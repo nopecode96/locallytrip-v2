@@ -31,7 +31,7 @@ services:
     env_file:
       - .env.production
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-locallytrip_prod_new}:${POSTGRES_PASSWORD:-locallytrip_secure_password_new}@postgres:5432/${POSTGRES_DB:-locallytrip_new}?schema=public}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-locallytrip_prod_new}:${POSTGRES_PASSWORD:-locallytrip_secure_password_new}@postgres:5432/${POSTGRES_DB:-locallytrip_new}?schema=public
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://locallytrip.com}
@@ -78,8 +78,8 @@ services:
     container_name: locallytrip_nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./public/images:/var/www/public/images:ro

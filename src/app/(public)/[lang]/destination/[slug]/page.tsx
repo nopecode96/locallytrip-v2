@@ -8,6 +8,7 @@ import { getDictionary, Locale } from '@/lib/dictionary';
 import { ExperienceCard } from '@/components/marketplace/ExperienceCard';
 import { StoryCard, StoryItem } from '@/components/marketplace/StoryCard';
 import { ExperienceItem } from '@/actions/experiences';
+import { resolveMeetupDisplayImage } from '@/lib/utils/images';
 import {
   MapPin,
   Calendar,
@@ -806,9 +807,10 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
                   }
                 );
 
-                const cityImg = meetup.cities?.image_url
-                  ? `/images/cities/${meetup.cities.image_url}`
-                  : '/images/default.jpg';
+                const coverImg = resolveMeetupDisplayImage(
+                  meetup.images,
+                  meetup.cities?.image_url
+                );
 
                 const creatorAvatar = meetup.users?.avatar_url
                   ? `/images/users/avatars/${meetup.users.avatar_url}`
@@ -835,10 +837,17 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
                       <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900">
                         <figure className="relative w-full h-full m-0">
                           <img
-                            src={cityImg}
+                            src={coverImg}
                             alt={meetup.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                             loading="lazy"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              const fallback = '/images/default-meetup-cover.jpg';
+                              if (target.src !== fallback && !target.src.endsWith(fallback)) {
+                                target.src = fallback;
+                              }
+                            }}
                           />
                           <figcaption className="sr-only">
                             Dokumentasi meetup komunitas di {city.name}

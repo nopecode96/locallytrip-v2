@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPersonaLink } from '@/components/common/UserPersonaLink';
 import { getPublicImageUrl } from '@/lib/images';
+import { resolveMeetupDisplayImage } from '@/lib/utils/images';
 import {
   Trophy,
   Medal,
@@ -612,11 +613,10 @@ export function CommunityHubClient({
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredMeetups.map((meetup) => {
-                  const cover = getPublicImageUrl(meetup.images, 'meetups', {
-                    fallbackUrl: meetup.city_image_url
-                      ? getPublicImageUrl(meetup.city_image_url, 'cities')
-                      : undefined,
-                  });
+                  const cover = resolveMeetupDisplayImage(
+                    meetup.images,
+                    meetup.city_image_url
+                  );
                   const formattedDate = new Date(meetup.start_date).toLocaleDateString(
                     isId ? 'id-ID' : 'en-US',
                     { day: 'numeric', month: 'short', year: 'numeric' }
@@ -1442,11 +1442,10 @@ export function CommunityHubClient({
 
                 <div className="space-y-4">
                   {upcomingMeetups.slice(0, 3).map((meetup) => {
-                    const cover = getPublicImageUrl(meetup.images, 'meetups', {
-                      fallbackUrl: meetup.city_image_url
-                        ? getPublicImageUrl(meetup.city_image_url, 'cities')
-                        : undefined,
-                    });
+                    const cover = resolveMeetupDisplayImage(
+                      meetup.images,
+                      meetup.city_image_url
+                    );
                     const formattedDate = new Date(meetup.start_date).toLocaleDateString(
                       isId ? 'id-ID' : 'en-US',
                       { day: 'numeric', month: 'short', year: 'numeric' }

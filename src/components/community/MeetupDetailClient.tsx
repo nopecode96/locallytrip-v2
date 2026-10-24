@@ -38,7 +38,7 @@ import { FollowButton } from '@/components/shared/FollowButton';
 import { UserSidebarCard } from '@/components/shared/UserSidebarCard';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import { ImageUploadDropzone } from '@/components/shared/ImageUploadDropzone';
-import { resolveMeetupImageUrl } from '@/lib/utils/media';
+import { resolveMeetupImageUrl, resolveMeetupDisplayImage } from '@/lib/utils/media';
 
 export interface MeetupMemberItem {
   id: number;
@@ -75,7 +75,9 @@ export interface MeetupDetailData {
     id: number;
     name: string;
     description?: string | null;
+    image?: string | null;
     image_url?: string | null;
+    coverImage?: string | null;
   } | null;
   creator: {
     id: number;
@@ -375,7 +377,10 @@ export function MeetupDetailClient({
           {/* 1. Banner / Foto Cover Meetup */}
           <div className="relative w-full h-72 sm:h-96 rounded-3xl overflow-hidden bg-slate-900">
             <Image
-              src={resolveMeetupImageUrl(initialMeetup.bannerImage)}
+              src={resolveMeetupDisplayImage(
+                initialMeetup.bannerImage,
+                initialMeetup.city?.image || initialMeetup.city?.coverImage || initialMeetup.city?.image_url
+              )}
               alt={initialMeetup.title || 'Meetup Cover'}
               fill
               priority

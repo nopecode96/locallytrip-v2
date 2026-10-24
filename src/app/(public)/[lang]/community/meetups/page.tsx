@@ -182,6 +182,8 @@ export default async function MeetupsPage({ params, searchParams }: MeetupsPageP
       max_participants: m.max_members,
       join_type: m.join_type,
       images: m.images,
+      image: resolvedDisplayImage,
+      coverImage: resolvedDisplayImage,
       created_at: m.created_at ? m.created_at.toISOString() : null,
       category: m.experience_types
         ? {
@@ -195,14 +197,18 @@ export default async function MeetupsPage({ params, searchParams }: MeetupsPageP
         ? {
             id: m.cities.id,
             name: m.cities.name,
+            image: m.cities.image_url,
             image_url: m.cities.image_url,
+            coverImage: m.cities.image_url,
           }
         : null,
       city: m.cities
         ? {
             id: m.cities.id,
             name: m.cities.name,
+            image: m.cities.image_url,
             image_url: m.cities.image_url,
+            coverImage: m.cities.image_url,
             countryName: m.cities.countries?.name || 'Indonesia',
             countryCode: m.cities.countries?.code || 'ID',
           }

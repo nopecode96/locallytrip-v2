@@ -13,6 +13,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getCurrentUserSession } from '@/actions/bookings';
 import { getPublicImageUrl } from '@/lib/images';
+import { resolveMeetupDisplayImage } from '@/lib/utils/images';
 
 interface MeetupDetailPageProps {
   params: Promise<{
@@ -173,12 +174,11 @@ export default async function MeetupDetailPage({ params }: MeetupDetailPageProps
   const isId = resolved.lang === 'id';
   const creator = meetup.users;
 
-  // Resolusi banner image meetup terpusat
-  const bannerImage = getPublicImageUrl(meetup.images, 'meetups', {
-    fallbackUrl: meetup.cities?.image_url
-      ? getPublicImageUrl(meetup.cities.image_url, 'cities')
-      : undefined,
-  });
+  // Resolusi banner image meetup terpusat (User upload -> City image -> Default cover)
+  const bannerImage = resolveMeetupDisplayImage(
+    meetup.images,
+    meetup.cities?.image_url
+  );
 
   // Format anggota
   const formattedMembers = meetup.vibes_travel_meetup_members.map((member) => ({
@@ -221,7 +221,9 @@ export default async function MeetupDetailPage({ params }: MeetupDetailPageProps
         id: meetup.cities.id,
         name: meetup.cities.name,
         description: meetup.cities.description,
+        image: meetup.cities.image_url,
         image_url: meetup.cities.image_url,
+        coverImage: meetup.cities.image_url,
       }
       : null,
     creator: {

@@ -20,7 +20,11 @@ export interface MeetupCardItem {
   max_members?: number | null;
   max_participants?: number | null;
   join_type: string;
-  images: any;
+  images?: any;
+  image?: string | null;
+  coverImage?: string | null;
+  cover_image?: string | null;
+  photo?: string | null;
   created_at?: string | null;
   category?: {
     id: number;
@@ -31,12 +35,16 @@ export interface MeetupCardItem {
   cities?: {
     id: number;
     name: string;
+    image?: string | null;
     image_url?: string | null;
+    coverImage?: string | null;
   } | null;
   city?: {
     id: number;
     name: string;
+    image?: string | null;
     image_url?: string | null;
+    coverImage?: string | null;
     countryName?: string;
     countryCode?: string;
   } | null;
@@ -67,8 +75,27 @@ interface MeetupCardProps {
 export function MeetupCard({ meetup, locale }: MeetupCardProps) {
   const isId = locale === 'id';
   const cityName = meetup.cities?.name || meetup.city?.name || 'Indonesia';
-  const cityPhoto = meetup.cities?.image_url || meetup.city?.image_url;
-  const coverSrc = resolveMeetupDisplayImage(meetup.images, cityPhoto);
+
+  // 1. User-uploaded image candidate
+  const userCover =
+    meetup.image ||
+    meetup.coverImage ||
+    meetup.cover_image ||
+    meetup.photo ||
+    meetup.images;
+
+  // 2. City representative image candidate
+  const cityPhoto =
+    meetup.city?.image ||
+    meetup.city?.coverImage ||
+    meetup.city?.image_url ||
+    meetup.cities?.image ||
+    meetup.cities?.coverImage ||
+    meetup.cities?.image_url;
+
+  // 3. Resolve using strict 3-tier hierarchy:
+  // User Uploaded -> City Representative Image -> Default Meetup Cover
+  const coverSrc = resolveMeetupDisplayImage(userCover, cityPhoto);
 
   const startDate = new Date(meetup.start_date);
   const dateFormatted = !isNaN(startDate.getTime())
@@ -97,8 +124,9 @@ export function MeetupCard({ meetup, locale }: MeetupCardProps) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
             onError={(e) => {
               const target = e.currentTarget;
-              if (target.src !== '/images/placeholder-meetup.webp' && !target.src.endsWith('/images/placeholder-meetup.webp')) {
-                target.src = '/images/placeholder-meetup.webp';
+              const fallback = '/images/default-meetup-cover.jpg';
+              if (target.src !== fallback && !target.src.endsWith(fallback)) {
+                target.src = fallback;
               }
             }}
           />

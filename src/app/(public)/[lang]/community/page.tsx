@@ -2,6 +2,7 @@ import React from 'react';
 import { Metadata } from 'next';
 import prisma from '@/lib/prisma';
 import { getPublicImageUrl } from '@/lib/images';
+import { resolveMeetupDisplayImage } from '@/lib/utils/images';
 import {
   CommunityHubClient,
   CommunityLeaderboardUser,
@@ -303,11 +304,7 @@ export default async function CommunityHubPage({ params, searchParams }: Communi
 
   // Format Meetups with Coordinates & Centralized Image Utility
   const upcomingMeetups: CommunityUpcomingMeetup[] = meetupsRaw.map((m) => {
-    const cover = getPublicImageUrl(m.images, 'meetups', {
-      fallbackUrl: m.cities?.image_url
-        ? getPublicImageUrl(m.cities.image_url, 'cities')
-        : undefined,
-    });
+    const cover = resolveMeetupDisplayImage(m.images, m.cities?.image_url);
 
     return {
       id: m.id,

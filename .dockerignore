@@ -3,3 +3,7 @@ node_modules
 .git
 .DS_Store
 *.log
+*.zip
+*.tar.gz
+backup_*.sql
+*.tsbuildinfo
