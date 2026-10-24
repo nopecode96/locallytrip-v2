@@ -187,10 +187,10 @@ export async function grantReward(
         await tx.notifications.create({
           data: {
             user_id: userId,
-            title: actionKey === 'WELCOME_AIRDROP' ? 'Welcome Airdrop Diterima! 🎁' : `Reward Koin: +${actionLtp} LTP 🪙`,
+            title: actionKey === 'WELCOME_AIRDROP' ? 'Welcome Reward Diterima! 🎁' : `Reward Kredit: +${actionLtp} LTP 🪙`,
             message: actionKey === 'WELCOME_AIRDROP'
-              ? 'Selamat datang! Saldo modal 1.000 LTP & 500 XP telah masuk ke dompet Anda.'
-              : `Anda memperoleh bonus +${actionLtp} LTP dari aktivitas komunitas.`,
+              ? 'Selamat datang! Saldo modal 1.000 Kredit LTP & 500 XP telah masuk ke dompet Anda.'
+              : `Anda memperoleh bonus +${actionLtp} Kredit LTP dari aktivitas komunitas.`,
             type: 'REWARD_LTP',
             action_url: '/community/perks',
             created_at: new Date(),

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { registerQuickUser } from '@/actions/auth/register';
@@ -13,6 +14,7 @@ interface UnifiedAuthCardProps {
   onSuccess?: () => void;
   isModal?: boolean;
   promptMessage?: string;
+  dict?: any;
 }
 
 export function UnifiedAuthCard({
@@ -22,10 +24,12 @@ export function UnifiedAuthCard({
   onSuccess,
   isModal = false,
   promptMessage,
+  dict,
 }: UnifiedAuthCardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isId = locale === 'id';
+  const t = dict?.auth;
 
   // Ambil callbackUrl dari prop atau search param URL, fallback ke dashboard jika tidak ada
   const queryCallbackUrl = searchParams.get('callbackUrl');
@@ -55,9 +59,10 @@ export function UnifiedAuthCard({
     } catch (err: any) {
       console.error('Google sign in error:', err);
       setErrorMessage(
-        isId
-          ? 'Gagal menghubungkan ke akun Google. Silakan coba kembali.'
-          : 'Failed to connect to Google account. Please try again.'
+        t?.googleError ||
+          (isId
+            ? 'Gagal menghubungkan ke akun Google. Silakan coba kembali.'
+            : 'Failed to connect to Google account. Please try again.')
       );
       setIsGoogleLoading(false);
     }
@@ -75,15 +80,16 @@ export function UnifiedAuthCard({
         // Alur registrasi 3-baris terintegrasi referral
         const res = await registerQuickUser({ name, email, password, referralCode });
         if (!res.success) {
-          setErrorMessage(res.error || (isId ? 'Pendaftaran gagal.' : 'Registration failed.'));
+          setErrorMessage(res.error || t?.registerFailed || (isId ? 'Pendaftaran gagal.' : 'Registration failed.'));
           setIsSubmitting(false);
           return;
         }
 
         setSuccessMessage(
-          isId
-            ? 'Akun berhasil dibuat! Mengalihkan Anda masuk...'
-            : 'Account created! Signing you in...'
+          t?.registerSuccess ||
+            (isId
+              ? 'Akun berhasil dibuat! Mengalihkan Anda masuk...'
+              : 'Account created! Signing you in...')
         );
 
         // Langsung lakukan sign in credentials setelah register berhasil
@@ -123,9 +129,10 @@ export function UnifiedAuthCard({
 
         if (loginRes?.error) {
           setErrorMessage(
-            isId
-              ? 'Email atau kata sandi tidak cocok. Silakan periksa kembali.'
-              : 'Invalid email or password. Please try again.'
+            t?.loginInvalid ||
+              (isId
+                ? 'Email atau kata sandi tidak cocok. Silakan periksa kembali.'
+                : 'Invalid email or password. Please try again.')
           );
           setIsSubmitting(false);
           return;
@@ -141,9 +148,10 @@ export function UnifiedAuthCard({
     } catch (err: any) {
       console.error('Auth submit error:', err);
       setErrorMessage(
-        isId
-          ? 'Terjadi kendala saat memproses permintaan. Silakan coba lagi.'
-          : 'An error occurred while processing. Please try again.'
+        t?.processError ||
+          (isId
+            ? 'Terjadi kendala saat memproses permintaan. Silakan coba lagi.'
+            : 'An error occurred while processing. Please try again.')
       );
     } finally {
       setIsSubmitting(false);
@@ -163,22 +171,20 @@ export function UnifiedAuthCard({
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold font-serif text-slate-900 tracking-tight">
           {mode === 'login'
-            ? isId
-              ? 'Selamat Datang Kembali'
-              : 'Welcome Back'
-            : isId
-            ? 'Mulai Petualanganmu'
-            : 'Join Locallytrip'}
+            ? t?.welcomeBack || (isId ? 'Selamat Datang Kembali' : 'Welcome Back')
+            : t?.joinTitle || (isId ? 'Mulai Petualanganmu' : 'Join Locallytrip')}
         </h2>
         <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
           {promptMessage ||
             (mode === 'login'
-              ? isId
-                ? 'Masuk untuk mengelola perjalanan, forum diskusi, dan reward koin LTP.'
-                : 'Sign in to access your trips, community vibes, and LTP coin rewards.'
-              : isId
-              ? 'Daftar cepat dalam 10 detik dan langsung dapatkan 1.000 LTP & 500 XP Welcome Airdrop.'
-              : 'Sign up in 10 seconds and instantly claim 1,000 LTP & 500 XP Welcome Airdrop.')}
+              ? t?.welcomeBackSub ||
+                (isId
+                  ? 'Masuk untuk mengelola perjalanan, forum diskusi, dan reward kredit LTP.'
+                  : 'Sign in to access your trips, community forums, and LTP travel credits.')
+              : t?.joinSub ||
+                (isId
+                  ? 'Daftar cepat dalam 10 detik dan langsung dapatkan 1.000 Kredit LTP & 500 XP Welcome Reward.'
+                  : 'Sign up in 10 seconds and claim 1,000 LTP Credits & 500 XP Welcome Reward.'))}
         </p>
       </div>
 
@@ -197,7 +203,7 @@ export function UnifiedAuthCard({
               : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          {isId ? 'Masuk' : 'Sign In'}
+          {t?.signInTab || (isId ? 'Masuk' : 'Sign In')}
         </button>
         <button
           type="button"
@@ -212,7 +218,7 @@ export function UnifiedAuthCard({
               : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          {isId ? 'Daftar Baru' : 'Register'}
+          {t?.registerTab || (isId ? 'Daftar Baru' : 'Register')}
         </button>
       </div>
 
@@ -247,7 +253,7 @@ export function UnifiedAuthCard({
             </svg>
           )}
           <span>
-            {isId ? 'Lanjutkan dengan Google' : 'Continue with Google'}
+            {t?.continueGoogle || (isId ? 'Lanjutkan dengan Google' : 'Continue with Google')}
           </span>
         </button>
 
@@ -255,7 +261,7 @@ export function UnifiedAuthCard({
         <div className="relative flex items-center justify-center my-4">
           <div className="border-t border-slate-200 w-full" />
           <span className="bg-white px-3 text-[11px] uppercase tracking-wider text-slate-400 font-semibold absolute">
-            {isId ? 'atau lanjutkan dengan email' : 'or continue with email'}
+            {t?.orContinueEmail || (isId ? 'atau lanjutkan dengan email' : 'or continue with email')}
           </span>
         </div>
 
@@ -279,14 +285,14 @@ export function UnifiedAuthCard({
           {mode === 'register' && (
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 block">
-                {isId ? 'Nama Lengkap' : 'Full Name'}
+                {t?.fullName || (isId ? 'Nama Lengkap' : 'Full Name')}
               </label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={isId ? 'cth. Rina Pratiwi' : 'e.g. John Doe'}
+                placeholder={t?.fullNamePlaceholder || (isId ? 'cth. Rina Pratiwi' : 'e.g. John Doe')}
                 className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/50 text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition"
               />
             </div>
@@ -295,14 +301,14 @@ export function UnifiedAuthCard({
           {/* Kolom Email */}
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 block">
-              {isId ? 'Alamat Email' : 'Email Address'}
+              {t?.email || (isId ? 'Alamat Email' : 'Email Address')}
             </label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="nama@email.com"
+              placeholder={t?.emailPlaceholder || 'nama@email.com'}
               className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/50 text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition"
             />
           </div>
@@ -311,11 +317,11 @@ export function UnifiedAuthCard({
           <div className="space-y-1">
             <div className="flex justify-between items-center">
               <label className="text-xs font-semibold text-slate-700 block">
-                {isId ? 'Kata Sandi' : 'Password'}
+                {t?.password || (isId ? 'Kata Sandi' : 'Password')}
               </label>
               {mode === 'login' && (
                 <span className="text-[11px] text-purple-700 font-medium hover:underline cursor-pointer">
-                  {isId ? 'Lupa Sandi?' : 'Forgot?'}
+                  {t?.forgotPassword || (isId ? 'Lupa Sandi?' : 'Forgot?')}
                 </span>
               )}
             </div>
@@ -328,9 +334,7 @@ export function UnifiedAuthCard({
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={
                   mode === 'register'
-                    ? isId
-                      ? 'Minimal 6 karakter'
-                      : 'Min. 6 characters'
+                    ? t?.passwordMinPlaceholder || (isId ? 'Minimal 6 karakter' : 'Min. 6 characters')
                     : '••••••••'
                 }
                 className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/50 text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition pr-11"
@@ -355,9 +359,9 @@ export function UnifiedAuthCard({
             {isSubmitting ? (
               <Loader2 className="w-4 h-4 animate-spin text-white" />
             ) : mode === 'login' ? (
-              <span>{isId ? 'Masuk Sekarang' : 'Sign In Now'}</span>
+              <span>{t?.signInBtn || (isId ? 'Masuk Sekarang' : 'Sign In Now')}</span>
             ) : (
-              <span>{isId ? 'Buat Akun & Dapatkan +50 XP' : 'Create Account & Get +50 XP'}</span>
+              <span>{t?.registerBtn || (isId ? 'Buat Akun & Dapatkan +50 XP' : 'Create Account & Get +50 XP')}</span>
             )}
           </button>
         </form>
@@ -368,15 +372,25 @@ export function UnifiedAuthCard({
             {isId ? (
               <>
                 Dengan melanjutkan, Anda menyetujui{' '}
-                <span className="text-slate-600 hover:underline cursor-pointer">Syarat Layanan</span> dan{' '}
-                <span className="text-slate-600 hover:underline cursor-pointer">Kebijakan Privasi</span>{' '}
+                <Link href={`/${locale}/terms`} className="text-purple-700 hover:underline">
+                  Syarat Layanan
+                </Link>{' '}
+                dan{' '}
+                <Link href={`/${locale}/privacy`} className="text-purple-700 hover:underline">
+                  Kebijakan Privasi
+                </Link>{' '}
                 Locallytrip.
               </>
             ) : (
               <>
                 By continuing, you agree to Locallytrip&apos;s{' '}
-                <span className="text-slate-600 hover:underline cursor-pointer">Terms of Service</span> and{' '}
-                <span className="text-slate-600 hover:underline cursor-pointer">Privacy Policy</span>.
+                <Link href={`/${locale}/terms`} className="text-purple-700 hover:underline">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link href={`/${locale}/privacy`} className="text-purple-700 hover:underline">
+                  Privacy Policy
+                </Link>.
               </>
             )}
           </p>

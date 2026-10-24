@@ -3704,8 +3704,8 @@ export function DashboardClient({ locale, user }: DashboardClientProps) {
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 {isId
-                  ? 'Koin LTP Anda dapat ditukarkan untuk potongan harga pemesanan tur atau dicairkan langsung ke rekening bank / PayPal.'
-                  : 'Your LTP Coins can be redeemed for booking discounts or cashed out to your bank account or PayPal.'}
+                  ? 'Kredit LTP Anda dapat digunakan untuk potongan harga pemesanan tur. (Pencairan ke rekening bank/PayPal secara eksklusif berlaku untuk Host Terverifikasi).'
+                  : 'Your LTP Credits can be redeemed for tour booking discounts. (Cash-out to bank account/PayPal is exclusively available for Verified Local Hosts).'}
               </p>
             </div>
 

@@ -78,7 +78,7 @@ export async function verifyUserEmail(
       data: {
         user_id: user.id,
         title: 'Email Berhasil Diverifikasi! 🎉',
-        message: 'Selamat! Akun Anda telah aktif sepenuhnya. Saldo Welcome Airdrop 1.000 LTP & 500 XP siap digunakan.',
+        message: 'Selamat! Akun Anda telah aktif sepenuhnya. Saldo Welcome Reward 1.000 Kredit LTP & 500 XP siap digunakan.',
         type: 'SYSTEM',
         action_url: '/dashboard?tab=overview',
         created_at: now,

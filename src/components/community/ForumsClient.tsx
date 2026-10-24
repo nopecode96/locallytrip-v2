@@ -587,18 +587,18 @@ export function ForumsClient({
               <span className="text-2xl">🪙</span>
               <div>
                 <h3 className="font-bold text-sm tracking-wide text-amber-300">
-                  {isId ? 'Reward LTP Coin & Level XP' : 'LTP Rewards & XP Levels'}
+                  {isId ? 'Reward Kredit LTP & Level XP' : 'LTP Travel Credits & XP Levels'}
                 </h3>
                 <p className="text-[11px] text-purple-200">
-                  {isId ? 'Ekosistem Komunitas Aktif' : 'Active Traveler Ecosystem'}
+                  {isId ? 'Kredit Perjalanan & Reputasi' : 'Travel Credits & Reputation'}
                 </p>
               </div>
             </div>
 
             <p className="text-xs text-purple-100 leading-relaxed">
               {isId
-                ? 'Dapatkan reward XP untuk setiap diskusi dan balasan berkualitas untuk menikmati diskon tur lokal atau tip sesama explorer!'
-                : 'Earn XP for every discussion and quality reply to enjoy discounts on local tours or tip fellow explorers!'}
+                ? 'Dapatkan kredit LTP untuk membuka pengalaman tur lokal gratis & diskon pemesanan! *(Pencairan ke USD secara eksklusif hanya berlaku bagi Host Terverifikasi yang memperoleh pendapatan dari tur terbitan).*'
+                : 'Earn LTP Credits to unlock free local experiences & discounts! *(Cash-out to USD is exclusively available for Verified Local Hosts earning from published experiences).*'}
             </p>
 
             <div className="grid grid-cols-2 gap-2.5 pt-1 text-center">
@@ -611,7 +611,7 @@ export function ForumsClient({
               <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/10">
                 <span className="block text-lg font-bold text-amber-300">🪙 +{ltpReward} LTP</span>
                 <span className="text-[10px] text-purple-200">
-                  {isId ? 'Koin Reward' : 'Reward Coins'}
+                  {isId ? 'Kredit Reward' : 'Travel Credits'}
                 </span>
               </div>
             </div>

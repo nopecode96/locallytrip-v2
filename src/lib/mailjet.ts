@@ -118,7 +118,7 @@ export function generateVerificationHtml(
           <div class="greeting">Welcome to Locallytrip, ${safeName}! 👋</div>
           <p class="body-text">
             Thank you for signing up for <strong>Locallytrip</strong>, where travelers connect with verified local hosts worldwide.
-            Please verify your email address to secure your account and instantly unlock your <strong>Welcome Airdrop (+1,000 LTP Coins & +500 XP)</strong>.
+            Please verify your email address to secure your account and instantly unlock your <strong>Welcome Reward (+1,000 LTP Credits & +500 XP)</strong>.
           </p>
 
           <div class="otp-card">
@@ -132,7 +132,7 @@ export function generateVerificationHtml(
 
           <div class="airdrop-card">
             <p class="airdrop-text">
-              🎁 <strong>Starter Perk:</strong> Once verified, your wallet is automatically credited with <strong>1,000 LTP Coins & 500 XP</strong> for exclusive travel discounts and brand perks!
+              🎁 <strong>Starter Perk:</strong> Once verified, your wallet is automatically credited with <strong>1,000 LTP Credits & 500 XP</strong> for exclusive travel discounts and brand perks!
             </p>
           </div>
 
@@ -150,7 +150,7 @@ export function generateVerificationHtml(
           <div class="greeting">Halo, ${safeName}! Selamat Datang di Locallytrip! 👋</div>
           <p class="body-text">
             Terima kasih telah bergabung di <strong>Locallytrip</strong>, platform penjelajahan bersama local host terpercaya.
-            Silakan verifikasi email Anda untuk mengamankan akun dan langsung mengklaim <strong>Welcome Airdrop (+1.000 LTP Koin & +500 XP)</strong>.
+            Silakan verifikasi email Anda untuk mengamankan akun dan langsung mengklaim <strong>Welcome Reward (+1.000 Kredit LTP & +500 XP)</strong>.
           </p>
 
           <div class="otp-card">
@@ -164,7 +164,7 @@ export function generateVerificationHtml(
 
           <div class="airdrop-card">
             <p class="airdrop-text">
-              🎁 <strong>Bonus Pemula:</strong> Setelah diverifikasi, dompet Anda otomatis menerima <strong>1.000 LTP Koin & 500 XP</strong> untuk diskon tur dan voucher mitra brand!
+              🎁 <strong>Bonus Pemula:</strong> Setelah diverifikasi, dompet Anda otomatis menerima <strong>1.000 Kredit LTP & 500 XP</strong> untuk diskon tur dan voucher mitra brand!
             </p>
           </div>
 
@@ -266,17 +266,17 @@ export function generateWelcomeHtml(
           </p>
 
           <div class="airdrop-banner">
-            <div class="airdrop-badge">🎁 Welcome Airdrop Unlocked</div>
-            <div class="airdrop-value">+1,000 LTP Coins & +500 XP</div>
+            <div class="airdrop-badge">🎁 Welcome Reward Unlocked</div>
+            <div class="airdrop-value">+1,000 LTP Credits & +500 XP</div>
             <p class="airdrop-note">
-              Credited directly to your Rewards Wallet. Spend your coins on local tour bookings and exclusive brand discounts!
+              Credited directly to your Rewards Wallet. Spend your credits on local tour bookings and exclusive brand discounts!
             </p>
           </div>
 
           <div class="feature-card">
             <div class="feature-title">🎟️ Travel Perks Marketplace</div>
             <p class="feature-text">
-              Redeem your LTP Coins for glamping vouchers, dining discounts, and top outdoor gear offers (like EIGER) from our partner brands.
+              Redeem your LTP Credits for glamping vouchers, dining discounts, and top outdoor gear offers (like EIGER) from our partner brands.
             </p>
           </div>
 
@@ -309,10 +309,10 @@ export function generateWelcomeHtml(
           </p>
 
           <div class="airdrop-banner">
-            <div class="airdrop-badge">🎁 Welcome Airdrop Terbuka</div>
-            <div class="airdrop-value">+1.000 LTP Koin & +500 XP</div>
+            <div class="airdrop-badge">🎁 Welcome Reward Terbuka</div>
+            <div class="airdrop-value">+1.000 Kredit LTP & +500 XP</div>
             <p class="airdrop-note">
-              Saldo hadiah telah otomatis masuk ke Dompet Hadiah Anda. Gunakan untuk diskon tur dan penukaran voucher mitra!
+              Saldo reward telah otomatis masuk ke Dompet Hadiah Anda. Gunakan untuk diskon tur dan penukaran voucher mitra!
             </p>
           </div>
 

@@ -396,7 +396,9 @@ export function CommunityHubClient({
                 <div className="absolute -bottom-3 left-6 z-20 bg-purple-950/90 backdrop-blur-md border border-purple-400/40 rounded-2xl px-3 py-1.5 shadow-xl flex items-center gap-2">
                   <Coins className="w-4 h-4 text-amber-400" />
                   <span className="text-[11px] font-bold text-purple-200">
-                    Earn LTP Credits to unlock free local experiences & discounts
+                    {isId
+                      ? 'Kredit LTP untuk membuka pengalaman lokal gratis & diskon'
+                      : 'Earn LTP Credits to unlock free local experiences & discounts'}
                   </span>
                 </div>
               </div>
@@ -1268,15 +1270,19 @@ export function CommunityHubClient({
                     <span>{isId ? 'Kalkulator Nilai Kredit LTP & Diskon' : 'LTP Travel Credit Calculator'}</span>
                   </h3>
                   <p className="text-xs text-purple-200 mt-1 max-w-xl">
-                    Earn LTP Credits to unlock free local experiences & discounts.
+                    {isId
+                      ? 'Dapatkan Kredit LTP untuk membuka pengalaman tur lokal gratis & diskon pemesanan.'
+                      : 'Earn LTP Credits to unlock free local experiences & discounts.'}
                     <span className="block text-purple-300 text-[10px] mt-0.5">
-                      *(Cash-out to USD is exclusively available for Verified Local Hosts earning from published experiences).*
+                      {isId
+                        ? '*(Pencairan ke USD secara eksklusif hanya berlaku bagi Host Terverifikasi yang memperoleh pendapatan dari tur terbitan).*'
+                        : '*(Cash-out to USD is exclusively available for Verified Local Hosts earning from published experiences).*'}
                     </span>
                   </p>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-[11px] text-purple-300 block">Nilai Acuan Kredit</span>
+                  <span className="text-[11px] text-purple-300 block">{isId ? 'Nilai Acuan Kredit' : 'Credit Reference Rate'}</span>
                   <span className="font-bold text-amber-300 text-sm">100 LTP = $1.00 USD</span>
                 </div>
               </div>
@@ -1284,7 +1290,7 @@ export function CommunityHubClient({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-purple-200 block">
-                    {isId ? 'Jumlah Koin LTP' : 'LTP Coins Amount'}
+                    {isId ? 'Jumlah Kredit LTP' : 'LTP Credits Amount'}
                   </label>
                   <input
                     type="number"

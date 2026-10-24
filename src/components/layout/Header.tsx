@@ -45,21 +45,25 @@ export function Header({ dict }: HeaderProps) {
     return null;
   }
 
+  const isId = locale === 'id';
+
   const tNav = dict?.nav || {
-    explore: 'Explore',
-    experiences: 'Experiences',
-    community: 'Community',
-    forums: 'Vibes Forum',
-    meetups: 'Travel Meetups',
-    stories: 'Stories',
+    explore: isId ? 'Eksplor' : 'Explore',
+    experiences: isId ? 'Pengalaman' : 'Experiences',
+    community: isId ? 'Komunitas' : 'Community',
+    forums: isId ? 'Forum Diskusi' : 'Vibes Forum',
+    meetups: isId ? 'Temu Komunitas' : 'Travel Meetups',
+    stories: isId ? 'Cerita' : 'Stories',
   };
 
   const tCommon = dict?.common || {
     appName: 'Locallytrip',
-    login: 'Sign In',
-    register: 'Sign Up',
-    becomeHost: 'Become a Host',
-    search: 'Search local experiences, cities, or stories...',
+    login: isId ? 'Masuk' : 'Sign In',
+    register: isId ? 'Daftar' : 'Sign Up',
+    becomeHost: isId ? 'Jadi Host' : 'Become a Host',
+    search: isId
+      ? 'Cari pengalaman lokal, kota, atau cerita...'
+      : 'Search local experiences, cities, or stories...',
   };
 
   const currentLangPrefix = `/${locale}`;

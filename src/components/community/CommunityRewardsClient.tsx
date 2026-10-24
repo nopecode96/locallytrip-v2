@@ -79,7 +79,7 @@ const t = {
     breadcrumb: { home: 'Beranda', community: 'Komunitas', rewards: 'Sistem Hadiah & Gamifikasi' },
     hero: {
       badge: 'SISTEM TRAVEL CREDITS & REWARD',
-      title: 'Earn LTP Credits to Unlock Free Local Experiences & Discounts',
+      title: 'Kumpulkan Kredit LTP untuk Pengalaman Lokal Gratis & Diskon',
       subtitle:
         'Panduan resmi sistem reward kredit perjalanan untuk seluruh penjelajah dan kontributor komunitas. Dapatkan kredit LTP untuk membuka pengalaman tur lokal gratis, diskon tiket hingga 50%, dan merchandise eksklusif. *(Pencairan ke USD secara eksklusif hanya berlaku bagi Host Terverifikasi yang memperoleh pendapatan dari tur terbitan).*',
       ctaLevel: 'Lihat Tingkatan Level',
@@ -96,14 +96,14 @@ const t = {
         'XP meningkatkan status reputasi akunmu secara permanen, sedangkan kredit LTP memberikan keuntungan hemat perjalanan nyata.',
       step3Title: 'Buka Pengalaman Lokal & Nikmati Diskon',
       step3Desc:
-        'Earn LTP Credits to unlock free local experiences & discounts. *(Pencairan ke USD secara eksklusif hanya berlaku bagi Host Terverifikasi yang memperoleh pendapatan dari tur terbitan).*',
+        'Gunakan kredit LTP untuk membuka pengalaman tur lokal gratis & potongan harga pemesanan. *(Pencairan ke USD secara eksklusif hanya berlaku bagi Host Terverifikasi yang memperoleh pendapatan dari tur terbitan).*',
     },
     tiers: {
       title: '12 Tingkatan Level Reputasi XP & Hadiah Pencapaian',
       subtitle:
         'Semakin tinggi kontribusimu di platform, semakin prestisius statusmu dan semakin banyak hak istimewa yang bisa diklaim.',
       minXp: 'Syarat XP',
-      bonusLtp: 'Bonus Koin LTP',
+      bonusLtp: 'Bonus Kredit LTP',
       merchReward: 'Hadiah Pencapaian',
       claimStatus: 'Klaim Alamat Diperlukan',
       levelPrefix: 'Tingkat',
@@ -208,7 +208,7 @@ const t = {
       subtitle:
         'The more you contribute to the ecosystem, the more prestigious your status and the greater the exclusive perks.',
       minXp: 'Required XP',
-      bonusLtp: 'LTP Coin Bonus',
+      bonusLtp: 'Bonus LTP Credits',
       merchReward: 'Milestone Reward',
       claimStatus: 'Shipping Address Required',
       levelPrefix: 'Tier',

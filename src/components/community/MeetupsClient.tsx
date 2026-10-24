@@ -275,13 +275,13 @@ export function MeetupsClient({
               <div className="space-y-0.5">
                 <p className="text-xs sm:text-sm font-bold text-slate-900">
                   {isId
-                    ? `✨ Inisiasi meetup dan dapatkan +${REWARD_RULES.ACTIONS.MEETUP_CREATE.xp} XP & +${REWARD_RULES.ACTIONS.MEETUP_CREATE.ltp} LTP Koin!`
-                    : `✨ Host a meetup and earn +${REWARD_RULES.ACTIONS.MEETUP_CREATE.xp} XP & +${REWARD_RULES.ACTIONS.MEETUP_CREATE.ltp} LTP Coins!`}
+                    ? `✨ Inisiasi meetup dan dapatkan +${REWARD_RULES.ACTIONS.MEETUP_CREATE.xp} XP & +${REWARD_RULES.ACTIONS.MEETUP_CREATE.ltp} Kredit LTP!`
+                    : `✨ Host a meetup and earn +${REWARD_RULES.ACTIONS.MEETUP_CREATE.xp} XP & +${REWARD_RULES.ACTIONS.MEETUP_CREATE.ltp} LTP Credits!`}
                 </p>
                 <p className="text-[11px] text-slate-500">
                   {isId
-                    ? 'Koin LTP dapat digunakan langsung sebagai potongan harga pemesanan tur.'
-                    : 'LTP coins can be redeemed directly for discounts on all experiences.'}
+                    ? 'Dapatkan Kredit LTP untuk membuka pengalaman tur lokal gratis & diskon pemesanan.'
+                    : 'Earn LTP Credits to unlock free local experiences & discounts.'}
                 </p>
               </div>
             </div>
