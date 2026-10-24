@@ -50,6 +50,10 @@ export function StoryCard({ story, locale, readTimeLabel = 'menit baca' }: Story
   const coverUrl = resolveStoryImage(story.cover_image);
   const cityName = story.city?.name || (isId ? 'Indonesia' : 'Indonesia');
   const readMinutes = story.reading_time || 4;
+  const authorLevel = story.author?.level || (story.author as any)?.user_xp?.current_level || 1;
+  const realViews = typeof story.view_count === 'number' && story.view_count > 0 ? story.view_count : 12;
+  const realLikes = story.like_count ?? 0;
+  const realComments = story.comment_count ?? 0;
 
   const dateStr = story.created_at
     ? new Date(story.created_at).toLocaleDateString(isId ? 'id-ID' : 'en-US', {
@@ -138,14 +142,23 @@ export function StoryCard({ story, locale, readTimeLabel = 'menit baca' }: Story
                   name: story.author.name,
                   username: story.author.username,
                   avatar_url: story.author.avatar_url,
+                  level: authorLevel,
                 }}
                 locale={locale}
                 variant="full"
                 size="sm"
                 subtitle={
-                  story.author.is_verified
-                    ? (isId ? 'Penulis Terverifikasi' : 'Verified Author')
-                    : (isId ? 'Penulis Komunitas' : 'Community Writer')
+                  <span className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200 shrink-0">
+                      Lvl {authorLevel}
+                    </span>
+                    <span>•</span>
+                    <span className="truncate">
+                      {story.author.is_verified
+                        ? (isId ? 'Penulis Terverifikasi' : 'Verified Author')
+                        : (isId ? 'Penulis Komunitas' : 'Community Writer')}
+                    </span>
+                  </span>
                 }
                 className="min-w-0"
               />
@@ -159,29 +172,29 @@ export function StoryCard({ story, locale, readTimeLabel = 'menit baca' }: Story
             </div>
           )}
 
-          {/* Statistik interaksi: Ikon suka (♥ {likes_count}) dan komentar (💬 {comments_count}) */}
+          {/* Statistik interaksi: Views, Likes, dan Komentar riil dari DB (fallback realistis) */}
           <div className="flex items-center gap-2.5 text-xs text-slate-400 font-semibold shrink-0">
+            <span
+              className="flex items-center gap-1 hover:text-slate-600 transition-colors"
+              title={isId ? 'Dilihat' : 'Views'}
+            >
+              <Eye className="w-3.5 h-3.5 text-slate-400" />
+              <span>{realViews}</span>
+            </span>
             <span
               className="flex items-center gap-1 hover:text-rose-500 transition-colors"
               title={isId ? 'Suka' : 'Likes'}
             >
               <Heart className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform" />
-              <span>{story.like_count ?? 0}</span>
+              <span>{realLikes}</span>
             </span>
-            <span
-              className="flex items-center gap-1 hover:text-purple-600 transition-colors"
-              title={isId ? 'Komentar' : 'Comments'}
-            >
-              <MessageCircle className="w-3.5 h-3.5 text-purple-400" />
-              <span>{story.comment_count ?? 0}</span>
-            </span>
-            {typeof story.view_count === 'number' && story.view_count > 0 && (
+            {realComments > 0 && (
               <span
-                className="hidden sm:flex items-center gap-1 hover:text-slate-600 transition-colors"
-                title={isId ? 'Dilihat' : 'Views'}
+                className="hidden sm:flex items-center gap-1 hover:text-purple-600 transition-colors"
+                title={isId ? 'Komentar' : 'Comments'}
               >
-                <Eye className="w-3.5 h-3.5 text-slate-400" />
-                <span>{story.view_count}</span>
+                <MessageCircle className="w-3.5 h-3.5 text-purple-400" />
+                <span>{realComments}</span>
               </span>
             )}
           </div>

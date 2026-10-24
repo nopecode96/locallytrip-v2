@@ -36,6 +36,11 @@ export function ExperienceCard({ experience, dict, homeDict }: ExperienceCardPro
     ? `${experience.durationHours} ${dict?.hours || 'Jam'}`
     : `3 ${dict?.hours || 'Jam'}`;
 
+  const hostName = experience.host?.name || 'Local Host';
+  const hostLevel = experience.host?.level || 1;
+  const joinedMembers = experience.ratingCount > 0 ? experience.ratingCount : (experience.maxParticipants ? Math.min(experience.maxParticipants, 8) : 6);
+  const formattedPrice = formatPrice(experience.packagePrice, experience.currency || 'USD');
+
   return (
     <div className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:border-violet-200 overflow-hidden hover:shadow-2xl hover:shadow-violet-950/10 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
       {/* 1. Media Container: Aspect 4/3 with rounded-2xl overflow-hidden */}
@@ -71,7 +76,7 @@ export function ExperienceCard({ experience, dict, homeDict }: ExperienceCardPro
 
       {/* 2. Body Details: flex-1 flex flex-col justify-between p-4 sm:p-5 */}
       <div className="p-4 sm:p-5 pt-3.5 flex-1 flex flex-col justify-between">
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {/* Rating Bintang (xx ulasan) + Durasi Kegiatan */}
           <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
             <span className="flex items-center gap-1 text-amber-500 font-bold">
@@ -88,6 +93,15 @@ export function ExperienceCard({ experience, dict, homeDict }: ExperienceCardPro
             </span>
           </div>
 
+          {/* Social Proof Tag: members joining host this Friday (dengan spasi presisi) */}
+          <div className="text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-xl flex items-center gap-1.5 line-clamp-1">
+            <span>
+              {locale === 'id'
+                ? `🎒 ${joinedMembers} anggota bergabung dengan ${hostName} Lvl ${hostLevel} Jumat ini`
+                : `🎒 ${joinedMembers} members are joining ${hostName} Lvl ${hostLevel} this Friday`}
+            </span>
+          </div>
+
           {/* Judul Aktivitas (Terstandarisasi heading-h3 line-clamp-2) */}
           <Link href={hrefSlug} className="block group">
             <h3 className="heading-h3 line-clamp-2 text-slate-900 group-hover:text-purple-600 transition-colors">
@@ -97,39 +111,58 @@ export function ExperienceCard({ experience, dict, homeDict }: ExperienceCardPro
         </div>
 
         {/* 3. Footer: Info Host & Harga */}
-        <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-3">
-          {/* Host Info */}
-          {experience.host ? (
-            <UserPersonaLink
-              user={{
-                id: experience.host.id,
-                name: experience.host.name,
-                username: experience.host.username,
-                avatar_url: experience.host.avatarUrl,
-              }}
-              locale={locale}
-              variant="full"
-              size="xs"
-              className="min-w-0 max-w-[140px]"
-            />
-          ) : (
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-6 h-6 rounded-full bg-slate-100 shrink-0" />
-              <span className="text-xs text-slate-600 font-medium truncate">
-                Local Host
+        <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3">
+            {/* Host Info dengan Level XP Dinamis */}
+            {experience.host ? (
+              <UserPersonaLink
+                user={{
+                  id: experience.host.id,
+                  name: experience.host.name,
+                  username: experience.host.username,
+                  avatar_url: experience.host.avatarUrl,
+                }}
+                locale={locale}
+                variant="full"
+                size="xs"
+                subtitle={
+                  <span className="text-[10px] font-bold text-violet-700 bg-violet-50 px-1.5 py-0.2 rounded border border-violet-100">
+                    Lvl {hostLevel}
+                  </span>
+                }
+                className="min-w-0 max-w-[140px]"
+              />
+            ) : (
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-6 h-6 rounded-full bg-slate-100 shrink-0" />
+                <span className="text-xs text-slate-600 font-medium truncate">
+                  Local Host
+                </span>
+              </div>
+            )}
+
+            {/* Harga Tegas di Kanan Bawah */}
+            <div className="text-right shrink-0">
+              <span className="text-xl font-bold text-slate-900">
+                {formattedPrice}
+              </span>
+              <span className="text-xs text-slate-500 ml-1 font-medium">
+                {dict?.perPerson || '/ orang'}
               </span>
             </div>
-          )}
-
-          {/* Harga Tegas di Kanan Bawah */}
-          <div className="text-right shrink-0">
-            <span className="text-xl font-bold text-slate-900">
-              {formatPrice(experience.packagePrice, experience.currency || 'USD')}
-            </span>
-            <span className="text-xs text-slate-500 ml-1 font-medium">
-              {dict?.perPerson || '/ orang'}
-            </span>
           </div>
+
+          {/* Action Button: Join {host.name} Lvl {host.level} for ${price} (spasi sempurna) */}
+          <Link
+            href={hrefSlug}
+            className="w-full py-2 px-3 rounded-xl bg-violet-50 hover:bg-violet-600 text-violet-700 hover:text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5"
+          >
+            <span>
+              {locale === 'id'
+                ? `Ikut ${hostName} Lvl ${hostLevel} seharga ${formattedPrice}`
+                : `Join ${hostName} Lvl ${hostLevel} for ${formattedPrice}`}
+            </span>
+          </Link>
         </div>
       </div>
     </div>

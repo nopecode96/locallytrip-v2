@@ -150,6 +150,9 @@ export default async function CommunityHubPage({ params, searchParams }: Communi
             avatar_url: true,
             role: true,
             is_verified: true,
+            user_xp: {
+              select: { current_level: true, total_xp: true },
+            },
           },
         },
         _count: {
@@ -179,6 +182,9 @@ export default async function CommunityHubPage({ params, searchParams }: Communi
             role: true,
             is_verified: true,
             cities: { select: { id: true, name: true } },
+            user_xp: {
+              select: { current_level: true, total_xp: true },
+            },
           },
         },
         _count: {
@@ -329,6 +335,7 @@ export default async function CommunityHubPage({ params, searchParams }: Communi
         avatar_url: getPublicImageUrl(m.users?.avatar_url, 'users'),
         role: m.users?.role || null,
         is_verified: Boolean(m.users?.is_verified),
+        level: m.users?.user_xp?.current_level || 1,
       },
     };
   });
@@ -367,6 +374,7 @@ export default async function CommunityHubPage({ params, searchParams }: Communi
         role: author?.role || null,
         is_verified: Boolean(author?.is_verified),
         cityName: author?.cities?.name || null,
+        level: author?.user_xp?.current_level || 1,
       },
     };
   });

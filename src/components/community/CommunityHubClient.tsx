@@ -89,6 +89,7 @@ export interface CommunityRecentThread {
     role?: string | null;
     is_verified: boolean;
     cityName: string | null;
+    level?: number;
   };
 }
 
@@ -115,6 +116,7 @@ export interface CommunityUpcomingMeetup {
     avatar_url: string | null;
     role?: string | null;
     is_verified: boolean;
+    level?: number;
   };
 }
 
@@ -1486,8 +1488,11 @@ export function CommunityHubClient({
                           </div>
 
                           <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                            <span className="text-slate-500 text-[11px]">
-                              Host: <strong className="text-slate-800">{meetup.creator.name}</strong>
+                            <span className="text-slate-500 text-[11px] flex items-center gap-1.5">
+                              <span>Host: <strong className="text-slate-800">{meetup.creator.name}</strong></span>
+                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 rounded px-1.5 py-0.5">
+                                Lvl {meetup.creator.level || 1}
+                              </span>
                             </span>
                             <span className="font-semibold text-emerald-700 text-xs">
                               👥 {meetup.members_count} {isId ? 'peserta' : 'joined'}
@@ -1561,7 +1566,12 @@ export function CommunityHubClient({
                       </Link>
 
                       <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                        <span>Oleh: <strong className="text-slate-800">{thread.author.name}</strong></span>
+                        <span className="flex items-center gap-1.5">
+                          <span>Oleh: <strong className="text-slate-800">{thread.author.name}</strong></span>
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 rounded px-1.5 py-0.5">
+                            Lvl {thread.author.level || 1}
+                          </span>
+                        </span>
                         <Link
                           href={`/${locale}/community/forums/${thread.slug || thread.id}`}
                           className="font-bold text-purple-700 hover:text-purple-900"

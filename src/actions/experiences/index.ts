@@ -29,6 +29,7 @@ export interface ExperienceItem {
     username: string | null;
     avatarUrl: string | null;
     isVerified: boolean | null;
+    level?: number;
   } | null;
   images: string[];
 }
@@ -192,6 +193,12 @@ export async function getActiveExperiences(
               username: true,
               avatar_url: true,
               is_verified: true,
+              user_xp: {
+                select: {
+                  current_level: true,
+                  total_xp: true,
+                },
+              },
             },
           },
         },
@@ -222,6 +229,7 @@ export async function getActiveExperiences(
             username: exp.users.username,
             avatarUrl: getPublicImageUrl(exp.users.avatar_url, 'users'),
             isVerified: exp.users.is_verified,
+            level: (exp.users as any).user_xp?.current_level || 1,
           }
         : null,
       images: getPublicImageUrls(exp.images, 'experiences'),
@@ -382,6 +390,7 @@ export async function getExperienceBySlug(
             username: exp.users.username,
             avatarUrl: getPublicImageUrl(exp.users.avatar_url, 'users'),
             isVerified: exp.users.is_verified,
+            level: (exp.users as any).user_xp?.current_level || 1,
           }
         : null,
       hostDetails: exp.users
@@ -453,6 +462,7 @@ export async function getExperienceBySlug(
               username: r.users.username,
               avatarUrl: getPublicImageUrl(r.users.avatar_url, 'users'),
               isVerified: r.users.is_verified,
+              level: (r.users as any).user_xp?.current_level || 1,
             }
           : null,
         images: getPublicImageUrls(r.images, 'experiences'),

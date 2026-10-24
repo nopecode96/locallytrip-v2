@@ -14,6 +14,7 @@ export interface UserPersonaLinkProps {
     avatar_url?: string | null;
     avatarUrl?: string | null;
     image?: string | null;
+    level?: number;
   };
   locale: string;
   variant?: 'avatar-only' | 'name-only' | 'full' | 'card';

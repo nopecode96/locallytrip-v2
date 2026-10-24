@@ -222,6 +222,7 @@ export default async function MeetupsPage({ params, searchParams }: MeetupsPageP
             avatar_url: m.users.avatar_url,
             role: m.users.role,
             is_verified: m.users.is_verified,
+            level: m.users.user_xp?.current_level || 1,
           }
         : null,
       _count: {

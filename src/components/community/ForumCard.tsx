@@ -255,11 +255,9 @@ export function ForumCard({ thread, locale }: ForumCardProps) {
                     {isId ? 'Traveler' : 'Traveler'}
                   </span>
                 )}
-                {userLevel > 1 && (
-                  <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-1 py-0.2 rounded border border-purple-100 shrink-0">
-                    Lv.{userLevel}
-                  </span>
-                )}
+                <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200 shrink-0">
+                  Lvl {userLevel}
+                </span>
               </span>
             }
           />

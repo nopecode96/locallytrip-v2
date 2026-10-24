@@ -56,6 +56,7 @@ export interface MeetupCardItem {
     avatar_url?: string | null;
     is_verified?: boolean | null;
     role?: string | null;
+    level?: number;
   } | null;
   members?: Array<{
     user_id: number;
@@ -212,12 +213,17 @@ export function MeetupCard({ meetup, locale }: MeetupCardProps) {
                   name: meetup.creator.name || (isId ? 'Host Komunitas' : 'Community Host'),
                   username: meetup.creator.username,
                   avatar_url: meetup.creator.avatar_url || meetup.creator.avatar,
+                  level: meetup.creator.level || 1,
                 }}
                 locale={locale}
                 variant="full"
                 size="sm"
                 subtitle={
-                  <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                  <span className="flex items-center gap-1.5 text-[10px] text-slate-500 flex-wrap">
+                    <span className="font-bold text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200 shrink-0">
+                      Lvl {meetup.creator.level || 1}
+                    </span>
+                    <span>•</span>
                     <span>{isId ? 'Inisiator' : 'Host'}</span>
                     {meetup.creator.is_verified && (
                       <ShieldCheck className="w-3 h-3 text-emerald-600 inline shrink-0" />
