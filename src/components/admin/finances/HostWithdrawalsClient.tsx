@@ -41,6 +41,7 @@ import {
   getAdminPayouts,
 } from '@/actions/admin/payouts';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
+import { resolveAvatarUrl } from '@/lib/avatar';
 
 interface HostWithdrawalsClientProps {
   initialPayouts: AdminPayoutItem[];
@@ -710,16 +711,18 @@ export function HostWithdrawalsClient({
                       {/* Host Profile */}
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3 min-w-[200px]">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center shrink-0 text-xs">
-                            {item.user.avatarUrl ? (
-                              <img
-                                src={item.user.avatarUrl}
-                                alt={item.user.name}
-                                className="w-full h-full rounded-full object-cover"
-                              />
-                            ) : (
-                              item.user.name.charAt(0).toUpperCase()
-                            )}
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center shrink-0 text-xs border border-purple-200/50 dark:border-purple-800/50">
+                            <img
+                              src={resolveAvatarUrl(item.user)}
+                              alt={item.user.name}
+                              className="w-full h-full rounded-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (target.src !== '/images/default-avatar.png') {
+                                  target.src = '/images/default-avatar.png';
+                                }
+                              }}
+                            />
                           </div>
                           <div className="min-w-0">
                             <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
@@ -742,6 +745,18 @@ export function HostWithdrawalsClient({
                         {item.bankAccount ? (
                           <div className="min-w-[220px]">
                             <div className="flex items-center gap-1.5">
+                              {item.bankAccount.logoUrl ? (
+                                <div className="w-5 h-5 rounded-md bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
+                                  <img
+                                    src={item.bankAccount.logoUrl}
+                                    alt={item.bankAccount.bankName}
+                                    className="w-full h-full object-contain"
+                                    onError={(e) => {
+                                      (e.currentTarget as HTMLElement).style.display = 'none';
+                                    }}
+                                  />
+                                </div>
+                              ) : null}
                               <span className="px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-mono font-bold uppercase">
                                 {item.bankAccount.bankCode || 'BANK'}
                               </span>
@@ -1295,7 +1310,30 @@ export function HostWithdrawalsClient({
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                     Informasi Host
                   </span>
-                  <div className="p-3.5 rounded-2xl border border-gray-200/90 dark:border-white/10 space-y-2">
+                  <div className="p-3.5 rounded-2xl border border-gray-200/90 dark:border-white/10 space-y-2.5">
+                    <div className="flex items-center gap-3 pb-2.5 border-b border-slate-100 dark:border-white/10">
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50">
+                        <img
+                          src={resolveAvatarUrl(detailModalItem.user)}
+                          alt={detailModalItem.user.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (target.src !== '/images/default-avatar.png') {
+                              target.src = '/images/default-avatar.png';
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-900 dark:text-white truncate">
+                          {detailModalItem.user.name}
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                          {detailModalItem.user.email}
+                        </div>
+                      </div>
+                    </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Nama Lengkap:</span>
                       <span className="font-bold text-slate-900 dark:text-white">
@@ -1338,12 +1376,26 @@ export function HostWithdrawalsClient({
                       Rekening Bank Tujuan
                     </span>
                     <div className="p-3.5 rounded-2xl border border-gray-200/90 dark:border-white/10 space-y-2">
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center">
                         <span className="text-slate-500">Nama Bank:</span>
-                        <span className="font-bold text-slate-900 dark:text-white">
-                          {detailModalItem.bankAccount.bankName} (
-                          {detailModalItem.bankAccount.bankCode})
-                        </span>
+                        <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
+                          {detailModalItem.bankAccount.logoUrl && (
+                            <div className="w-5 h-5 rounded bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
+                              <img
+                                src={detailModalItem.bankAccount.logoUrl}
+                                alt={detailModalItem.bankAccount.bankName}
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLElement).style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          )}
+                          <span>
+                            {detailModalItem.bankAccount.bankName} (
+                            {detailModalItem.bankAccount.bankCode})
+                          </span>
+                        </div>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-slate-500">Nomor Rekening:</span>

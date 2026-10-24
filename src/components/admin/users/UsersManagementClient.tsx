@@ -30,6 +30,7 @@ import {
 import { AdminUserItem, toggleUserStatus, updateUserRole, getAdminUsers } from '@/actions/admin/users';
 import Image from 'next/image';
 import { getPublicImageUrl } from '@/lib/images';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
 
 interface UsersManagementClientProps {
@@ -273,15 +274,17 @@ export function UsersManagementClient({ initialUsers, initialPagination, stats }
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="relative w-9 h-9 rounded-2xl overflow-hidden bg-purple-100 dark:bg-purple-900/40 border border-purple-200 dark:border-purple-800 flex items-center justify-center font-black text-xs text-purple-700 dark:text-purple-300 shrink-0">
-                            {user.avatar_url ? (
-                              <img
-                                src={getPublicImageUrl(user.avatar_url, 'users')}
-                                alt={user.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              user.name.charAt(0).toUpperCase()
-                            )}
+                            <img
+                              src={resolveAvatarUrl(user)}
+                              alt={user.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (target.src !== '/images/default-avatar.png') {
+                                  target.src = '/images/default-avatar.png';
+                                }
+                              }}
+                            />
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
@@ -443,16 +446,18 @@ export function UsersManagementClient({ initialUsers, initialPagination, stats }
               {/* Modal Header */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-900/40 border border-purple-200 dark:border-purple-800 flex items-center justify-center font-black text-base text-purple-700 dark:text-purple-300">
-                    {selectedUserDetail.avatar_url ? (
-                      <img
-                        src={getPublicImageUrl(selectedUserDetail.avatar_url, 'users')}
-                        alt={selectedUserDetail.name}
-                        className="w-full h-full object-cover rounded-2xl"
-                      />
-                    ) : (
-                      selectedUserDetail.name.charAt(0).toUpperCase()
-                    )}
+                  <div className="w-12 h-12 rounded-2xl overflow-hidden bg-purple-100 dark:bg-purple-900/40 border border-purple-200 dark:border-purple-800 flex items-center justify-center font-black text-base text-purple-700 dark:text-purple-300">
+                    <img
+                      src={resolveAvatarUrl(selectedUserDetail)}
+                      alt={selectedUserDetail.name}
+                      className="w-full h-full object-cover rounded-2xl"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (target.src !== '/images/default-avatar.png') {
+                          target.src = '/images/default-avatar.png';
+                        }
+                      }}
+                    />
                   </div>
                   <div>
                     <h3 className="text-base font-extrabold text-gray-900 dark:text-white flex items-center gap-2">

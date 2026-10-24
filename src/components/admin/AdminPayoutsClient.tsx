@@ -7,6 +7,7 @@ import {
   approvePayout,
   rejectPayout,
 } from '@/actions/admin/payouts';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import {
   Wallet,
   Clock,
@@ -350,34 +351,51 @@ export function AdminPayoutsClient({
 
                       {/* Host & KYC */}
                       <td className="py-4 px-6">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-white text-sm">{payout.user.name}</span>
-                          {payout.user.isKycApproved ? (
-                            <span
-                              className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
-                              title="Pemandu Terverifikasi KYC Resmi"
-                            >
-                              <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                              <span>KYC</span>
-                            </span>
-                          ) : (
-                            <span
-                              className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 border border-amber-500/30 text-amber-400"
-                              title="Pemandu Belum Menyelesaikan Verifikasi KYC"
-                            >
-                              <AlertCircle className="w-3 h-3 text-amber-400" />
-                              <span>Non-KYC</span>
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
-                          <span>{payout.user.email}</span>
-                          {payout.user.phone && (
-                            <>
-                              <span>•</span>
-                              <span>{payout.user.phone}</span>
-                            </>
-                          )}
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center shrink-0 text-xs border border-purple-200/50 dark:border-purple-800/50">
+                            <img
+                              src={resolveAvatarUrl(payout.user)}
+                              alt={payout.user.name}
+                              className="w-full h-full rounded-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (target.src !== '/images/default-avatar.png') {
+                                  target.src = '/images/default-avatar.png';
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-white text-sm">{payout.user.name}</span>
+                              {payout.user.isKycApproved ? (
+                                <span
+                                  className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+                                  title="Pemandu Terverifikasi KYC Resmi"
+                                >
+                                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                                  <span>KYC</span>
+                                </span>
+                              ) : (
+                                <span
+                                  className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 border border-amber-500/30 text-amber-400"
+                                  title="Pemandu Belum Menyelesaikan Verifikasi KYC"
+                                >
+                                  <AlertCircle className="w-3 h-3 text-amber-400" />
+                                  <span>Non-KYC</span>
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                              <span>{payout.user.email}</span>
+                              {payout.user.phone && (
+                                <>
+                                  <span>•</span>
+                                  <span>{payout.user.phone}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </td>
 

@@ -19,6 +19,7 @@ import {
 import Link from 'next/link';
 import { AdminReviewItem, deleteReview, getAdminReviews } from '@/actions/admin/reviews';
 import { getPublicImageUrl } from '@/lib/images';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
 
 interface ReviewsModerationClientProps {
@@ -240,16 +241,18 @@ export function ReviewsModerationClient({
                       {/* Reviewer */}
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center shrink-0">
-                            {r.reviewer.avatar_url ? (
-                              <img
-                                src={getPublicImageUrl(r.reviewer.avatar_url, 'users')}
-                                alt={r.reviewer.name}
-                                className="w-full h-full object-cover rounded-xl"
-                              />
-                            ) : (
-                              r.reviewer.name.charAt(0).toUpperCase()
-                            )}
+                          <div className="w-7 h-7 rounded-xl overflow-hidden bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50">
+                            <img
+                              src={resolveAvatarUrl(r.reviewer)}
+                              alt={r.reviewer.name}
+                              className="w-full h-full object-cover rounded-xl"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (target.src !== '/images/default-avatar.png') {
+                                  target.src = '/images/default-avatar.png';
+                                }
+                              }}
+                            />
                           </div>
                           <div className="min-w-0">
                             <span className="font-bold text-gray-900 dark:text-white block truncate max-w-[130px]">

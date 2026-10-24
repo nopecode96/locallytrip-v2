@@ -3,6 +3,8 @@
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getAdminStaffSession } from '@/lib/admin-auth';
+import { resolveAvatarUrl } from '@/lib/avatar';
+import { getPublicImageUrl } from '@/lib/images';
 
 export interface AdminPayoutItem {
   id: number;
@@ -233,7 +235,7 @@ export async function getAdminPayouts(
           email: item.users.email,
           username: item.users.username,
           phone: item.users.phone,
-          avatarUrl: item.users.avatar_url,
+          avatarUrl: resolveAvatarUrl(item.users),
           role: item.users.role,
           isKycApproved,
         },
@@ -243,7 +245,9 @@ export async function getAdminPayouts(
               bankName:
                 item.user_bank_accounts.banks?.bank_name || 'Bank Transfer',
               bankCode: item.user_bank_accounts.banks?.bank_code || null,
-              logoUrl: item.user_bank_accounts.banks?.logo_url || null,
+              logoUrl: item.user_bank_accounts.banks?.logo_url
+                ? getPublicImageUrl(item.user_bank_accounts.banks.logo_url, 'banks')
+                : null,
               accountNumber: item.user_bank_accounts.account_number,
               accountHolderName: item.user_bank_accounts.account_holder_name,
               branchName: item.user_bank_accounts.branch_name,

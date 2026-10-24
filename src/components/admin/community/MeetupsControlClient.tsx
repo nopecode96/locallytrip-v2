@@ -20,6 +20,7 @@ import {
 import Link from 'next/link';
 import { AdminMeetupItem, updateMeetupStatus, deleteMeetup, getAdminMeetups } from '@/actions/admin/community/meetups';
 import { getPublicImageUrl } from '@/lib/images';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
 
 interface MeetupsControlClientProps {
@@ -249,16 +250,18 @@ export function MeetupsControlClient({ initialMeetups, initialPagination, stats 
                       {/* Host Identity */}
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-black text-xs flex items-center justify-center shrink-0">
-                            {m.creator.avatar_url ? (
-                              <img
-                                src={getPublicImageUrl(m.creator.avatar_url, 'users')}
-                                alt={m.creator.name}
-                                className="w-full h-full object-cover rounded-xl"
-                              />
-                            ) : (
-                              m.creator.name.charAt(0).toUpperCase()
-                            )}
+                          <div className="w-7 h-7 rounded-xl overflow-hidden bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-black text-xs flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50">
+                            <img
+                              src={resolveAvatarUrl(m.creator)}
+                              alt={m.creator.name}
+                              className="w-full h-full object-cover rounded-xl"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (target.src !== '/images/default-avatar.png') {
+                                  target.src = '/images/default-avatar.png';
+                                }
+                              }}
+                            />
                           </div>
                           <div className="min-w-0">
                             <span className="font-bold text-gray-800 dark:text-gray-200 block truncate max-w-[140px]">

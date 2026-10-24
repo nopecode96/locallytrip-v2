@@ -37,6 +37,7 @@ import {
   getAdminRewardRulesAndTiers,
 } from '@/actions/admin/rewards';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
+import { getPublicImageUrl } from '@/lib/images';
 
 interface RewardsControlClientProps {
   initialMerchandise: AdminMerchandiseItem[];
@@ -478,7 +479,7 @@ export function RewardsControlClient({
                             <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-zinc-800 border border-zinc-700/60 flex-shrink-0 flex items-center justify-center">
                               {item.imageUrl ? (
                                 <img
-                                  src={item.imageUrl}
+                                  src={getPublicImageUrl(item.imageUrl, 'rewards')}
                                   alt={item.name}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {

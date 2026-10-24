@@ -27,6 +27,7 @@ import {
   getAdminStories,
 } from '@/actions/admin/community/stories';
 import { getPublicImageUrl } from '@/lib/images';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
 
 interface StoriesControlClientProps {
@@ -275,6 +276,12 @@ export function StoriesControlClient({ initialStories, initialPagination, stats 
                                   src={getPublicImageUrl(s.cover_image, 'stories')}
                                   alt={s.title}
                                   className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.currentTarget;
+                                    if (target.src !== '/images/default-story-cover.jpg') {
+                                      target.src = '/images/default-story-cover.jpg';
+                                    }
+                                  }}
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -299,16 +306,18 @@ export function StoriesControlClient({ initialStories, initialPagination, stats 
                         {/* Author */}
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-[10px] flex items-center justify-center shrink-0">
-                              {s.author.avatar_url ? (
-                                <img
-                                  src={getPublicImageUrl(s.author.avatar_url, 'users')}
-                                  alt={s.author.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                s.author.name.charAt(0).toUpperCase()
-                              )}
+                            <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-[10px] flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50">
+                              <img
+                                src={resolveAvatarUrl(s.author)}
+                                alt={s.author.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.currentTarget;
+                                  if (target.src !== '/images/default-avatar.png') {
+                                    target.src = '/images/default-avatar.png';
+                                  }
+                                }}
+                              />
                             </div>
                             <span className="font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[120px]">
                               {s.author.name}
@@ -419,6 +428,12 @@ export function StoriesControlClient({ initialStories, initialPagination, stats 
                         src={getPublicImageUrl(s.cover_image, 'stories')}
                         alt={s.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (target.src !== '/images/default-story-cover.jpg') {
+                            target.src = '/images/default-story-cover.jpg';
+                          }
+                        }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400">

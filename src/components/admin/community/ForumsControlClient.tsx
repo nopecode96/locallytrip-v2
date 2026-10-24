@@ -27,6 +27,7 @@ import {
   getAdminForumThreads,
 } from '@/actions/admin/community/forums';
 import { getPublicImageUrl } from '@/lib/images';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
 
 interface ForumsControlClientProps {
@@ -284,16 +285,18 @@ export function ForumsControlClient({
                       {/* Author */}
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-[10px] flex items-center justify-center shrink-0">
-                            {t.author.avatar_url ? (
-                              <img
-                                src={getPublicImageUrl(t.author.avatar_url, 'users')}
-                                alt={t.author.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              t.author.name.charAt(0).toUpperCase()
-                            )}
+                          <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-[10px] flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50">
+                            <img
+                              src={resolveAvatarUrl(t.author)}
+                              alt={t.author.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (target.src !== '/images/default-avatar.png') {
+                                  target.src = '/images/default-avatar.png';
+                                }
+                              }}
+                            />
                           </div>
                           <div className="min-w-0">
                             <span className="font-semibold text-gray-800 dark:text-gray-200 block truncate max-w-[120px]">

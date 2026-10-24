@@ -32,6 +32,7 @@ import {
   grantManualAirdrop,
 } from '@/actions/admin/economy';
 import { getPublicImageUrl } from '@/lib/images';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import { AdminPagination } from '@/components/admin/ui/AdminPagination';
 
 interface EconomyControlClientProps {
@@ -412,16 +413,18 @@ export function EconomyControlClient({
                               <span className="font-mono text-gray-400 text-xs w-4">
                                 #{globalIdx + 1}
                               </span>
-                              <div className="w-8 h-8 rounded-xl overflow-hidden bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center shrink-0">
-                                {user.avatar_url ? (
-                                  <img
-                                    src={getPublicImageUrl(user.avatar_url, 'users')}
-                                    alt={user.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  user.name.charAt(0).toUpperCase()
-                                )}
+                              <div className="w-8 h-8 rounded-xl overflow-hidden bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50">
+                                <img
+                                  src={resolveAvatarUrl(user)}
+                                  alt={user.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.currentTarget;
+                                    if (target.src !== '/images/default-avatar.png') {
+                                      target.src = '/images/default-avatar.png';
+                                    }
+                                  }}
+                                />
                               </div>
                               <div className="min-w-0">
                                 <span className="font-bold text-gray-900 dark:text-white block truncate max-w-[140px]">

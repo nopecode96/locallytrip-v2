@@ -38,6 +38,7 @@ import {
   rejectKyc,
 } from '@/actions/admin/kyc';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import { getPublicImageUrl } from '@/lib/images';
 
 interface KycManagementClientProps {
@@ -400,16 +401,18 @@ export function KycManagementClient({
                       {/* Host Profile */}
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-2xl overflow-hidden bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center shrink-0">
-                            {kyc.user.avatarUrl ? (
-                              <img
-                                src={kyc.user.avatarUrl}
-                                alt={kyc.fullName}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              (kyc.fullName || kyc.user.name || 'H').charAt(0).toUpperCase()
-                            )}
+                          <div className="w-10 h-10 rounded-2xl overflow-hidden bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50">
+                            <img
+                              src={resolveAvatarUrl(kyc.user)}
+                              alt={kyc.fullName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (target.src !== '/images/default-avatar.png') {
+                                  target.src = '/images/default-avatar.png';
+                                }
+                              }}
+                            />
                           </div>
                           <div className="min-w-0">
                             <span className="font-bold text-gray-900 dark:text-white block truncate max-w-[180px]">
@@ -638,6 +641,12 @@ export function KycManagementClient({
                   src={previewDoc.previewUrl}
                   alt={previewDoc.documentType}
                   className="w-full h-full object-contain"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (target.src !== '/images/placeholder.jpg') {
+                      target.src = '/images/placeholder.jpg';
+                    }
+                  }}
                 />
               </div>
 

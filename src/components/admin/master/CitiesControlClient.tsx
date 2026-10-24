@@ -28,6 +28,7 @@ import {
   getAdminCities,
 } from '@/actions/admin/master';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
+import { getPublicImageUrl } from '@/lib/images';
 import Image from 'next/image';
 
 interface CountryOption {
@@ -316,7 +317,7 @@ export function CitiesControlClient({
                         <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-zinc-800 border border-zinc-700/60 flex-shrink-0 flex items-center justify-center">
                           {city.imageUrl ? (
                             <img
-                              src={city.imageUrl}
+                              src={getPublicImageUrl(city.imageUrl, 'cities')}
                               alt={city.name}
                               className="w-full h-full object-cover"
                               onError={(e) => {
@@ -654,7 +655,7 @@ export function CitiesControlClient({
               </div>
               <div className="w-full h-64 rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800">
                 <img
-                  src={previewImage.url}
+                  src={getPublicImageUrl(previewImage.url, 'cities')}
                   alt={previewImage.name}
                   className="w-full h-full object-cover"
                 />

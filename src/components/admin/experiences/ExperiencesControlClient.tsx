@@ -28,6 +28,7 @@ import {
   getAdminExperiences,
 } from '@/actions/admin/experiences';
 import { getPublicImageUrl } from '@/lib/images';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
 
 interface ExperiencesControlClientProps {
@@ -277,6 +278,12 @@ export function ExperiencesControlClient({
                                 src={getPublicImageUrl(exp.cover_image, 'experiences')}
                                 alt={exp.title}
                                 className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.currentTarget;
+                                  if (target.src !== '/images/placeholder-experience.jpg') {
+                                    target.src = '/images/placeholder-experience.jpg';
+                                  }
+                                }}
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-teal-500">
@@ -305,16 +312,18 @@ export function ExperiencesControlClient({
                       {/* Host */}
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-[10px] flex items-center justify-center shrink-0">
-                            {exp.host.avatar_url ? (
-                              <img
-                                src={getPublicImageUrl(exp.host.avatar_url, 'users')}
-                                alt={exp.host.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              exp.host.name.charAt(0).toUpperCase()
-                            )}
+                          <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-[10px] flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50">
+                            <img
+                              src={resolveAvatarUrl(exp.host)}
+                              alt={exp.host.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (target.src !== '/images/default-avatar.png') {
+                                  target.src = '/images/default-avatar.png';
+                                }
+                              }}
+                            />
                           </div>
                           <div className="min-w-0">
                             <span className="font-semibold text-gray-800 dark:text-gray-200 block truncate max-w-[120px]">

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { AdminBookingItem } from '@/actions/admin/bookings';
 import { getPublicImageUrl } from '@/lib/images';
+import { resolveAvatarUrl } from '@/lib/avatar';
 
 interface HostContactModalProps {
   booking: AdminBookingItem | null;
@@ -112,15 +113,17 @@ export function HostContactModal({ booking, onClose }: HostContactModalProps) {
             <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/5 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl overflow-hidden bg-purple-100 dark:bg-purple-900/40 border border-purple-200 dark:border-purple-800 flex items-center justify-center font-black text-base text-purple-700 dark:text-purple-300 shrink-0">
-                  {host.avatar_url ? (
-                    <img
-                      src={getPublicImageUrl(host.avatar_url, 'users')}
-                      alt={host.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    host.name.charAt(0).toUpperCase()
-                  )}
+                  <img
+                    src={resolveAvatarUrl(host)}
+                    alt={host.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (target.src !== '/images/default-avatar.png') {
+                        target.src = '/images/default-avatar.png';
+                      }
+                    }}
+                  />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">

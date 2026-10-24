@@ -40,6 +40,7 @@ import {
   getAdminB2BPartnersData,
 } from '@/actions/admin/b2b';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
+import { getPublicImageUrl } from '@/lib/images';
 
 interface B2BControlClientProps {
   initialPartners: AdminB2BPartnerItem[];
@@ -674,9 +675,12 @@ export function B2BControlClient({
                           <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1 flex items-center justify-center shrink-0 overflow-hidden">
                             {item.logoUrl ? (
                               <img
-                                src={item.logoUrl}
+                                src={getPublicImageUrl(item.logoUrl, 'badges')}
                                 alt={item.name}
                                 className="w-full h-full object-cover rounded-xl"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = 'none';
+                                }}
                               />
                             ) : (
                               <Building2 className="w-5 h-5 text-slate-400" />

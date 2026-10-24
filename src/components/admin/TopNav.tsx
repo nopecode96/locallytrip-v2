@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPublicImageUrl } from '@/lib/images';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import { logoutAction } from '@/actions/auth/logout';
 import {
   getAdminNotifications,
@@ -459,11 +460,17 @@ export function TopNav() {
               aria-expanded={isProfileOpen}
             >
               <div className="relative">
-                {session?.user?.image ? (
+                {session?.user ? (
                   <img
-                    src={getPublicImageUrl(session.user.image, 'users')}
+                    src={resolveAvatarUrl(session.user)}
                     alt={session.user.name || 'Admin'}
                     className="w-10 h-10 rounded-full object-cover ring-2 ring-purple-500/30 group-hover:ring-purple-500/60 transition-all"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (target.src !== '/images/default-avatar.png') {
+                        target.src = '/images/default-avatar.png';
+                      }
+                    }}
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 flex items-center justify-center text-white text-xs font-black shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform">

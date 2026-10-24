@@ -29,6 +29,7 @@ import {
   getAdminContentReports,
 } from '@/actions/admin/reports';
 import { SafeImage } from '@/components/common/SafeImage';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
 
 interface ReportsControlClientProps {
@@ -548,16 +549,18 @@ export function ReportsControlClient({
                       {/* Reporter Info */}
                       <td className="py-4 px-6 align-top">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 dark:bg-white/10 shrink-0 relative">
-                            {report.reporter.avatar_url ? (
-                              <SafeImage
-                                src={report.reporter.avatar_url}
-                                alt={report.reporter.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <User className="w-4 h-4 m-2 text-gray-400" />
-                            )}
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50">
+                            <img
+                              src={resolveAvatarUrl(report.reporter)}
+                              alt={report.reporter.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (target.src !== '/images/default-avatar.png') {
+                                  target.src = '/images/default-avatar.png';
+                                }
+                              }}
+                            />
                           </div>
                           <div>
                             <div className="font-semibold text-gray-900 dark:text-white">
