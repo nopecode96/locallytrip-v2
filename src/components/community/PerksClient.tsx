@@ -24,8 +24,14 @@ import {
   X,
   Compass,
   ArrowRight,
+  Printer,
+  Store,
+  Globe,
+  Building2,
+  Barcode,
 } from 'lucide-react';
 import { claimBrandPerkVoucher } from '@/actions/partners/brand-actions';
+import { BarcodeView, QrCodeBox, PerkVoucherPrintModal } from './PerkVoucherPrintModal';
 
 export interface PerkPartner {
   id: number;
@@ -61,6 +67,8 @@ export interface UserPerkClaim {
   claimed_at: string;
   campaign_title?: string;
   partner_name?: string;
+  partner_logo?: string;
+  partner_category?: string;
   terms?: string | null;
 }
 
@@ -138,7 +146,12 @@ export function PerksClient({
     terms?: string | null;
     campaignTitle?: string;
     partnerName?: string;
+    partnerLogo?: string;
+    partnerCategory?: string;
   } | null>(null);
+
+  // Printable Voucher Modal State
+  const [printableClaim, setPrintableClaim] = useState<UserPerkClaim | null>(null);
 
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
@@ -168,6 +181,8 @@ export function PerksClient({
         terms: campaign.terms,
         campaignTitle: campaign.title,
         partnerName: campaign.partner.name,
+        partnerLogo: campaign.partner.logo_url,
+        partnerCategory: campaign.partner.category,
       });
     }
   };
@@ -184,9 +199,11 @@ export function PerksClient({
       } else {
         setClaimedResult({
           voucherCode: res.voucherCode || '',
-          terms: res.terms,
-          campaignTitle: res.campaignTitle,
-          partnerName: res.partnerName,
+          terms: res.terms || selectedCampaign.terms,
+          campaignTitle: res.campaignTitle || selectedCampaign.title,
+          partnerName: res.partnerName || selectedCampaign.partner.name,
+          partnerLogo: selectedCampaign.partner.logo_url,
+          partnerCategory: selectedCampaign.partner.category,
         });
 
         // Update saldo lokal
@@ -201,6 +218,8 @@ export function PerksClient({
           claimed_at: new Date().toISOString(),
           campaign_title: selectedCampaign.title,
           partner_name: selectedCampaign.partner.name,
+          partner_logo: selectedCampaign.partner.logo_url,
+          partner_category: selectedCampaign.partner.category,
           terms: selectedCampaign.terms,
         };
         setUserClaims((prev) => [newClaim, ...prev]);
@@ -353,64 +372,136 @@ export function PerksClient({
               {userClaims.map((claim, idx) => (
                 <div
                   key={idx}
-                  className="bg-white rounded-3xl p-6 border-2 border-purple-200/90 shadow-sm space-y-4 relative overflow-hidden"
+                  className="bg-white rounded-3xl p-6 border-2 border-purple-200/90 shadow-sm space-y-4 relative overflow-hidden flex flex-col justify-between"
                 >
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <span className="text-xs font-bold text-purple-700 flex items-center gap-1">
-                      <Ticket className="w-3.5 h-3.5" />
-                      <span>{isId ? 'Voucher Aktif' : 'Active Voucher'}</span>
-                    </span>
-                    <span className="text-[11px] text-slate-400">
-                      {new Date(claim.claimed_at).toLocaleDateString(isId ? 'id-ID' : 'en-US', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </span>
+                  <div className="space-y-4">
+                    {/* Top Status & Category Header */}
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>{isId ? 'Voucher Aktif' : 'Active Voucher'}</span>
+                        </span>
+                        {claim.partner_category && (
+                          <span className="text-[10px] font-semibold text-slate-500 uppercase px-2 py-0.5 rounded bg-slate-100">
+                            {claim.partner_category}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-slate-400">
+                        {new Date(claim.claimed_at).toLocaleDateString(isId ? 'id-ID' : 'en-US', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </div>
+
+                    {/* Brand & Campaign Title */}
+                    <div>
+                      <div className="text-xs font-bold text-purple-700">
+                        {claim.partner_name || 'Locallytrip Partner'}
+                      </div>
+                      <h4 className="font-bold text-base text-slate-900 mt-0.5 line-clamp-1">
+                        {claim.campaign_title || claim.partner_name || 'Voucher Mitra'}
+                      </h4>
+                    </div>
+
+                    {/* Voucher Box with Copy */}
+                    <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 flex items-center justify-between gap-3">
+                      <span className="font-mono font-black text-lg text-purple-950 tracking-wider">
+                        {claim.voucher_code}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyCode(claim.voucher_code)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                          copiedCode === claim.voucher_code
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-purple-900 text-white hover:bg-purple-950'
+                        }`}
+                      >
+                        {copiedCode === claim.voucher_code ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{isId ? 'Tersalin' : 'Copied'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>{isId ? 'Salin Kode' : 'Copy'}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Barcode & QR Code Display */}
+                    <div className="space-y-1.5">
+                      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                        <Barcode className="w-3.5 h-3.5 text-purple-600" />
+                        <span>{isId ? 'Pindai Barcode / QR Kasir' : 'Scan Barcode / QR'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <BarcodeView code={claim.voucher_code} />
+                        </div>
+                        <QrCodeBox code={claim.voucher_code} />
+                      </div>
+                    </div>
+
+                    {/* Redemption Instructions (Offline & Online) */}
+                    <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs text-slate-600">
+                      <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                        <Info className="w-3.5 h-3.5 text-purple-600" />
+                        <span>{isId ? 'Panduan Cara Penukaran:' : 'How to Redeem:'}</span>
+                      </div>
+
+                      <div className="space-y-1.5 text-[11px] leading-relaxed">
+                        <div className="flex items-start gap-1.5">
+                          <Store className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
+                          <div>
+                            <strong className="text-slate-800">
+                              {isId ? 'Gerai Fisik / Kasir Outlet:' : 'Offline Outlet:'}
+                            </strong>{' '}
+                            {isId
+                              ? 'Tunjukkan barcode atau kode voucher ini ke kasir gerai resmi saat pembayaran.'
+                              : 'Show this barcode or quote code to cashier at official partner branches.'}
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-1.5">
+                          <Globe className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
+                          <div>
+                            <strong className="text-slate-800">
+                              {isId ? 'Belanja Online Mitra:' : 'Online Brand Website:'}
+                            </strong>{' '}
+                            {isId
+                              ? 'Masukkan kode voucher ini pada kolom "Kode Promo" saat checkout.'
+                              : 'Enter this voucher code in promo/coupon field at online checkout.'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {claim.terms && (
+                      <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed italic">
+                        {claim.terms}
+                      </p>
+                    )}
                   </div>
 
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-900 line-clamp-1">
-                      {claim.campaign_title || claim.partner_name || 'Voucher Mitra'}
-                    </h4>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {claim.partner_name || 'Locallytrip Partner'}
-                    </p>
-                  </div>
-
-                  {/* Voucher Box with Copy */}
-                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
-                    <span className="font-mono font-black text-base text-slate-900 tracking-wider">
-                      {claim.voucher_code}
-                    </span>
+                  {/* Cetak / Download Action Button */}
+                  <div className="pt-2">
                     <button
                       type="button"
-                      onClick={() => handleCopyCode(claim.voucher_code)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
-                        copiedCode === claim.voucher_code
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-purple-100 text-purple-800 hover:bg-purple-200'
-                      }`}
+                      onClick={() => setPrintableClaim(claim)}
+                      className="w-full py-2.5 px-4 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 font-bold text-xs flex items-center justify-center gap-2 transition"
                     >
-                      {copiedCode === claim.voucher_code ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>{isId ? 'Tersalin!' : 'Copied!'}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>{isId ? 'Salin' : 'Copy'}</span>
-                        </>
-                      )}
+                      <Printer className="w-4 h-4 text-purple-700" />
+                      <span>
+                        {isId ? 'Cetak / Unduh Voucher (PDF)' : 'Print / Download Voucher (PDF)'}
+                      </span>
                     </button>
                   </div>
-
-                  {claim.terms && (
-                    <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
-                      {claim.terms}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
@@ -631,7 +722,7 @@ export function PerksClient({
                 </div>
 
                 {/* Kode Voucher Unik Box */}
-                <div className="p-4 rounded-2xl bg-purple-50 border-2 border-purple-300 space-y-2">
+                <div className="p-4 rounded-2xl bg-purple-50 border-2 border-purple-300 space-y-3">
                   <span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider block">
                     {isId ? 'KODE VOUCHER ANDA' : 'YOUR VOUCHER CODE'}
                   </span>
@@ -661,27 +752,82 @@ export function PerksClient({
                       )}
                     </button>
                   </div>
+
+                  {/* Barcode & QR Box */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <div className="flex-1">
+                      <BarcodeView code={claimedResult.voucherCode} />
+                    </div>
+                    <QrCodeBox code={claimedResult.voucherCode} />
+                  </div>
+                </div>
+
+                {/* Redemption Instructions (Offline & Online) */}
+                <div className="text-left p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs text-slate-600">
+                  <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5 text-purple-600" />
+                    <span>{isId ? 'Panduan Penggunaan:' : 'How to Use:'}</span>
+                  </div>
+                  <div className="space-y-1.5 text-[11px] leading-relaxed">
+                    <div className="flex items-start gap-1.5">
+                      <Store className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="text-slate-800">{isId ? 'Offline (Gerai):' : 'Offline Store:'}</strong>{' '}
+                        {isId
+                          ? 'Tunjukkan barcode ini kepada kasir saat pembayaran.'
+                          : 'Show this barcode to the cashier when paying.'}
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-1.5">
+                      <Globe className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="text-slate-800">{isId ? 'Online (Web/App):' : 'Online Store:'}</strong>{' '}
+                        {isId
+                          ? 'Masukkan kode ini pada kolom kupon promo saat checkout.'
+                          : 'Enter this code in promo/coupon field at online checkout.'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Syarat & Ketentuan Penggunaan */}
                 {claimedResult.terms && (
-                  <div className="text-left p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1.5 text-xs text-slate-600">
-                    <div className="font-bold text-slate-800">
-                      {isId ? 'Cara & Syarat Penggunaan:' : 'Terms & How to Use:'}
+                  <div className="text-left p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1 text-xs text-slate-500">
+                    <div className="font-bold text-slate-700">
+                      {isId ? 'Syarat & Ketentuan:' : 'Terms & Conditions:'}
                     </div>
-                    <p className="whitespace-pre-line text-[11px] leading-relaxed">
+                    <p className="whitespace-pre-line text-[11px] leading-relaxed italic">
                       {claimedResult.terms}
                     </p>
                   </div>
                 )}
 
-                <div className="pt-2">
+                <div className="pt-2 flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPrintableClaim({
+                        campaign_id: selectedCampaign.id,
+                        voucher_code: claimedResult.voucherCode,
+                        claimed_at: new Date().toISOString(),
+                        campaign_title: claimedResult.campaignTitle || selectedCampaign.title,
+                        partner_name: claimedResult.partnerName || selectedCampaign.partner.name,
+                        partner_logo: claimedResult.partnerLogo || selectedCampaign.partner.logo_url,
+                        partner_category: claimedResult.partnerCategory || selectedCampaign.partner.category,
+                        terms: claimedResult.terms || selectedCampaign.terms,
+                      });
+                    }}
+                    className="flex-1 py-3 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5"
+                  >
+                    <Printer className="w-4 h-4 text-purple-700" />
+                    <span>{isId ? 'Cetak / Unduh (PDF)' : 'Print / Download (PDF)'}</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setSelectedCampaign(null)}
-                    className="w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm transition"
+                    className="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm transition"
                   >
-                    {isId ? 'Tutup' : 'Close'}
+                    {isId ? 'Selesai & Tutup' : 'Done & Close'}
                   </button>
                 </div>
               </div>
@@ -771,6 +917,14 @@ export function PerksClient({
           </div>
         </div>
       )}
+
+      {/* 5. MODAL PRINTABLE VOUCHER TICKET (PDF / CETAK RESMI) */}
+      <PerkVoucherPrintModal
+        claim={printableClaim}
+        isOpen={Boolean(printableClaim)}
+        onClose={() => setPrintableClaim(null)}
+        isId={isId}
+      />
     </div>
   );
 }

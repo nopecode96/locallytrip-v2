@@ -23,6 +23,13 @@ export interface AdminVoucherItem {
   description: string | null;
   currency: string;
   internalNotes: string | null;
+  brandId: number | null;
+  brandPartner?: {
+    id: number;
+    name: string;
+    logoUrl: string;
+    category: string;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -79,6 +86,7 @@ export interface CreateVoucherInput {
   description?: string;
   currency?: string;
   internalNotes?: string;
+  brandId?: number | null;
 }
 
 async function requireAdminOrMarketingSession() {
@@ -145,6 +153,14 @@ export async function getAdminVouchersData(
         include: {
           promo_code_usage: {
             select: { discount_amount: true },
+          },
+          brand_partner: {
+            select: {
+              id: true,
+              name: true,
+              logo_url: true,
+              category: true,
+            },
           },
         },
       }),
@@ -233,6 +249,15 @@ export async function getAdminVouchersData(
         description: item.description,
         currency: item.currency || 'IDR',
         internalNotes: item.internal_notes,
+        brandId: item.brand_id,
+        brandPartner: item.brand_partner
+          ? {
+              id: item.brand_partner.id,
+              name: item.brand_partner.name,
+              logoUrl: item.brand_partner.logo_url,
+              category: item.brand_partner.category,
+            }
+          : null,
         createdAt: item.created_at.toISOString(),
         updatedAt: item.updated_at.toISOString(),
       };
@@ -348,6 +373,7 @@ export async function createPromoVoucher(
       data: {
         code: cleanCode,
         type: (data.type || 'platform') as enum_promotion_codes_type,
+        brand_id: data.brandId ? Number(data.brandId) : null,
         created_by: session.id ? Number(session.id) : null,
         discount_type: data.discountType as enum_promotion_codes_discount_type,
         discount_value: data.discountValue,
@@ -486,6 +512,47 @@ export async function deletePromoVoucher(
       success: false,
       message: error?.message || 'Gagal menghapus voucher promo.',
       error: error?.message,
+    };
+  }
+}
+
+export interface BrandPartnerOption {
+  id: number;
+  name: string;
+  category: string;
+  logo_url: string;
+}
+
+/**
+ * 4. Fetch active B2B brand partners for dropdown selection
+ */
+export async function getActiveBrandPartnersForSelect(): Promise<{
+  success: boolean;
+  data: BrandPartnerOption[];
+}> {
+  try {
+    const partners = await prisma.brand_partners.findMany({
+      where: {
+        status: { in: ['ACTIVE', 'APPROVED'] },
+      },
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        logo_url: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    return {
+      success: true,
+      data: partners,
+    };
+  } catch (error: any) {
+    console.error('Error fetching brand partners for select:', error);
+    return {
+      success: false,
+      data: [],
     };
   }
 }

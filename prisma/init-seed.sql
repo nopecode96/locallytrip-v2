@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict WLUMUdYKdogHCHsGTFuvApHM99LLwzTdK4nQCNhIdMjkb4kk46Fz5gr67J7aGsZ
+\restrict OcOQ4cTHZtOffMy5XFSWUHycZhHyFCIfw20PxplQaLWIij57h1WtCRfKvh8tC4U
 
 -- Dumped from database version 15.19
 -- Dumped by pg_dump version 15.19
@@ -2932,7 +2932,8 @@ CREATE TABLE public.promotion_codes (
     internal_notes text,
     affiliate_id integer,
     created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
+    updated_at timestamp with time zone NOT NULL,
+    brand_id integer
 );
 
 
@@ -33937,13 +33938,13 @@ COPY public.promo_code_usage (id, booking_id, promo_code_id, user_id, discount_a
 -- Data for Name: promotion_codes; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.promotion_codes (id, code, type, created_by, discount_type, discount_value, min_booking_amount, max_discount_amount, usage_limit, usage_count, stackable, category_restrictions, location_restrictions, valid_from, valid_until, status, description, currency, internal_notes, affiliate_id, created_at, updated_at) FROM stdin;
-1	SUTA	host	161	percentage	10.00	0.00	\N	\N	0	f	{}	{}	2026-03-01 00:00:00+00	2026-03-07 00:00:00+00	active	Gunakan dan nikmati banyak potongan	IDR	\N	\N	2026-02-11 15:27:52.793+00	2026-02-11 15:27:52.794+00
-2	EXPLORE20	platform	\N	percentage	20.00	200000.00	150000.00	200	52	f	{"Tours & Sightseeing","Outdoor & Nature"}	{}	2026-10-14 11:11:07.726+00	2026-11-23 11:11:07.726+00	active	Diskon 20% Eksplorasi Wisata Lokal se-Indonesia	IDR	Q4 Tourism Revival Campaign	\N	2026-10-14 11:11:07.726+00	2026-10-14 11:11:07.726+00
-3	FLAT75K	platform	\N	fixed_amount	75000.00	150000.00	\N	100	34	f	{"Food & Culinary","Workshops & Crafts"}	{}	2026-10-19 11:11:07.726+00	2026-12-08 11:11:07.726+00	active	Potongan Langsung Rp 75.000 untuk Kuliner & Workshop	IDR	Partnership with local culinary workshops	\N	2026-10-19 11:11:07.726+00	2026-10-19 11:11:07.726+00
-4	RINJANI100	influencer	\N	fixed_amount	100000.00	500000.00	\N	50	12	f	{"Outdoor & Nature","Adventure Trekking"}	{}	2026-10-10 11:11:07.726+00	2026-11-13 11:11:07.726+00	active	Voucher Khusus Komunitas Pendaki Gunung Rinjani	IDR	Influencer campaign @explore_lombok	\N	2026-10-10 11:11:07.726+00	2026-10-10 11:11:07.726+00
-5	NEWYEAR2026	platform	\N	percentage	25.00	250000.00	200000.00	150	150	f	{}	{}	2026-01-01 00:00:00+00	2026-01-31 23:59:59+00	expired	Promo Spesial Tahun Baru 2026 - Semua Pengalaman	IDR	New Year Early Bird Campaign (Sold out)	\N	2025-12-28 00:00:00+00	2026-02-01 00:00:00+00
-6	PARTNERVIP	referral	\N	percentage	15.00	100000.00	100000.00	30	8	f	{}	{}	2026-10-04 11:11:07.726+00	2026-12-23 11:11:07.726+00	disabled	Diskon Eksklusif Member VIP Komunitas	IDR	Temporarily disabled for quota recalculation	\N	2026-10-04 11:11:07.726+00	2026-10-22 11:11:07.726+00
+COPY public.promotion_codes (id, code, type, created_by, discount_type, discount_value, min_booking_amount, max_discount_amount, usage_limit, usage_count, stackable, category_restrictions, location_restrictions, valid_from, valid_until, status, description, currency, internal_notes, affiliate_id, created_at, updated_at, brand_id) FROM stdin;
+1	SUTA	host	161	percentage	10.00	0.00	\N	\N	0	f	{}	{}	2026-03-01 00:00:00+00	2026-03-07 00:00:00+00	active	Gunakan dan nikmati banyak potongan	IDR	\N	\N	2026-02-11 15:27:52.793+00	2026-02-11 15:27:52.794+00	\N
+2	EXPLORE20	platform	\N	percentage	20.00	200000.00	150000.00	200	52	f	{"Tours & Sightseeing","Outdoor & Nature"}	{}	2026-10-14 11:11:07.726+00	2026-11-23 11:11:07.726+00	active	Diskon 20% Eksplorasi Wisata Lokal se-Indonesia	IDR	Q4 Tourism Revival Campaign	\N	2026-10-14 11:11:07.726+00	2026-10-14 11:11:07.726+00	\N
+3	FLAT75K	platform	\N	fixed_amount	75000.00	150000.00	\N	100	34	f	{"Food & Culinary","Workshops & Crafts"}	{}	2026-10-19 11:11:07.726+00	2026-12-08 11:11:07.726+00	active	Potongan Langsung Rp 75.000 untuk Kuliner & Workshop	IDR	Partnership with local culinary workshops	\N	2026-10-19 11:11:07.726+00	2026-10-19 11:11:07.726+00	\N
+4	RINJANI100	influencer	\N	fixed_amount	100000.00	500000.00	\N	50	12	f	{"Outdoor & Nature","Adventure Trekking"}	{}	2026-10-10 11:11:07.726+00	2026-11-13 11:11:07.726+00	active	Voucher Khusus Komunitas Pendaki Gunung Rinjani	IDR	Influencer campaign @explore_lombok	\N	2026-10-10 11:11:07.726+00	2026-10-10 11:11:07.726+00	\N
+5	NEWYEAR2026	platform	\N	percentage	25.00	250000.00	200000.00	150	150	f	{}	{}	2026-01-01 00:00:00+00	2026-01-31 23:59:59+00	expired	Promo Spesial Tahun Baru 2026 - Semua Pengalaman	IDR	New Year Early Bird Campaign (Sold out)	\N	2025-12-28 00:00:00+00	2026-02-01 00:00:00+00	\N
+6	PARTNERVIP	referral	\N	percentage	15.00	100000.00	100000.00	30	8	f	{}	{}	2026-10-04 11:11:07.726+00	2026-12-23 11:11:07.726+00	disabled	Diskon Eksklusif Member VIP Komunitas	IDR	Temporarily disabled for quota recalculation	\N	2026-10-04 11:11:07.726+00	2026-10-22 11:11:07.726+00	\N
 \.
 
 
@@ -53572,6 +53573,13 @@ CREATE INDEX promotion_codes_affiliate_id ON public.promotion_codes USING btree 
 
 
 --
+-- Name: promotion_codes_brand_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX promotion_codes_brand_id ON public.promotion_codes USING btree (brand_id);
+
+
+--
 -- Name: promotion_codes_code; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -54834,6 +54842,14 @@ ALTER TABLE ONLY public.promotion_codes
 
 
 --
+-- Name: promotion_codes promotion_codes_brand_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.promotion_codes
+    ADD CONSTRAINT promotion_codes_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brand_partners(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
 -- Name: promotion_codes promotion_codes_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -55509,5 +55525,5 @@ ALTER TABLE ONLY public.vibes_user_forum_reputation
 -- PostgreSQL database dump complete
 --
 
-\unrestrict WLUMUdYKdogHCHsGTFuvApHM99LLwzTdK4nQCNhIdMjkb4kk46Fz5gr67J7aGsZ
+\unrestrict OcOQ4cTHZtOffMy5XFSWUHycZhHyFCIfw20PxplQaLWIij57h1WtCRfKvh8tC4U
 

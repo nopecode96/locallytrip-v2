@@ -26,6 +26,7 @@ import {
   Share2,
   Layers,
   ShoppingBag,
+  Building2,
 } from 'lucide-react';
 import {
   AdminVoucherItem,
@@ -35,6 +36,7 @@ import {
   deletePromoVoucher,
   CreateVoucherInput,
   getAdminVouchersData,
+  BrandPartnerOption,
 } from '@/actions/admin/vouchers';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
 
@@ -42,6 +44,7 @@ interface VouchersControlClientProps {
   initialVouchers: AdminVoucherItem[];
   initialPagination?: PaginationState;
   initialStats: AdminVoucherStats;
+  brandPartners?: BrandPartnerOption[];
 }
 
 type FilterTab = 'all' | 'active' | 'expired' | 'disabled';
@@ -50,6 +53,7 @@ export function VouchersControlClient({
   initialVouchers,
   initialPagination,
   initialStats,
+  brandPartners = [],
 }: VouchersControlClientProps) {
   const [vouchers, setVouchers] = useState<AdminVoucherItem[]>(initialVouchers);
   const [pagination, setPagination] = useState<PaginationState>(
@@ -119,6 +123,7 @@ export function VouchersControlClient({
   const [formData, setFormData] = useState<CreateVoucherInput>({
     code: '',
     type: 'platform',
+    brandId: null,
     discountType: 'percentage',
     discountValue: 15,
     minBookingAmount: 150000,
@@ -286,11 +291,24 @@ export function VouchersControlClient({
           setBannerAlert({ type: 'success', message: res.message });
           setIsCreateModalOpen(false);
 
+          const matchedPartner = formData.brandId
+            ? brandPartners.find((p) => p.id === Number(formData.brandId))
+            : null;
+
           // Optimistically append new voucher to list
           const newVoucher: AdminVoucherItem = {
             id: Date.now(),
             code: formData.code.trim().toUpperCase(),
             type: formData.type || 'platform',
+            brandId: formData.brandId ? Number(formData.brandId) : null,
+            brandPartner: matchedPartner
+              ? {
+                  id: matchedPartner.id,
+                  name: matchedPartner.name,
+                  logoUrl: matchedPartner.logo_url,
+                  category: matchedPartner.category,
+                }
+              : null,
             discountType: formData.discountType,
             discountValue: Number(formData.discountValue),
             minBookingAmount: Number(formData.minBookingAmount) || 0,
@@ -320,6 +338,7 @@ export function VouchersControlClient({
           setFormData({
             code: '',
             type: 'platform',
+            brandId: null,
             discountType: 'percentage',
             discountValue: 15,
             minBookingAmount: 150000,
@@ -645,6 +664,12 @@ export function VouchersControlClient({
                         <div className="text-[10px] text-slate-400 font-mono uppercase mt-1">
                           Tipe: {item.type}
                         </div>
+                        {item.brandPartner && (
+                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[10px] font-semibold mt-1">
+                            <Building2 className="w-3 h-3 text-indigo-500" />
+                            <span>{item.brandPartner.name}</span>
+                          </div>
+                        )}
                       </td>
 
                       {/* Title & Restrictions */}
@@ -881,6 +906,33 @@ export function VouchersControlClient({
                     placeholder="Contoh: Diskon Eksplorasi Wisata Akhir Pekan"
                     className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
+                </div>
+
+                {/* Brand Partner / Sponsor */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Brand Partner / Sponsor (Opsional)
+                  </label>
+                  <select
+                    value={formData.brandId || ''}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        brandId: e.target.value ? Number(e.target.value) : null,
+                      })
+                    }
+                    className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">-- Tanpa Brand Partner (Kupon Internal Platform) --</option>
+                    {brandPartners.map((bp) => (
+                      <option key={bp.id} value={bp.id}>
+                        {bp.name} ({bp.category})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Pilih mitra B2B jika voucher ini merupakan program sponsorship atau voucher diskon brand partner.
+                  </p>
                 </div>
 
                 {/* Type & Discount Type */}

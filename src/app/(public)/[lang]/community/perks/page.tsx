@@ -142,7 +142,7 @@ export default async function CommunityPerksPage({ params }: CommunityPerksPageP
             select: {
               title: true,
               terms: true,
-              partner: { select: { name: true } },
+              partner: { select: { name: true, logo_url: true, category: true } },
             },
           },
         },
@@ -159,6 +159,8 @@ export default async function CommunityPerksPage({ params }: CommunityPerksPageP
       claimed_at: c.claimed_at.toISOString(),
       campaign_title: c.campaign.title,
       partner_name: c.campaign.partner.name,
+      partner_logo: c.campaign.partner.logo_url,
+      partner_category: c.campaign.partner.category,
       terms: c.campaign.terms,
     }));
   }
