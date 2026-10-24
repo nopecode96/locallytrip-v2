@@ -65,6 +65,9 @@ export default async function MarketplacePage({
     limit: 12,
   });
 
+  // Hyper-Local Geographic Density: Southeast Asia priority country codes
+  const SOUTHEAST_ASIA_COUNTRIES = ['ID', 'SG', 'MY', 'TH', 'VN', 'PH'];
+
   // Mengambil data pendukung dari DB dengan relasi untuk tampilan visual kaya
   const [
     forumThreads,
@@ -79,7 +82,19 @@ export default async function MarketplacePage({
     totalForumPosts,
     totalActiveCities,
   ] = await Promise.all([
+      // 1. Thread Diskusi Forum (Fokus Indonesia & Asia Tenggara)
       prisma.vibes_forum_threads.findMany({
+        where: {
+          status: 'active',
+          deleted_at: null,
+          users_vibes_forum_threads_author_idTousers: {
+            cities: {
+              countries: {
+                code: { in: SOUTHEAST_ASIA_COUNTRIES },
+              },
+            },
+          },
+        },
         take: 3,
         orderBy: { created_at: 'desc' },
         select: {
@@ -94,7 +109,18 @@ export default async function MarketplacePage({
           },
         },
       }),
+
+      // 2. Meetup Komunitas (Fokus Indonesia & Asia Tenggara)
       prisma.vibes_travel_meetups.findMany({
+        where: {
+          status: 'active',
+          deleted_at: null,
+          cities: {
+            countries: {
+              code: { in: SOUTHEAST_ASIA_COUNTRIES },
+            },
+          },
+        },
         take: 3,
         orderBy: { created_at: 'desc' },
         select: {
@@ -106,7 +132,18 @@ export default async function MarketplacePage({
           cities: { select: { name: true } },
         },
       }),
+
+      // 3. Cerita Wisata (Fokus Indonesia & Asia Tenggara)
       prisma.stories.findMany({
+        where: {
+          status: 'published',
+          is_active: true,
+          cities: {
+            countries: {
+              code: { in: SOUTHEAST_ASIA_COUNTRIES },
+            },
+          },
+        },
         take: 3,
         orderBy: { created_at: 'desc' },
         select: {
@@ -120,14 +157,25 @@ export default async function MarketplacePage({
           cities: { select: { name: true } },
         },
       }),
+
+      // 4. Kota Unggulan dengan Aktivitas
       prisma.cities.findMany({
         take: 8,
-        where: { experiences: { some: {} } },
+        where: {
+          is_active: true,
+          experiences: { some: {} },
+          countries: { code: { in: SOUTHEAST_ASIA_COUNTRIES } },
+        },
         select: { id: true, name: true },
       }),
+
+      // 5. Destinasi Populer
       prisma.cities.findMany({
         take: 8,
-        where: { is_active: true },
+        where: {
+          is_active: true,
+          countries: { code: { in: SOUTHEAST_ASIA_COUNTRIES } },
+        },
         select: {
           id: true,
           name: true,
@@ -145,10 +193,17 @@ export default async function MarketplacePage({
           },
         },
       }),
+
+      // 6. Host Pemandu Lokal Terverifikasi
       prisma.users.findMany({
         where: {
           role: 'host',
           is_active: true,
+          cities: {
+            countries: {
+              code: { in: SOUTHEAST_ASIA_COUNTRIES },
+            },
+          },
           OR: [
             { is_verified: true },
             { host_kyc_host_kyc_user_idTousers: { is: { status: 'approved' } } },

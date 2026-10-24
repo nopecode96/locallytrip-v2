@@ -140,8 +140,17 @@ export async function getActiveExperiences(
       ];
     }
 
+    // Hyper-Local Geographic Focus: Prioritize and strictly feature destinations in Indonesia & Southeast Asia
+    const SOUTHEAST_ASIA_COUNTRIES = ['ID', 'SG', 'MY', 'TH', 'VN', 'PH'];
+
     if (cityId) {
       whereClause.city_id = cityId;
+    } else if (!search || search.trim() === '') {
+      whereClause.cities = {
+        countries: {
+          code: { in: SOUTHEAST_ASIA_COUNTRIES },
+        },
+      };
     }
 
     if (category && category.trim() !== '') {

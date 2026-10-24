@@ -3868,6 +3868,12 @@ export function DashboardClient({ locale, user }: DashboardClientProps) {
                     <span>{isId ? 'Gunakan untuk Diskon Tur' : 'Redeem on Tours'}</span>
                   </Link>
                 </div>
+
+                <p className="text-[11px] text-purple-200/90 pt-1">
+                  * {isId
+                    ? 'Earn LTP Credits to unlock free local experiences & discounts. (Pencairan ke USD secara eksklusif hanya berlaku bagi Host Terverifikasi yang memperoleh pendapatan dari tur terbitan).'
+                    : 'Earn LTP Credits to unlock free local experiences & discounts. (Cash-out to USD is exclusively available for Verified Local Hosts earning from published experiences).'}
+                </p>
               </div>
             </div>
 

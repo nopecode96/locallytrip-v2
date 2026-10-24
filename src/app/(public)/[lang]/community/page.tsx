@@ -91,6 +91,9 @@ export default async function CommunityHubPage({ params, searchParams }: Communi
     ? resolvedSearchParams.tab
     : 'all') as 'all' | 'meetups' | 'forums' | 'stories' | 'leaderboard';
 
+  // Hyper-Local Geographic Density: Southeast Asia priority country codes
+  const SOUTHEAST_ASIA_COUNTRIES = ['ID', 'SG', 'MY', 'TH', 'VN', 'PH'];
+
   // Kueri Data Prisma Secara Paralel dari PostgreSQL
   const [
     topUsersRaw,
@@ -126,11 +129,16 @@ export default async function CommunityHubPage({ params, searchParams }: Communi
       },
     }),
 
-    // 2. Travel Meetups (Aktif)
+    // 2. Travel Meetups (Fokus Indonesia & Asia Tenggara)
     prisma.vibes_travel_meetups.findMany({
       where: {
         status: 'active',
         deleted_at: null,
+        cities: {
+          countries: {
+            code: { in: SOUTHEAST_ASIA_COUNTRIES },
+          },
+        },
       },
       include: {
         cities: {
@@ -163,11 +171,18 @@ export default async function CommunityHubPage({ params, searchParams }: Communi
       take: 12,
     }),
 
-    // 3. Discussion Forums (Aktif)
+    // 3. Discussion Forums (Fokus Indonesia & Asia Tenggara)
     prisma.vibes_forum_threads.findMany({
       where: {
         status: 'active',
         deleted_at: null,
+        users_vibes_forum_threads_author_idTousers: {
+          cities: {
+            countries: {
+              code: { in: SOUTHEAST_ASIA_COUNTRIES },
+            },
+          },
+        },
       },
       include: {
         vibes_forum_categories: {
@@ -199,11 +214,16 @@ export default async function CommunityHubPage({ params, searchParams }: Communi
       take: 12,
     }),
 
-    // 4. Travel Stories (Terbit & Aktif)
+    // 4. Travel Stories (Fokus Indonesia & Asia Tenggara)
     prisma.stories.findMany({
       where: {
         status: 'published',
         is_active: true,
+        cities: {
+          countries: {
+            code: { in: SOUTHEAST_ASIA_COUNTRIES },
+          },
+        },
       },
       include: {
         users_stories_author_idTousers: {
@@ -237,9 +257,14 @@ export default async function CommunityHubPage({ params, searchParams }: Communi
       orderBy: { name: 'asc' },
     }),
 
-    // 6. Cities for Filters
+    // 6. Cities for Filters (Fokus Indonesia & Asia Tenggara)
     prisma.cities.findMany({
-      where: { is_active: true },
+      where: {
+        is_active: true,
+        countries: {
+          code: { in: SOUTHEAST_ASIA_COUNTRIES },
+        },
+      },
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
       take: 20,

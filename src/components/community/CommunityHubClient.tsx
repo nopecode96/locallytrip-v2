@@ -396,7 +396,7 @@ export function CommunityHubClient({
                 <div className="absolute -bottom-3 left-6 z-20 bg-purple-950/90 backdrop-blur-md border border-purple-400/40 rounded-2xl px-3 py-1.5 shadow-xl flex items-center gap-2">
                   <Coins className="w-4 h-4 text-amber-400" />
                   <span className="text-[11px] font-bold text-purple-200">
-                    100 LTP = $1 USD
+                    Earn LTP Credits to unlock free local experiences & discounts
                   </span>
                 </div>
               </div>
@@ -1265,17 +1265,18 @@ export function CommunityHubClient({
                 <div>
                   <h3 className="text-xl font-bold font-serif text-white flex items-center gap-2">
                     <Coins className="w-6 h-6 text-amber-400" />
-                    <span>{isId ? 'Kalkulator Konversi Koin LTP & Hadiah' : 'LTP Coin Reward Calculator'}</span>
+                    <span>{isId ? 'Kalkulator Nilai Kredit LTP & Diskon' : 'LTP Travel Credit Calculator'}</span>
                   </h3>
-                  <p className="text-xs text-purple-200 mt-1">
-                    {isId
-                      ? 'Nilai koin LTP yang diperoleh dapat dicairkan langsung ke rekening bank atau dompet digital.'
-                      : 'Convert your community earnings to real cash withdrawals or tour discounts.'}
+                  <p className="text-xs text-purple-200 mt-1 max-w-xl">
+                    Earn LTP Credits to unlock free local experiences & discounts.
+                    <span className="block text-purple-300 text-[10px] mt-0.5">
+                      *(Cash-out to USD is exclusively available for Verified Local Hosts earning from published experiences).*
+                    </span>
                   </p>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-[11px] text-purple-300 block">Kurs Acuan Resmi</span>
+                  <span className="text-[11px] text-purple-300 block">Nilai Acuan Kredit</span>
                   <span className="font-bold text-amber-300 text-sm">100 LTP = $1.00 USD</span>
                 </div>
               </div>
@@ -1294,7 +1295,9 @@ export function CommunityHubClient({
                     className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-black text-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
                   />
                   <span className="text-[10px] text-purple-300 block">
-                    Minimal pencairan: {minPayoutLtp.toLocaleString()} LTP
+                    {isId
+                      ? 'Dapat ditukarkan langsung saat checkout tur (Khusus Host: min pencairan 3.000 LTP)'
+                      : 'Redeemable directly at checkout (Verified Hosts min payout: 3,000 LTP)'}
                   </span>
                 </div>
 

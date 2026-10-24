@@ -82,11 +82,16 @@ export default async function MeetupsPage({ params, searchParams }: MeetupsPageP
     getDictionary(locale),
     getCurrentUserSession().catch(() => null),
 
-    // 1. Ambil data agenda meetup aktif dari database PostgreSQL via Prisma
+    // 1. Ambil data agenda meetup aktif dari database PostgreSQL via Prisma (Fokus Indonesia & Asia Tenggara)
     prisma.vibes_travel_meetups.findMany({
       where: {
         status: { in: ['active', 'OPEN', 'PUBLISHED'] },
         deleted_at: null,
+        cities: {
+          countries: {
+            code: { in: ['ID', 'SG', 'MY', 'TH', 'VN', 'PH'] },
+          },
+        },
       },
       include: {
         cities: {

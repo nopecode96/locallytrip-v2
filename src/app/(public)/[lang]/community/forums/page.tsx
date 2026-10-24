@@ -75,6 +75,9 @@ export default async function ForumsPage({ params }: ForumsPageProps) {
 
   const dict = await getDictionary(locale);
 
+  // Hyper-Local Geographic Focus: Southeast Asia priority country codes
+  const SOUTHEAST_ASIA_COUNTRIES = ['ID', 'SG', 'MY', 'TH', 'VN', 'PH'];
+
   // Kueri data riil dari PostgreSQL menggunakan Promise.all
   const [
     threadsRaw,
@@ -86,11 +89,18 @@ export default async function ForumsPage({ params }: ForumsPageProps) {
     experiencesRaw,
     meetupsRaw,
   ] = await Promise.all([
-    // 1. Thread Diskusi Forum Aktif
+    // 1. Thread Diskusi Forum Aktif (Fokus Indonesia & Asia Tenggara)
     prisma.vibes_forum_threads.findMany({
       where: {
         status: 'active',
         deleted_at: null,
+        users_vibes_forum_threads_author_idTousers: {
+          cities: {
+            countries: {
+              code: { in: SOUTHEAST_ASIA_COUNTRIES },
+            },
+          },
+        },
       },
       include: {
         vibes_forum_categories: {
@@ -122,11 +132,18 @@ export default async function ForumsPage({ params }: ForumsPageProps) {
       take: 15,
     }),
 
-    // Total hitungan thread aktif
+    // Total hitungan thread aktif (Fokus Indonesia & Asia Tenggara)
     prisma.vibes_forum_threads.count({
       where: {
         status: 'active',
         deleted_at: null,
+        users_vibes_forum_threads_author_idTousers: {
+          cities: {
+            countries: {
+              code: { in: SOUTHEAST_ASIA_COUNTRIES },
+            },
+          },
+        },
       },
     }),
 
