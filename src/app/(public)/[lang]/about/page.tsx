@@ -1,7 +1,19 @@
 import React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ShieldCheck, Compass, HeartHandshake, Building2, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
+import {
+  ShieldCheck,
+  Compass,
+  HeartHandshake,
+  Building2,
+  Sparkles,
+  ArrowRight,
+  CheckCircle2,
+  Calendar,
+  Award,
+  FileText,
+  Lock,
+} from 'lucide-react';
 import { getDictionary } from '@/lib/getDictionary';
 
 interface AboutPageProps {
@@ -178,6 +190,92 @@ export default async function AboutPage({ params }: AboutPageProps) {
             </span>
             <span>•</span>
             <span>Email: <a href="mailto:support@locallytrip.com" className="text-violet-600 hover:underline">{t.contactSupport}</a></span>
+          </div>
+        </div>
+
+        {/* Founder Story & Origin Section */}
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200/80 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-violet-600 flex items-center gap-1.5">
+                <Award className="w-4 h-4 text-violet-600" />
+                <span>{isId ? 'Kisah Pendiri & Visi' : 'Founding Story & Vision'}</span>
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black font-serif text-slate-900">
+                {isId ? 'About LocallyTrip and Founder Nope' : 'About LocallyTrip and Founder Nope'}
+              </h2>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold self-start sm:self-auto">
+              <Calendar className="w-3.5 h-3.5 text-slate-500" />
+              <span>Published: June 20, 2026</span>
+            </div>
+          </div>
+
+          <div className="space-y-4 text-sm sm:text-base text-slate-600 leading-relaxed">
+            <p>
+              {isId
+                ? 'Locallytrip didirikan oleh Nope bersama tim penggiat komunitas lokal dengan satu misi mendasar: mengembalikan pariwisata ke tangan para warga lokal asli Indonesia. Di era di mana platform perjalanan global didominasi oleh perantara komersial dan potongan komisi yang mencekik, Nope merancang Locallytrip sebagai jembatan langsung dan transparan antara traveler dunia dengan pemandu akar rumput yang berpengetahuan mendalam.'
+                : 'Locallytrip was founded by Nope and a collective of grassroots community innovators with a singular purpose: returning travel autonomy to indigenous Indonesian local guides. In an era where global travel aggregators are dominated by exploitative commercial middlemen and exorbitant commission cuts, Nope architected Locallytrip as a transparent, direct bridge between global adventurers and grassroots insiders.'}
+            </p>
+            <p>
+              {isId
+                ? 'Berawal dari inisiatif akar rumput di Bali, Yogyakarta, dan Bandung, platform ini berkembang menjadi ekosistem terpadu yang memadukan reservasi pengalaman tur terverifikasi, forum diskusi tips rute otentik, dan temu komunitas (meetups) berbasis kepercayaan mutual.'
+                : 'Originating from grassroots community pilots across Bali, Yogyakarta, and Bandung, the platform has scaled into a unified decentralized ecosystem blending verified tour experiences, authentic route debate forums, and trust-first community meetups.'}
+            </p>
+          </div>
+        </div>
+
+        {/* Accreditation, Standards & Compliance Lists (UNWTO, Kemenkumham, CHSE) */}
+        <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-10 shadow-lg space-y-6">
+          <div className="space-y-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-violet-400 flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-violet-400" />
+              <span>{isId ? 'Kepatuhan Regulasi & Standar Keberlanjutan' : 'Regulatory Compliance & Standards'}</span>
+            </span>
+            <h3 className="text-xl sm:text-2xl font-black font-serif text-white">
+              {isId ? 'Daftar Referensi Kepatuhan Hukum & Standar Global' : 'Legal Compliance & Global Framework Reference List'}
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+            {/* 1. UNWTO Framework */}
+            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+              <div className="flex items-center gap-2 text-violet-400 font-bold text-sm">
+                <FileText className="w-4 h-4 shrink-0" />
+                <span>UNWTO Sustainable Tourism</span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {isId
+                  ? 'Kepatuhan pada kode etik pariwisata berkelanjutan United Nations World Tourism Organization (UNWTO) untuk pelestarian warisan budaya lokal, pemberdayaan ekonomi komunitas, dan pencegahan eksploitasi alam.'
+                  : 'Adherence to the United Nations World Tourism Organization (UNWTO) global code of ethics for sustainable tourism, cultural heritage preservation, and fair community economic enrichment.'}
+              </p>
+            </div>
+
+            {/* 2. Kemenkumham RI */}
+            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+              <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                <Building2 className="w-4 h-4 shrink-0" />
+                <span>Kemenkumham RI Registered</span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {isId
+                  ? 'Berbadan hukum resmi terdaftar di Kementerian Hukum dan Hak Asasi Manusia Republik Indonesia sebagai PT Locallytrip Teknologi Indonesia (Nomor AHU-0034891.AH.01.01.TAHUN 2026).'
+                  : 'Officially registered corporate entity under the Ministry of Law and Human Rights of the Republic of Indonesia (PT Locallytrip Teknologi Indonesia, AHU-0034891.AH.01.01.TAHUN 2026).'}
+              </p>
+            </div>
+
+            {/* 3. CHSE Protocols */}
+            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>CHSE Certified Standards</span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {isId
+                  ? 'Penerapan standar Cleanliness, Health, Safety, and Environment Sustainability (CHSE) di seluruh kurasi pemandu tur lapangan, rute jelajah alam, dan protokol temu komunitas.'
+                  : 'Application of strict Cleanliness, Health, Safety, and Environmental Sustainability (CHSE) benchmarks across local field hosts, adventure guides, and meetup operations.'}
+              </p>
+            </div>
           </div>
         </div>
 

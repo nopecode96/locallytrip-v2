@@ -8,6 +8,7 @@ import { PopularDestinations } from '@/components/marketplace/PopularDestination
 import { LocalGuidesSection, VerifiedGuideItem } from '@/components/marketplace/LocalGuidesSection';
 import { HomeFaq } from '@/components/marketplace/HomeFaq';
 import { CommunityStats } from '@/components/community/CommunityStats';
+import { MobileAppPreview } from '@/components/marketplace/MobileAppPreview';
 import { UgcTranslateButton } from '@/components/community/UgcTranslateButton';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
@@ -25,6 +26,9 @@ import {
   MessageSquare,
   Sparkles,
   Clock,
+  CheckCircle2,
+  Lock,
+  Building2,
 } from 'lucide-react';
 
 interface MarketplacePageProps {
@@ -320,22 +324,8 @@ export default async function MarketplacePage({
         </div>
       </section>
 
-      {/* 3. SEKSI DESTINASI TERPOPULER (POPULAR CITIES) */}
-      <PopularDestinations
-        cities={popularCitiesData}
-        locale={locale}
-        dict={dict}
-      />
-
-      {/* 4. SEKSI PEMANDU LOKAL BERLISENSI & TERPERCAYA (VERIFIED LOCAL GUIDES) */}
-      <LocalGuidesSection
-        hosts={verifiedGuides}
-        locale={locale}
-        dict={dict}
-      />
-
-      {/* 5. GRID KATALOG UTAMA (3 KOLOM LEGA MODERN) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-14 sm:mt-16">
+      {/* 3. GRID KATALOG UTAMA (LANGSUNG TAMPIL SETELAH PILAR KEPERCAYAAN) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-14">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <div className="flex items-center gap-2 text-violet-600 text-xs font-bold uppercase tracking-wider mb-1">
@@ -386,6 +376,20 @@ export default async function MarketplacePage({
           </Link>
         </div>
       </section>
+
+      {/* 4. SEKSI DESTINASI TERPOPULER (POPULAR CITIES) */}
+      <PopularDestinations
+        cities={popularCitiesData}
+        locale={locale}
+        dict={dict}
+      />
+
+      {/* 5. SEKSI PEMANDU LOKAL BERLISENSI & TERPERCAYA (VERIFIED LOCAL GUIDES) */}
+      <LocalGuidesSection
+        hosts={verifiedGuides}
+        locale={locale}
+        dict={dict}
+      />
 
       {/* 5. DESAIN ULANG SEKSI KOMUNITAS & BUKTI SOSIAL (3 KOLOM VISUAL KAYA) */}
       {(meetups.length > 0 || stories.length > 0 || forumThreads.length > 0) && (
@@ -651,10 +655,13 @@ export default async function MarketplacePage({
         </section>
       )}
 
-      {/* 6. SEKSI FAQ TERSTRUKTUR DENGAN ACCORDION (AEO & E-E-A-T OPTIMIZED) */}
+      {/* 7. PREVIEW APLIKASI SELULER (COMING SOON MARKETING HOOK) */}
+      <MobileAppPreview locale={locale} />
+
+      {/* 8. SEKSI FAQ TERSTRUKTUR DENGAN ACCORDION (AEO & E-E-A-T OPTIMIZED) */}
       <HomeFaq dict={dict} />
 
-      {/* 7. BANNER AJAKAN MENJADI HOST DENGAN AI BUILDER */}
+      {/* 9. BANNER AJAKAN MENJADI HOST DENGAN AI BUILDER */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-14 sm:mt-16">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-950 via-purple-900 to-violet-950 p-8 sm:p-12 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 border border-purple-800/40">
           <div className="space-y-3 max-w-2xl">
@@ -677,6 +684,26 @@ export default async function MarketplacePage({
             <span>{dict.home.hostBannerBtn}</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
+        </div>
+      </section>
+
+      {/* 10. SLEEK TRUST BADGE ROW (REPLACING RIGID SEO/CORPORATE BLOCKS) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-14 mb-4">
+        <div className="py-4 px-6 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-slate-600 shadow-2xs text-center">
+          <span className="flex items-center gap-2 text-slate-800">
+            <Building2 className="w-4 h-4 text-violet-600 shrink-0" />
+            Operated by PT Locallytrip Teknologi Indonesia
+          </span>
+          <span className="text-slate-300 hidden sm:inline">•</span>
+          <span className="flex items-center gap-2 text-slate-800">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            Verified Local Hosts
+          </span>
+          <span className="text-slate-300 hidden sm:inline">•</span>
+          <span className="flex items-center gap-2 text-slate-800">
+            <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+            SSL Secured
+          </span>
         </div>
       </section>
     </div>

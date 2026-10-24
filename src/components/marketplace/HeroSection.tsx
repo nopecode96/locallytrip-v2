@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { Sparkles, Compass, ArrowRight } from 'lucide-react';
 import { HeroSearch } from './HeroSearch';
 import { Dictionary } from '@/lib/dictionary';
 import { Locale } from '@/lib/i18n';
@@ -74,13 +75,29 @@ export function HeroSection({
             </p>
 
             {/* Kolom Pencarian Tunggal: Lebar Penuh (max-w-xl mx-auto lg:mx-0) */}
-            <div className="pt-2 w-full max-w-xl mx-auto lg:mx-0">
+            <div className="pt-2 w-full max-w-xl mx-auto lg:mx-0 space-y-4">
               <HeroSearch
                 locale={locale}
                 initialQuery={searchQuery}
                 cities={featuredCities}
                 dict={dict}
               />
+
+              {/* Primary Call-to-Action: Explore Local Experiences & Meetups */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 justify-center lg:justify-start">
+                <Link
+                  href={`/${locale}/experiences`}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-violet-700 hover:from-violet-700 hover:to-purple-800 text-white font-bold text-sm sm:text-base shadow-lg shadow-violet-500/25 transition-all hover:shadow-xl hover:-translate-y-0.5 active:scale-95 group cursor-pointer"
+                >
+                  <Compass className="w-5 h-5 text-violet-200 group-hover:rotate-45 transition-transform" />
+                  <span>
+                    {locale === 'id'
+                      ? 'Jelajahi Pengalaman & Meetup Lokal'
+                      : 'Explore Local Experiences & Meetups'}
+                  </span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
             </div>
           </div>
 
