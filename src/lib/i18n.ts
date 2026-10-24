@@ -12,6 +12,7 @@ export interface I18nDictionary {
     becomeHost: string;
     allRightsReserved: string;
     perPerson: string;
+    perPackage?: string;
     viewDetails: string;
     topRated: string;
     featured: string;

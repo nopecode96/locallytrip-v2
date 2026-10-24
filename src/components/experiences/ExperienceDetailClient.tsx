@@ -36,6 +36,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { usePreferences } from '@/components/layout/PreferencesContext';
+import { formatExperienceDuration } from '@/lib/duration';
 import { FollowButton } from '@/components/shared/FollowButton';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import { ExperienceDetailGallery } from './ExperienceDetailGallery';
@@ -442,7 +443,7 @@ export function ExperienceDetailClient({
                 <span className="text-sm font-bold text-slate-900">
                   {isTripPlanner && planningServices.planning_timeline_days
                     ? `⚡ ${planningServices.planning_timeline_days} ${isId ? 'Hari Kerja' : 'Days'}`
-                    : `⏳ ${experience.duration_hours || 4} ${isId ? 'Jam' : 'Hours'}`}
+                    : `⏳ ${formatExperienceDuration(experience.duration_hours, isId ? 'id' : 'en')}`}
                 </span>
               </div>
             </div>
@@ -1159,7 +1160,7 @@ export function ExperienceDetailClient({
                 <span className="font-semibold text-slate-800">
                   {isTripPlanner && planningServices.planning_timeline_days
                     ? `${planningServices.planning_timeline_days} ${isId ? 'Hari Kerja' : 'Days'}`
-                    : `${experience.duration_hours || 4} ${isId ? 'Jam Penuh' : 'Hours'}`}
+                    : formatExperienceDuration(experience.duration_hours, isId ? 'id' : 'en')}
                 </span>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-slate-100">

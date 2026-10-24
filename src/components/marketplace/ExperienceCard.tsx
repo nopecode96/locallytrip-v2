@@ -9,6 +9,7 @@ import { Star, MapPin, CheckCircle2, Clock } from 'lucide-react';
 import { UserPersonaLink } from '@/components/common/UserPersonaLink';
 import { Dictionary } from '@/lib/dictionary';
 import { getPublicImageUrl } from '@/lib/images';
+import { formatExperienceDuration } from '@/lib/duration';
 
 interface ExperienceCardProps {
   experience: ExperienceItem;
@@ -33,9 +34,7 @@ export function ExperienceCard({ experience, dict, homeDict }: ExperienceCardPro
   const ratingVal = hasReviews && experience.ratingAverage > 0 ? experience.ratingAverage.toFixed(1) : null;
   const ratingCountVal = experience.ratingCount || 0;
   const reviewsLabel = homeDict?.reviews || (locale === 'id' ? 'ulasan' : 'reviews');
-  const durationText = experience.durationHours
-    ? `${experience.durationHours} ${dict?.hours || (locale === 'id' ? 'Jam' : 'Hours')}`
-    : `3 ${dict?.hours || (locale === 'id' ? 'Jam' : 'Hours')}`;
+  const durationText = formatExperienceDuration(experience.durationHours, locale === 'en' ? 'en' : 'id');
 
   const hostName = experience.host?.name || 'Local Host';
   const hostLevel = experience.host?.level || 1;
@@ -157,7 +156,7 @@ export function ExperienceCard({ experience, dict, homeDict }: ExperienceCardPro
                 {formattedPrice}
               </span>
               <span className="text-xs text-slate-500 ml-1 font-medium">
-                {dict?.perPerson || '/ orang'}
+                {dict?.perPackage || (locale === 'id' ? '/ paket' : '/ package')}
               </span>
             </div>
           </div>

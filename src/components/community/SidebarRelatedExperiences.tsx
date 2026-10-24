@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronRight, Star } from 'lucide-react';
+import { formatPrice as formatPriceUtil } from '@/lib/currency';
 
 export interface SidebarExperienceItem {
   id: number;
@@ -36,10 +37,7 @@ export function SidebarRelatedExperiences({
     const num = typeof priceVal === 'string' ? parseFloat(priceVal) : priceVal;
     if (isNaN(num)) return isId ? 'Mulai Rp 150.000' : 'From $15';
 
-    if (cur === 'USD' || cur === '$') {
-      return `$${num.toLocaleString()}`;
-    }
-    return `Rp ${(num > 1000 ? num : num * 15500).toLocaleString('id-ID')}`;
+    return formatPriceUtil(num, cur || 'USD', isId ? 'IDR' : 'USD');
   };
 
   const formatRating = (ratingVal: number | string | null) => {

@@ -18,6 +18,8 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import { getPublicImageUrl } from '@/lib/images';
+import { usePreferences } from '@/components/layout/PreferencesContext';
+import { formatExperienceDuration } from '@/lib/duration';
 
 export interface CatalogHostInfo {
   id: number;
@@ -82,6 +84,7 @@ export function ExperienceCatalogClient({
   locale,
 }: ExperienceCatalogClientProps) {
   const isId = locale === 'id';
+  const { formatPrice } = usePreferences();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -423,12 +426,12 @@ export function ExperienceCatalogClient({
                     <div className="flex items-center gap-3 text-xs text-slate-500 pt-1">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{exp.durationHours} jam</span>
+                        <span>{formatExperienceDuration(exp.durationHours, isId ? 'id' : 'en')}</span>
                       </span>
                       <span className="text-slate-300">•</span>
                       <span className="flex items-center gap-1">
                         <Users className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Maks. {exp.maxParticipants} orang</span>
+                        <span>{isId ? `Maks. ${exp.maxParticipants} orang` : `Max. ${exp.maxParticipants} guests`}</span>
                       </span>
                     </div>
                   </div>
@@ -453,8 +456,10 @@ export function ExperienceCatalogClient({
                       {isId ? 'Tarif Paket Privat' : 'Private Package Rate'}
                     </span>
                     <div className="text-base font-black text-amber-600">
-                      ${exp.packagePrice}{' '}
-                      <span className="text-[10px] font-semibold text-slate-500">/ paket</span>
+                      {formatPrice(exp.packagePrice, exp.currency || 'USD')}{' '}
+                      <span className="text-[10px] font-semibold text-slate-500">
+                        {isId ? '/ paket' : '/ package'}
+                      </span>
                     </div>
                   </div>
                 </div>

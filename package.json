@@ -9,7 +9,8 @@
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:pull": "prisma db pull",
-    "seed:reviews": "tsx prisma/seed-reviews.ts"
+    "seed:reviews": "tsx prisma/seed-reviews.ts",
+    "fix:durations": "tsx prisma/fix-durations.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
