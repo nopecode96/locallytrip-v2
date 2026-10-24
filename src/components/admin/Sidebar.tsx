@@ -27,6 +27,10 @@ import {
   Flag,
   LogOut,
   Loader2,
+  Layers,
+  Globe,
+  MapPin,
+  Gift,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut } from 'next-auth/react';
@@ -152,9 +156,24 @@ const navItems: NavItem[] = [
   },
   {
     id: 'economy',
-    name: 'LTP & XP Economy',
+    name: 'Economy & Rewards',
+    category: 'Treasury & Rewards',
     href: '/economy',
     icon: Coins,
+    subItems: [
+      {
+        name: 'LTP & XP Economy',
+        href: '/economy',
+        icon: Coins,
+        description: 'Point balances, XP ranks & redemptions',
+      },
+      {
+        name: 'Rewards & Merch Catalog',
+        href: '/rewards',
+        icon: Gift,
+        description: 'Merchandise inventory & rule settings',
+      },
+    ],
   },
   {
     id: 'marketing',
@@ -174,6 +193,33 @@ const navItems: NavItem[] = [
         href: '/b2b',
         icon: Building2,
         description: 'Corporate accounts & agency commissions',
+      },
+    ],
+  },
+  {
+    id: 'master-data',
+    name: 'Master Data & Config',
+    category: 'Platform Settings',
+    href: '/master/countries',
+    icon: Layers,
+    subItems: [
+      {
+        name: 'Countries & Regions',
+        href: '/master/countries',
+        icon: Globe,
+        description: 'ISO codes & country definitions',
+      },
+      {
+        name: 'Cities & Destinations',
+        href: '/master/cities',
+        icon: MapPin,
+        description: 'Destinations & fallback photo visuals',
+      },
+      {
+        name: 'Taxonomy & Categories',
+        href: '/master/categories',
+        icon: Layers,
+        description: 'Forums, meetups & story categories',
       },
     ],
   },

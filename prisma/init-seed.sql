@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict GtCAjOJ7NEd5gddRZqGfIm2gBmHwOKdkok6GiIFLzX2nPbFEkxMTDb2HDfoY4gQ
+\restrict WLUMUdYKdogHCHsGTFuvApHM99LLwzTdK4nQCNhIdMjkb4kk46Fz5gr67J7aGsZ
 
 -- Dumped from database version 15.19
 -- Dumped by pg_dump version 15.19
@@ -1086,8 +1086,8 @@ CREATE TABLE public.cities (
     description text,
     image_url character varying(500),
     is_active boolean DEFAULT true,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -1361,8 +1361,8 @@ CREATE TABLE public.countries (
     id integer NOT NULL,
     name character varying(100) NOT NULL,
     code character varying(3) NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -3112,6 +3112,47 @@ CREATE TABLE public.reward_level_tiers (
 
 
 --
+-- Name: reward_merchandise; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.reward_merchandise (
+    id integer NOT NULL,
+    name character varying(150) NOT NULL,
+    slug character varying(150) NOT NULL,
+    description text,
+    image_url character varying(500),
+    points_required integer DEFAULT 0 NOT NULL,
+    min_level integer DEFAULT 1 NOT NULL,
+    stock_quantity integer DEFAULT 0 NOT NULL,
+    claimed_count integer DEFAULT 0 NOT NULL,
+    category character varying(50) DEFAULT 'APPAREL'::character varying NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp(6) with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp(6) with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: reward_merchandise_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.reward_merchandise_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: reward_merchandise_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.reward_merchandise_id_seq OWNED BY public.reward_merchandise.id;
+
+
+--
 -- Name: reward_system_settings; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3435,6 +3476,45 @@ CREATE SEQUENCE public.story_bookmarks_id_seq
 --
 
 ALTER SEQUENCE public.story_bookmarks_id_seq OWNED BY public.story_bookmarks.id;
+
+
+--
+-- Name: story_categories; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.story_categories (
+    id integer NOT NULL,
+    name character varying(100) NOT NULL,
+    slug character varying(100) NOT NULL,
+    description text,
+    icon character varying(50),
+    color character varying(20),
+    image_url character varying(500),
+    is_active boolean DEFAULT true NOT NULL,
+    sort_order integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp(6) with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: story_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.story_categories_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: story_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.story_categories_id_seq OWNED BY public.story_categories.id;
 
 
 --
@@ -5173,6 +5253,13 @@ ALTER TABLE ONLY public.reward_action_rules ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
+-- Name: reward_merchandise id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reward_merchandise ALTER COLUMN id SET DEFAULT nextval('public.reward_merchandise_id_seq'::regclass);
+
+
+--
 -- Name: reward_system_settings id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -5212,6 +5299,13 @@ ALTER TABLE ONLY public.story_audit_log ALTER COLUMN id SET DEFAULT nextval('pub
 --
 
 ALTER TABLE ONLY public.story_bookmarks ALTER COLUMN id SET DEFAULT nextval('public.story_bookmarks_id_seq'::regclass);
+
+
+--
+-- Name: story_categories id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.story_categories ALTER COLUMN id SET DEFAULT nextval('public.story_categories_id_seq'::regclass);
 
 
 --
@@ -33911,6 +34005,18 @@ COPY public.reward_level_tiers (level, min_xp, badge_icon, ltp_bonus, reward_typ
 
 
 --
+-- Data for Name: reward_merchandise; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.reward_merchandise (id, name, slug, description, image_url, points_required, min_level, stock_quantity, claimed_count, category, is_active, created_at, updated_at) FROM stdin;
+1	Locallytrip Explorer Vintage Cap	lt-vintage-cap	Topi katun kanvas washed dengan bordir logo Locallytrip premium.	\N	150	2	45	0	APPAREL	t	2026-10-24 17:07:57.698+00	2026-10-24 17:07:57.698+00
+2	Locallytrip Hydro Steel Bottle 750ml	lt-hydro-steel-bottle	Tumbler stainless steel insulasi ganda tahan dingin 24 jam.	\N	250	3	30	0	GEAR	t	2026-10-24 17:07:57.698+00	2026-10-24 17:07:57.698+00
+3	Enamel Pin Set & Vinyl Decals Pack	lt-enamel-pin-decals	Koleksi 4 pin logam enamel traveler & 8 stiker vinyl outdoor weatherproof.	\N	80	1	120	0	ACCESSORIES	t	2026-10-24 17:07:57.698+00	2026-10-24 17:07:57.698+00
+4	Locallytrip Nomad Canvas Tote Bag	lt-nomad-canvas-tote	Tas jinjing kanvas tebal 14oz ramah lingkungan dengan saku ritsleting.	\N	120	2	60	0	APPAREL	t	2026-10-24 17:07:57.698+00	2026-10-24 17:07:57.698+00
+\.
+
+
+--
 -- Data for Name: reward_system_settings; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -34581,6 +34687,19 @@ COPY public.story_bookmarks (id, story_id, user_id, created_at) FROM stdin;
 6	171	222	2026-07-16 09:57:11.245+00
 7	169	222	2026-07-16 09:57:49.289+00
 9	173	222	2026-07-18 09:42:38.415+00
+\.
+
+
+--
+-- Data for Name: story_categories; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.story_categories (id, name, slug, description, icon, color, image_url, is_active, sort_order, created_at, updated_at) FROM stdin;
+1	Hidden Gems	hidden-gems	Destinasi rahasia dan sudut tersembunyi lokal.	💎	#8B5CF6	\N	t	0	2026-10-24 17:07:57.69+00	2026-10-24 17:07:57.69+00
+2	Culinary Trails	culinary-trails	Eksplorasi rasa dan warung legendaris.	🍜	#F59E0B	\N	t	0	2026-10-24 17:07:57.69+00	2026-10-24 17:07:57.69+00
+3	Island Life	island-life	Catatan perjalanan pantai dan kepulauan nusantara.	🏝️	#06B6D4	\N	t	0	2026-10-24 17:07:57.69+00	2026-10-24 17:07:57.69+00
+4	Mountain Treks	mountain-treks	Ekspedisi mendaki puncak dan rimba.	⛰️	#10B981	\N	t	0	2026-10-24 17:07:57.69+00	2026-10-24 17:07:57.69+00
+5	Heritage & Culture	heritage-culture	Kisah tradisi, candi, dan kearifan lokal.	🏛️	#EC4899	\N	t	0	2026-10-24 17:07:57.69+00	2026-10-24 17:07:57.69+00
 \.
 
 
@@ -51111,6 +51230,13 @@ SELECT pg_catalog.setval('public.reward_action_rules_id_seq', 23, true);
 
 
 --
+-- Name: reward_merchandise_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.reward_merchandise_id_seq', 4, true);
+
+
+--
 -- Name: reward_system_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
@@ -51150,6 +51276,13 @@ SELECT pg_catalog.setval('public.story_audit_log_id_seq', 260, true);
 --
 
 SELECT pg_catalog.setval('public.story_bookmarks_id_seq', 9, true);
+
+
+--
+-- Name: story_categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.story_categories_id_seq', 5, true);
 
 
 --
@@ -52136,6 +52269,14 @@ ALTER TABLE ONLY public.reward_level_tiers
 
 
 --
+-- Name: reward_merchandise reward_merchandise_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reward_merchandise
+    ADD CONSTRAINT reward_merchandise_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: reward_system_settings reward_system_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -52229,6 +52370,14 @@ ALTER TABLE ONLY public.story_audit_log
 
 ALTER TABLE ONLY public.story_bookmarks
     ADD CONSTRAINT story_bookmarks_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: story_categories story_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.story_categories
+    ADD CONSTRAINT story_categories_pkey PRIMARY KEY (id);
 
 
 --
@@ -53486,6 +53635,13 @@ CREATE UNIQUE INDEX reward_action_rules_action_code_key ON public.reward_action_
 
 
 --
+-- Name: reward_merchandise_slug_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX reward_merchandise_slug_key ON public.reward_merchandise USING btree (slug);
+
+
+--
 -- Name: reward_system_settings_setting_key_key; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -53651,6 +53807,20 @@ CREATE UNIQUE INDEX story_bookmarks_story_id_user_id ON public.story_bookmarks U
 --
 
 CREATE INDEX story_bookmarks_user_id ON public.story_bookmarks USING btree (user_id);
+
+
+--
+-- Name: story_categories_name_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX story_categories_name_key ON public.story_categories USING btree (name);
+
+
+--
+-- Name: story_categories_slug_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX story_categories_slug_key ON public.story_categories USING btree (slug);
 
 
 --
@@ -55339,5 +55509,5 @@ ALTER TABLE ONLY public.vibes_user_forum_reputation
 -- PostgreSQL database dump complete
 --
 
-\unrestrict GtCAjOJ7NEd5gddRZqGfIm2gBmHwOKdkok6GiIFLzX2nPbFEkxMTDb2HDfoY4gQ
+\unrestrict WLUMUdYKdogHCHsGTFuvApHM99LLwzTdK4nQCNhIdMjkb4kk46Fz5gr67J7aGsZ
 
