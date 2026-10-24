@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: locallytrip_postgres_local
+    container_name: locallytrip_postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-locallytrip_new}
@@ -24,18 +24,20 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: locallytrip_app_local
+    container_name: locallytrip_app
     restart: unless-stopped
     expose:
       - "3000"
+    env_file:
+      - .env.production
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-locallytrip_prod_new}:${POSTGRES_PASSWORD:-locallytrip_secure_password_new}@postgres:5432/${POSTGRES_DB:-locallytrip_new}?schema=public}
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3001}
-      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3001}
-      NEXT_PUBLIC_ADMIN_URL: ${NEXT_PUBLIC_ADMIN_URL:-http://localhost:3002}
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3001}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://locallytrip.com}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://locallytrip.com}
+      NEXT_PUBLIC_ADMIN_URL: ${NEXT_PUBLIC_ADMIN_URL:-https://admin.locallytrip.com}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-https://locallytrip.com}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-63cc127cb954806ae930d176c9008501f2390b182b729d4e026bffaff52a4757}
       JWT_SECRET: ${JWT_SECRET:-63cc127cb954806ae930d176c9008501f2390b182b729d4e026bffaff52a4757}
       PAYPAL_ENVIRONMENT: ${PAYPAL_ENVIRONMENT:-live}
@@ -73,11 +75,11 @@ services:
 
   nginx:
     image: nginx:alpine
-    container_name: locallytrip_nginx_local
+    container_name: locallytrip_nginx
     restart: unless-stopped
     ports:
-      - "3001:3001"
-      - "3002:3002"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./public/images:/var/www/public/images:ro
@@ -93,4 +95,3 @@ volumes:
 networks:
   locallytrip_network:
     name: locallytrip_network
-
