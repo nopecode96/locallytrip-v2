@@ -1,0 +1,38 @@
+{
+  "common": {
+    "appName": "Locallytrip",
+    "tagline": "Discover authentic local experiences & communities",
+    "search": "Cari pengalaman lokal, kota, atau cerita...",
+    "searchBtn": "Cari",
+    "login": "Masuk",
+    "register": "Daftar",
+    "becomeHost": "Jadi Host",
+    "allRightsReserved": "Hak cipta dilindungi undang-undang.",
+    "perPerson": "/ orang",
+    "viewDetails": "Lihat Detail",
+    "topRated": "Terpopuler",
+    "featured": "Pilihan"
+  },
+  "nav": {
+    "explore": "Explore",
+    "experiences": "Experiences",
+    "community": "Community",
+    "forums": "Forum Vibes",
+    "meetups": "Travel Meetups",
+    "stories": "Stories"
+  },
+  "home": {
+    "badge": "Monolit Modern Terpadu",
+    "heroTitle": "Jelajahi Dunia Bersama Local Host Otentik",
+    "heroSubtitle": "Temukan aktivitas kurasi lokal, bergabung dalam komunitas petualang, dan ciptakan memori perjalanan tak terlupakan.",
+    "searchPlaceholder": "Mau jalan-jalan ke mana? (cth: Bandung, Tokyo, Da Nang...)",
+    "featuredExperiences": "Pengalaman Lokal Pilihan",
+    "featuredExperiencesSub": "Aktivitas unik yang dipandu langsung oleh local host terverifikasi",
+    "communitySection": "Vibes Komunitas & Cerita",
+    "communitySectionSub": "Diskusi traveler, agenda kumpul bareng, dan inspirasi cerita perjalanan terbaru",
+    "forumSnippet": "Forum Diskusi Hangat",
+    "meetupSnippet": "Meetup & Kumpul Komunitas",
+    "storiesSnippet": "Cerita Petualang",
+    "noExperiences": "Belum ada pengalaman yang sesuai dengan pencarian Anda."
+  }
+}

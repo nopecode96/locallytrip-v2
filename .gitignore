@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Next.js build artifacts
+.next/
+out/
+build/
+
+# Environment variables & secrets
+.env
+.env.local
+.env.production
+.env*.local
+
+# OS files
+.DS_Store
+*.pem
+
+# Typescript build cache
+*.tsbuildinfo
+
+# Large local zip archives & redundant dumps
+*.zip
+*.tar.gz
+backup_locallytrip_fresh.sql

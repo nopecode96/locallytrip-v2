@@ -1,0 +1,2252 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SequelizeMeta {
+  name String @id @db.VarChar(255)
+}
+
+model affiliate_applications {
+  id                                              Int                    @id @default(autoincrement())
+  user_id                                         Int
+  status                                          String                 @default("pending") @db.VarChar(50)
+  submitted_at                                    DateTime?              @db.Timestamptz(6)
+  reviewed_at                                     DateTime?              @db.Timestamptz(6)
+  reviewed_by                                     Int?
+  approval_notes                                  String?
+  rejection_reason                                String?
+  full_name                                       String                 @db.VarChar(255)
+  email                                           String                 @db.VarChar(255)
+  phone                                           String?                @db.VarChar(50)
+  date_of_birth                                   DateTime?              @db.Date
+  nationality                                     String?                @db.VarChar(100)
+  current_city                                    String?                @db.VarChar(255)
+  current_country                                 String?                @db.VarChar(100)
+  identity_type                                   String?                @db.VarChar(50)
+  identity_number                                 String?                @db.VarChar(100)
+  identity_expiry_date                            DateTime?              @db.Date
+  identity_document_url                           String?                @db.VarChar(500)
+  business_name                                   String?                @db.VarChar(255)
+  business_type                                   String?                @db.VarChar(100)
+  years_of_experience                             Int?                   @default(0)
+  specialization                                  String?
+  languages_spoken                                String[]
+  certifications                                  String?
+  portfolio_website                               String?                @db.VarChar(500)
+  instagram_handle                                String?                @db.VarChar(255)
+  instagram_followers                             Int?                   @default(0)
+  facebook_page                                   String?                @db.VarChar(500)
+  facebook_followers                              Int?                   @default(0)
+  tiktok_handle                                   String?                @db.VarChar(255)
+  tiktok_followers                                Int?                   @default(0)
+  youtube_channel                                 String?                @db.VarChar(500)
+  youtube_subscribers                             Int?                   @default(0)
+  other_social_platforms                          String?
+  content_creation_experience                     String?
+  travel_content_examples                         String?
+  photography_equipment                           String?
+  video_equipment                                 String?
+  editing_software                                String?
+  marketing_strategy                              String?
+  target_audience                                 String?
+  promotion_channels                              String?
+  expected_monthly_referrals                      Int?                   @default(0)
+  bank_name                                       String?                @db.VarChar(255)
+  bank_account_number                             String?                @db.VarChar(100)
+  bank_account_holder                             String?                @db.VarChar(255)
+  tax_id                                          String?                @db.VarChar(100)
+  preferred_payment_method                        String?                @default("bank_transfer") @db.VarChar(100)
+  motivation                                      String?
+  goals                                           String?
+  why_locallytrip                                 String?
+  additional_comments                             String?
+  total_social_followers                          Int?                   @default(0)
+  calculated_tier                                 String?                @default("micro_1") @db.VarChar(50)
+  application_score                               Decimal?               @default(0) @db.Decimal(5, 2)
+  terms_agreed                                    Boolean?               @default(false)
+  privacy_agreed                                  Boolean?               @default(false)
+  marketing_consent                               Boolean?               @default(false)
+  ip_address                                      String?                @db.Inet
+  user_agent                                      String?
+  referral_source                                 String?                @db.VarChar(255)
+  created_at                                      DateTime               @db.Timestamptz(6)
+  updated_at                                      DateTime               @db.Timestamptz(6)
+  users_affiliate_applications_reviewed_byTousers users?                 @relation("affiliate_applications_reviewed_byTousers", fields: [reviewed_by], references: [id])
+  users_affiliate_applications_user_idTousers     users                  @relation("affiliate_applications_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade)
+  affiliate_audit_logs                            affiliate_audit_logs[]
+}
+
+model affiliate_audit_logs {
+  id                                             Int                                   @id @default(autoincrement())
+  application_id                                 Int
+  user_id                                        Int
+  action                                         String                                @db.VarChar(100)
+  action_type                                    enum_affiliate_audit_logs_action_type
+  old_status                                     String?                               @db.VarChar(50)
+  new_status                                     String?                               @db.VarChar(50)
+  old_values                                     Json?                                 @db.Json
+  new_values                                     Json?                                 @db.Json
+  changes_summary                                String?
+  performed_by                                   Int?
+  performed_by_role                              String?                               @db.VarChar(50)
+  notes                                          String?
+  reason                                         String?
+  admin_comments                                 String?
+  ip_address                                     String?                               @db.VarChar(45)
+  user_agent                                     String?
+  session_id                                     String?                               @db.VarChar(255)
+  request_id                                     String?                               @db.VarChar(255)
+  api_endpoint                                   String?                               @db.VarChar(255)
+  request_method                                 String?                               @db.VarChar(10)
+  request_headers                                Json?                                 @db.Json
+  response_status                                Int?
+  created_at                                     DateTime                              @db.Timestamptz(6)
+  affiliate_applications                         affiliate_applications                @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  users_affiliate_audit_logs_performed_byTousers users?                                @relation("affiliate_audit_logs_performed_byTousers", fields: [performed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_affiliate_audit_logs_user_idTousers      users                                 @relation("affiliate_audit_logs_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([action_type], map: "affiliate_audit_logs_action_type")
+  @@index([application_id], map: "affiliate_audit_logs_application_id")
+  @@index([application_id, action_type, created_at], map: "affiliate_audit_logs_application_id_action_type_created_at")
+  @@index([created_at], map: "affiliate_audit_logs_created_at")
+  @@index([performed_by], map: "affiliate_audit_logs_performed_by")
+  @@index([user_id], map: "affiliate_audit_logs_user_id")
+}
+
+model affiliate_programs {
+  id                      Int                            @id @default(autoincrement())
+  user_id                 Int
+  affiliate_code          String                         @unique @db.VarChar(50)
+  commission_rate         Decimal                        @default(7) @db.Decimal(5, 2)
+  tier                    enum_affiliate_programs_tier   @default(micro_1)
+  status                  enum_affiliate_programs_status @default(pending)
+  total_bookings          Int                            @default(0)
+  total_earnings          Decimal                        @default(0) @db.Decimal(12, 2)
+  preferred_currency      String                         @default("USD") @db.VarChar(3)
+  payout_threshold        Decimal                        @default(50) @db.Decimal(10, 2)
+  payout_method           String?                        @default("paypal") @db.VarChar(50)
+  payout_details          Json?                          @default("{}")
+  notes                   String?
+  activated_at            DateTime?                      @db.Timestamptz(6)
+  last_payout_at          DateTime?                      @db.Timestamptz(6)
+  created_at              DateTime                       @db.Timestamptz(6)
+  updated_at              DateTime                       @db.Timestamptz(6)
+  users                   users                          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  commission_transactions commission_transactions[]
+
+  @@index([affiliate_code], map: "affiliate_programs_affiliate_code")
+  @@index([status], map: "affiliate_programs_status")
+  @@index([tier], map: "affiliate_programs_tier")
+  @@index([user_id], map: "affiliate_programs_user_id")
+}
+
+model audit_logs {
+  id          Int      @id @default(autoincrement())
+  user_id     Int?
+  action      String   @db.VarChar(100)
+  entity_type String?  @db.VarChar(100)
+  entity_id   Int?
+  old_values  Json?
+  new_values  Json?
+  ip_address  String?  @db.Inet
+  user_agent  String?
+  created_at  DateTime @db.Timestamptz(6)
+  users       users?   @relation(fields: [user_id], references: [id])
+
+  @@index([created_at], map: "audit_logs_created_at")
+  @@index([entity_type, entity_id], map: "audit_logs_entity_type_entity_id")
+  @@index([user_id], map: "audit_logs_user_id")
+}
+
+model banks {
+  id                 Int                  @id @default(autoincrement())
+  bank_code          String               @unique @db.VarChar(10)
+  bank_name          String               @db.VarChar(100)
+  bank_name_short    String?              @db.VarChar(50)
+  swift_code         String?              @db.VarChar(11)
+  country_code       String?              @default("ID") @db.VarChar(2)
+  logo_url           String?              @db.VarChar(255)
+  is_active          Boolean?             @default(true)
+  created_at         DateTime             @db.Timestamptz(6)
+  updated_at         DateTime             @db.Timestamptz(6)
+  user_bank_accounts user_bank_accounts[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model banner_clicks {
+  id         Int      @id @default(autoincrement())
+  banner_id  Int
+  user_id    Int?
+  clicked_at DateTime @db.Timestamptz(6)
+  referrer   String?
+  ip_address String?  @db.VarChar(45)
+  banners    banners  @relation(fields: [banner_id], references: [id], onDelete: Cascade)
+  users      users?   @relation(fields: [user_id], references: [id])
+
+  @@index([banner_id], map: "idx_banner_clicks_banner_id")
+  @@index([banner_id, clicked_at], map: "idx_banner_clicks_reporting")
+  @@index([clicked_at], map: "idx_banner_clicks_timestamp")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model banners {
+  id                 Int               @id @default(autoincrement())
+  uuid               String            @unique @db.Uuid
+  title              String            @db.VarChar(200)
+  client_name        String            @db.VarChar(200)
+  contract_reference String?           @db.VarChar(100)
+  image_sizes        Json
+  link_url           String            @db.VarChar(500)
+  placement_page     String            @db.VarChar(50)
+  tier               enum_banners_tier @default(regular)
+  rotation_weight    Int               @default(1)
+  is_active          Boolean           @default(true)
+  start_date         DateTime          @db.Timestamptz(6)
+  end_date           DateTime          @db.Timestamptz(6)
+  impression_count   Int               @default(0)
+  click_count        Int               @default(0)
+  notes              String?
+  created_by         Int?
+  created_at         DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime          @default(now()) @db.Timestamptz(6)
+  banner_clicks      banner_clicks[]
+  users              users?            @relation(fields: [created_by], references: [id])
+
+  @@index([placement_page, tier, is_active, start_date, end_date], map: "idx_banners_active_lookup")
+  @@index([client_name], map: "idx_banners_client_name")
+  @@index([start_date, end_date], map: "idx_banners_date_range")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model bookings {
+  id                      Int                       @id @default(autoincrement())
+  uuid                    String?                   @unique @db.Uuid
+  experience_id           Int?
+  user_id                 Int?
+  selected_date           DateTime?                 @db.Date
+  selected_time           DateTime?                 @db.Time(6)
+  participant_count       Int?                      @default(1)
+  quantity                Int                       @default(1)
+  total_price             Decimal                   @default(0) @db.Decimal(10, 2)
+  status                  String?                   @default("pending") @db.VarChar(20)
+  special_requests        String?
+  contact_info            Json?
+  cancellation_reason     String?
+  booking_reference       String?                   @unique @db.VarChar(50)
+  category_specific       Json?
+  participants            Json?
+  created_at              DateTime                  @db.Timestamptz(6)
+  updated_at              DateTime                  @db.Timestamptz(6)
+  paypal_order_id         String?                   @db.VarChar(100)
+  experiences             experiences?              @relation(fields: [experience_id], references: [id])
+  users                   users?                    @relation(fields: [user_id], references: [id])
+  commission_transactions commission_transactions[]
+  payments                payments[]
+  promo_code_usage        promo_code_usage[]
+  reviews                 reviews?
+}
+
+model cities {
+  id                   Int                    @id @default(autoincrement())
+  name                 String                 @db.VarChar(255)
+  country_id           Int?
+  latitude             Decimal?               @db.Decimal(10, 8)
+  longitude            Decimal?               @db.Decimal(11, 8)
+  description          String?
+  image_url            String?                @db.VarChar(500)
+  is_active            Boolean?               @default(true)
+  created_at           DateTime               @db.Timestamptz(6)
+  updated_at           DateTime               @db.Timestamptz(6)
+  countries            countries?             @relation(fields: [country_id], references: [id])
+  experiences          experiences[]
+  featured_cities      featured_cities[]
+  stories              stories[]
+  users                users[]
+  vibes_travel_meetups vibes_travel_meetups[]
+}
+
+model commission_settings {
+  id                           Int      @id @default(autoincrement())
+  service_fee_percent          Decimal  @default(10) @db.Decimal(5, 2)
+  host_commission_percent      Decimal  @default(15) @db.Decimal(5, 2)
+  affiliate_commission_percent Decimal  @default(5) @db.Decimal(5, 2)
+  referral_commission_percent  Decimal  @default(5) @db.Decimal(5, 2)
+  min_booking_amount           Decimal  @default(10) @db.Decimal(10, 2)
+  max_discount_percent         Decimal  @default(50) @db.Decimal(5, 2)
+  max_stacked_codes            Int      @default(3)
+  platform_currency            String   @default("USD") @db.VarChar(3)
+  updated_by                   Int?
+  created_at                   DateTime @db.Timestamptz(6)
+  updated_at                   DateTime @db.Timestamptz(6)
+  users                        users?   @relation(fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model commission_transactions {
+  id                  Int                                          @id @default(autoincrement())
+  booking_id          Int
+  affiliate_id        Int?
+  referrer_user_id    Int?
+  referral_code_used  String?                                      @db.VarChar(50)
+  commission_type     enum_commission_transactions_commission_type
+  base_amount         Decimal                                      @db.Decimal(12, 2)
+  base_currency       String                                       @db.VarChar(3)
+  commission_amount   Decimal                                      @db.Decimal(12, 2)
+  commission_rate     Decimal                                      @db.Decimal(5, 2)
+  payout_amount       Decimal?                                     @db.Decimal(12, 2)
+  payout_currency     String?                                      @db.VarChar(3)
+  exchange_rate       Decimal?                                     @db.Decimal(10, 6)
+  rate_date           DateTime?                                    @db.Timestamptz(6)
+  status              enum_commission_transactions_status          @default(pending)
+  processed_at        DateTime?                                    @db.Timestamptz(6)
+  payout_method       String?                                      @db.VarChar(50)
+  payout_reference    String?                                      @db.VarChar(100)
+  payout_fee          Decimal?                                     @default(0) @db.Decimal(10, 2)
+  calculation_details Json?                                        @default("{}")
+  notes               String?
+  created_at          DateTime                                     @db.Timestamptz(6)
+  updated_at          DateTime                                     @db.Timestamptz(6)
+  affiliate_programs  affiliate_programs?                          @relation(fields: [affiliate_id], references: [id])
+  bookings            bookings                                     @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  users               users?                                       @relation(fields: [referrer_user_id], references: [id], onUpdate: NoAction)
+
+  @@index([affiliate_id], map: "commission_transactions_affiliate_id")
+  @@index([base_currency], map: "commission_transactions_base_currency")
+  @@index([booking_id], map: "commission_transactions_booking_id")
+  @@index([commission_type], map: "commission_transactions_commission_type")
+  @@index([payout_currency], map: "commission_transactions_payout_currency")
+  @@index([processed_at], map: "commission_transactions_processed_at")
+  @@index([status], map: "commission_transactions_status")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model communication_apps {
+  id                          Int                           @id @default(autoincrement())
+  name                        String                        @unique @db.VarChar(50)
+  display_name                String                        @db.VarChar(100)
+  icon_url                    String?                       @db.VarChar(255)
+  url_pattern                 String?                       @db.VarChar(255)
+  is_active                   Boolean?                      @default(true)
+  sort_order                  Int?                          @default(0)
+  created_at                  DateTime                      @db.Timestamptz(6)
+  updated_at                  DateTime                      @db.Timestamptz(6)
+  user_communication_contacts user_communication_contacts[]
+}
+
+model conversation_participants {
+  id              Int           @id @default(autoincrement())
+  conversation_id Int
+  user_id         Int
+  last_read_at    DateTime?     @db.Timestamptz(6)
+  unread_count    Int?          @default(0)
+  is_archived     Boolean?      @default(false)
+  is_muted        Boolean?      @default(false)
+  joined_at       DateTime?     @db.Timestamptz(6)
+  conversations   conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  users           users         @relation(fields: [user_id], references: [id], onDelete: NoAction)
+}
+
+model conversations {
+  id                                         Int                         @id @default(autoincrement())
+  participant1_id                            Int
+  participant2_id                            Int
+  last_message_at                            DateTime?                   @db.Timestamptz(6)
+  created_at                                 DateTime                    @db.Timestamptz(6)
+  updated_at                                 DateTime                    @db.Timestamptz(6)
+  conversation_participants                  conversation_participants[]
+  users_conversations_participant1_idTousers users                       @relation("conversations_participant1_idTousers", fields: [participant1_id], references: [id], onDelete: NoAction)
+  users_conversations_participant2_idTousers users                       @relation("conversations_participant2_idTousers", fields: [participant2_id], references: [id], onDelete: NoAction)
+  messages                                   messages[]
+}
+
+model countries {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique @db.VarChar(100)
+  code       String   @unique @db.VarChar(3)
+  created_at DateTime @db.Timestamptz(6)
+  updated_at DateTime @db.Timestamptz(6)
+  cities     cities[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model currency_rates {
+  id            Int       @id @default(autoincrement())
+  from_currency String    @db.VarChar(3)
+  to_currency   String    @db.VarChar(3)
+  rate          Decimal   @db.Decimal(12, 6)
+  source        String?   @default("manual") @db.VarChar(50)
+  rate_date     DateTime? @db.Date
+  is_active     Boolean?  @default(true)
+  created_at    DateTime  @db.Timestamptz(6)
+  updated_at    DateTime  @db.Timestamptz(6)
+  expires_at    DateTime? @db.Timestamptz(6)
+
+  @@unique([from_currency, to_currency, rate_date], map: "currency_rates_from_currency_to_currency_rate_date")
+  @@index([expires_at], map: "currency_rates_expires_at")
+  @@index([from_currency, to_currency], map: "currency_rates_from_currency_to_currency")
+  @@index([is_active], map: "currency_rates_is_active")
+  @@index([rate_date], map: "currency_rates_rate_date")
+  @@index([updated_at], map: "currency_rates_updated_at")
+}
+
+model experience_itineraries {
+  id               Int          @id @default(autoincrement())
+  experience_id    Int?
+  step_order       Int
+  title            String       @db.VarChar(200)
+  description      String?
+  duration_minutes Int?
+  location         String?      @db.VarChar(255)
+  created_at       DateTime     @db.Timestamptz(6)
+  updated_at       DateTime     @db.Timestamptz(6)
+  experiences      experiences? @relation(fields: [experience_id], references: [id])
+
+  @@index([experience_id, step_order], map: "experience_itineraries_experience_id_step_order")
+}
+
+model experience_shares {
+  id            Int         @id @default(autoincrement())
+  experience_id Int
+  user_id       Int?
+  share_type    String      @db.VarChar(50)
+  ip_address    String?     @db.VarChar(45)
+  user_agent    String?
+  referrer      String?
+  shared_at     DateTime    @db.Timestamptz(6)
+  experiences   experiences @relation(fields: [experience_id], references: [id], onDelete: Cascade)
+  users         users?      @relation(fields: [user_id], references: [id])
+
+  @@index([experience_id], map: "experience_shares_experience_id")
+  @@index([share_type], map: "experience_shares_share_type")
+  @@index([shared_at], map: "experience_shares_shared_at")
+  @@index([user_id], map: "experience_shares_user_id")
+}
+
+model experience_types {
+  id                         Int                    @id @default(autoincrement())
+  name                       String                 @unique(map: "experience_types_name") @db.VarChar(100)
+  description                String?
+  icon                       String?                @db.VarChar(50)
+  color                      String?                @db.VarChar(20)
+  image_url                  String?                @db.VarChar(255)
+  is_active                  Boolean?               @default(true)
+  sort_order                 Int?                   @default(0)
+  risk_level                 String?                @db.VarChar(20)
+  requires_emergency_contact Boolean?               @default(false)
+  requires_passport          Boolean?               @default(false)
+  requires_age_verification  Boolean?               @default(false)
+  min_age                    Int?
+  max_age                    Int?
+  requires_medical_clearance Boolean?               @default(false)
+  requires_insurance         Boolean?               @default(false)
+  created_at                 DateTime               @db.Timestamptz(6)
+  updated_at                 DateTime               @db.Timestamptz(6)
+  experiences                experiences[]
+  vibes_forum_threads        vibes_forum_threads[]
+  vibes_travel_meetups       vibes_travel_meetups[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model experience_views {
+  id            Int         @id @default(autoincrement())
+  experience_id Int
+  user_id       Int?
+  ip_address    String?     @db.VarChar(45)
+  user_agent    String?
+  referrer      String?
+  session_id    String?     @db.VarChar(255)
+  device_type   String?     @default("unknown") @db.VarChar(50)
+  view_duration Int?        @default(0)
+  viewed_at     DateTime    @db.Timestamptz(6)
+  experiences   experiences @relation(fields: [experience_id], references: [id], onDelete: Cascade)
+  users         users?      @relation(fields: [user_id], references: [id])
+
+  @@index([experience_id], map: "experience_views_experience_id")
+  @@index([ip_address, session_id], map: "experience_views_ip_address_session_id")
+  @@index([user_id], map: "experience_views_user_id")
+  @@index([viewed_at], map: "experience_views_viewed_at")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model experiences {
+  id                          Int                      @id @default(autoincrement())
+  uuid                        String?                  @unique @db.Uuid
+  title                       String                   @db.VarChar(500)
+  title_id                    String?                  @db.VarChar(500)
+  title_en                    String?                  @db.VarChar(500)
+  slug                        String?                  @unique @db.VarChar(255)
+  description                 String
+  description_id              String?
+  description_en              String?
+  short_description           String?                  @db.VarChar(500)
+  what_to_expect              Json?
+  requirements                Json?
+  host_id                     Int?
+  category_id                 Int?
+  experience_type_id          Int?
+  city_id                     Int?
+  package_price               Decimal?                 @db.Decimal(10, 2)
+  currency                    String?                  @default("USD") @db.VarChar(3)
+  duration_hours              Int?                     @default(4)
+  max_participants            Int?                     @default(10)
+  min_participants            Int?                     @default(1)
+  difficulty_level            String?                  @db.VarChar(20)
+  images                      Json?
+  included_items              Json?
+  excluded_items              Json?
+  meeting_point               String?
+  latitude                    Decimal?                 @db.Decimal(10, 8)
+  longitude                   Decimal?                 @db.Decimal(11, 8)
+  status                      enum_experiences_status  @default(draft)
+  is_active                   Boolean?                 @default(true)
+  is_featured                 Boolean?                 @default(false)
+  rating_average              Decimal?                 @default(0) @db.Decimal(3, 2)
+  rating_count                Int?                     @default(0)
+  booking_count               Int?                     @default(0)
+  host_specific_data          Json?
+  deliverables                Json?
+  equipment_used              Json?
+  ending_point                String?
+  walking_distance_km         Decimal?                 @db.Decimal(5, 2)
+  fitness_level               String?                  @db.VarChar(20)
+  rejection_reason            String?
+  rejected_at                 DateTime?                @db.Timestamptz(6)
+  reviewed_by                 Int?
+  reviewed_at                 DateTime?                @db.Timestamptz(6)
+  suspension_reason           String?
+  status_history              Json?                    @default("[]")
+  requires_passport           Boolean                  @default(false)
+  requires_nationality        Boolean                  @default(true)
+  requires_emergency_contact  Boolean                  @default(false)
+  passport_requirement_reason String?
+  view_count                  Int                      @default(0)
+  share_count                 Int                      @default(0)
+  last_viewed_at              DateTime?                @db.Timestamptz(6)
+  analytics_updated_at        DateTime?                @db.Timestamptz(6)
+  created_at                  DateTime                 @db.Timestamptz(6)
+  updated_at                  DateTime                 @db.Timestamptz(6)
+  bookings                    bookings[]
+  experience_itineraries      experience_itineraries[]
+  experience_shares           experience_shares[]
+  experience_views            experience_views[]
+  host_categories             host_categories?         @relation(fields: [category_id], references: [id])
+  cities                      cities?                  @relation(fields: [city_id], references: [id])
+  experience_types            experience_types?        @relation(fields: [experience_type_id], references: [id])
+  users                       users?                   @relation(fields: [host_id], references: [id])
+  featured_experiences        featured_experiences[]
+  reviews                     reviews[]
+}
+
+model faqs {
+  id            Int                 @id @default(autoincrement())
+  question      String              @db.VarChar(500)
+  answer        String
+  category      enum_faqs_category? @default(general)
+  is_active     Boolean?            @default(true)
+  is_featured   Boolean?            @default(false)
+  display_order Int?                @default(0)
+  view_count    Int?                @default(0)
+  helpful_count Int?                @default(0)
+  tags          Json?               @default("[]") @db.Json
+  created_at    DateTime            @db.Timestamptz(6)
+  updated_at    DateTime            @db.Timestamptz(6)
+}
+
+model featured_cities {
+  id             Int       @id @default(autoincrement())
+  city_id        Int?
+  sort_order     Int       @default(0)
+  featured_from  DateTime  @db.Timestamptz(6)
+  featured_until DateTime? @db.Timestamptz(6)
+  badge          String?   @default("Popular Destination") @db.VarChar(100)
+  created_by     Int?
+  is_active      Boolean   @default(true)
+  created_at     DateTime  @db.Timestamptz(6)
+  updated_at     DateTime  @db.Timestamptz(6)
+  cities         cities?   @relation(fields: [city_id], references: [id])
+  users          users?    @relation(fields: [created_by], references: [id])
+
+  @@index([city_id], map: "featured_cities_city_id")
+  @@index([featured_from, featured_until], map: "featured_cities_featured_from_featured_until")
+  @@index([is_active, sort_order], map: "featured_cities_is_active_sort_order")
+}
+
+model featured_experiences {
+  id             Int          @id @default(autoincrement())
+  experience_id  Int?
+  sort_order     Int          @default(0)
+  featured_from  DateTime     @db.Timestamptz(6)
+  featured_until DateTime?    @db.Timestamptz(6)
+  badge          String?      @default("Featured Experience") @db.VarChar(100)
+  created_by     Int?
+  is_active      Boolean      @default(true)
+  created_at     DateTime     @db.Timestamptz(6)
+  updated_at     DateTime     @db.Timestamptz(6)
+  users          users?       @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+  experiences    experiences? @relation(fields: [experience_id], references: [id])
+
+  @@index([experience_id], map: "featured_experiences_experience_id")
+  @@index([featured_from, featured_until], map: "featured_experiences_featured_from_featured_until")
+  @@index([is_active, sort_order], map: "featured_experiences_is_active_sort_order")
+}
+
+model featured_hosts {
+  id                                     Int       @id @default(autoincrement())
+  host_id                                Int?
+  sort_order                             Int       @default(0)
+  featured_from                          DateTime  @db.Timestamptz(6)
+  featured_until                         DateTime? @db.Timestamptz(6)
+  badge                                  String?   @default("Verified Host") @db.VarChar(100)
+  created_by                             Int?
+  is_active                              Boolean   @default(true)
+  created_at                             DateTime  @db.Timestamptz(6)
+  updated_at                             DateTime  @db.Timestamptz(6)
+  users_featured_hosts_created_byTousers users?    @relation("featured_hosts_created_byTousers", fields: [created_by], references: [id], onUpdate: NoAction)
+  users_featured_hosts_host_idTousers    users?    @relation("featured_hosts_host_idTousers", fields: [host_id], references: [id])
+
+  @@index([featured_from, featured_until], map: "featured_hosts_featured_from_featured_until")
+  @@index([host_id], map: "featured_hosts_host_id")
+  @@index([is_active, sort_order], map: "featured_hosts_is_active_sort_order")
+}
+
+model featured_stories {
+  id             Int       @id @default(autoincrement())
+  story_id       Int?
+  sort_order     Int       @default(0)
+  featured_from  DateTime  @db.Timestamptz(6)
+  featured_until DateTime? @db.Timestamptz(6)
+  badge          String?   @default("Featured Story") @db.VarChar(100)
+  created_by     Int?
+  is_active      Boolean   @default(true)
+  created_at     DateTime  @db.Timestamptz(6)
+  updated_at     DateTime  @db.Timestamptz(6)
+  users          users?    @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+  stories        stories?  @relation(fields: [story_id], references: [id])
+
+  @@index([featured_from, featured_until], map: "featured_stories_featured_from_featured_until")
+  @@index([is_active, sort_order], map: "featured_stories_is_active_sort_order")
+  @@index([story_id], map: "featured_stories_story_id")
+}
+
+model featured_testimonials {
+  id          Int                                 @id @default(autoincrement())
+  name        String                              @db.VarChar(100)
+  category    enum_featured_testimonials_category
+  title       String?                             @db.VarChar(150)
+  testimonial String
+  avatar_url  String?                             @db.VarChar(255)
+  location    String?                             @db.VarChar(100)
+  sort_order  Int?                                @default(0)
+  is_active   Boolean?                            @default(true)
+  created_at  DateTime                            @db.Timestamptz(6)
+  updated_at  DateTime                            @db.Timestamptz(6)
+
+  @@index([category], map: "featured_testimonials_category")
+  @@index([is_active, sort_order], map: "featured_testimonials_is_active_sort_order")
+}
+
+model host_categories {
+  id                   Int                    @id @default(autoincrement())
+  name                 String                 @unique @db.VarChar(255)
+  description          String?
+  icon                 String?                @db.VarChar(100)
+  image_url            String?                @db.VarChar(255)
+  is_active            Boolean?               @default(true)
+  sort_order           Int?                   @default(0)
+  created_at           DateTime               @db.Timestamptz(6)
+  updated_at           DateTime               @db.Timestamptz(6)
+  experiences          experiences[]
+  user_host_categories user_host_categories[]
+}
+
+model host_commission_summaries {
+  id                    String    @id @db.Uuid
+  host_id               Int
+  gross_revenue         Decimal   @default(0) @db.Decimal(15, 2)
+  platform_commission   Decimal   @default(0) @db.Decimal(15, 2)
+  net_revenue           Decimal   @default(0) @db.Decimal(15, 2)
+  commission_rate       Decimal   @default(5) @db.Decimal(5, 2)
+  currency              String    @default("IDR") @db.VarChar(3)
+  this_month_commission Decimal   @default(0) @db.Decimal(15, 2)
+  total_commission_paid Decimal   @default(0) @db.Decimal(15, 2)
+  avg_commission_rate   Decimal   @default(5) @db.Decimal(5, 2)
+  last_calculated_at    DateTime? @db.Timestamptz(6)
+  period_start          DateTime? @db.Timestamptz(6)
+  period_end            DateTime? @db.Timestamptz(6)
+  created_at            DateTime  @db.Timestamptz(6)
+  updated_at            DateTime  @db.Timestamptz(6)
+  users                 users     @relation(fields: [host_id], references: [id], onDelete: NoAction)
+
+  @@index([host_id], map: "host_commission_summaries_host_id")
+  @@index([last_calculated_at], map: "host_commission_summaries_last_calculated_at")
+}
+
+model host_kyc {
+  id                                Int                        @id @default(autoincrement())
+  user_id                           Int                        @unique
+  full_name                         String                     @db.VarChar(255)
+  date_of_birth                     DateTime                   @db.Date
+  place_of_birth                    String?                    @db.VarChar(255)
+  nationality                       String                     @db.VarChar(100)
+  gender                            enum_host_kyc_gender?
+  id_type                           enum_host_kyc_id_type
+  id_number                         String                     @unique @db.VarChar(100)
+  id_expiry_date                    DateTime?                  @db.Date
+  address_line_1                    String                     @db.VarChar(500)
+  address_line_2                    String?                    @db.VarChar(500)
+  city                              String                     @db.VarChar(100)
+  province                          String                     @db.VarChar(100)
+  postal_code                       String?                    @db.VarChar(20)
+  country                           String                     @default("Indonesia") @db.VarChar(100)
+  business_name                     String?                    @db.VarChar(255)
+  business_registration_number      String?                    @db.VarChar(100)
+  tax_number                        String?                    @db.VarChar(100)
+  certifications                    Json?                      @db.Json
+  emergency_contact_name            String?                    @db.VarChar(255)
+  emergency_contact_phone           String?                    @db.VarChar(50)
+  emergency_contact_relationship    String?                    @db.VarChar(100)
+  status                            enum_host_kyc_status       @default(pending)
+  reviewed_by                       Int?
+  reviewed_at                       DateTime?                  @db.Timestamptz(6)
+  rejection_reason                  String?
+  admin_notes                       String?
+  submitted_at                      DateTime?                  @db.Timestamptz(6)
+  approved_at                       DateTime?                  @db.Timestamptz(6)
+  verification_score                Int?
+  verification_flags                Json?                      @db.Json
+  created_at                        DateTime                   @db.Timestamptz(6)
+  updated_at                        DateTime                   @db.Timestamptz(6)
+  users_host_kyc_reviewed_byTousers users?                     @relation("host_kyc_reviewed_byTousers", fields: [reviewed_by], references: [id])
+  users_host_kyc_user_idTousers     users                      @relation("host_kyc_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction)
+  kyc_documents                     kyc_documents[]
+  kyc_verification_history          kyc_verification_history[]
+
+  @@index([id_number], map: "idx_host_kyc_id_number")
+  @@index([status], map: "idx_host_kyc_status")
+  @@index([user_id], map: "idx_host_kyc_user_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model identity_verification_audit {
+  id                                                   Int      @id @default(autoincrement())
+  user_id                                              Int
+  verification_type                                    String   @db.VarChar(50)
+  verification_method                                  String?  @db.VarChar(50)
+  verified_by                                          Int?
+  verification_data                                    Json?
+  status                                               String   @default("pending") @db.VarChar(20)
+  created_at                                           DateTime @db.Timestamptz(6)
+  updated_at                                           DateTime @db.Timestamptz(6)
+  users_identity_verification_audit_user_idTousers     users    @relation("identity_verification_audit_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction)
+  users_identity_verification_audit_verified_byTousers users?   @relation("identity_verification_audit_verified_byTousers", fields: [verified_by], references: [id])
+
+  @@index([status], map: "identity_verification_audit_status")
+  @@index([user_id], map: "identity_verification_audit_user_id")
+}
+
+model kyc_documents {
+  id                  Int                                    @id @default(autoincrement())
+  kyc_id              Int
+  document_type       enum_kyc_documents_document_type
+  file_path           String                                 @db.VarChar(500)
+  file_name           String                                 @db.VarChar(255)
+  file_size           Int?
+  mime_type           String?                                @db.VarChar(100)
+  upload_ip           String?                                @db.VarChar(45)
+  verification_status enum_kyc_documents_verification_status @default(pending)
+  rejection_reason    String?
+  extracted_data      Json?                                  @db.Json
+  created_at          DateTime                               @db.Timestamptz(6)
+  updated_at          DateTime                               @db.Timestamptz(6)
+  host_kyc            host_kyc                               @relation(fields: [kyc_id], references: [id], onDelete: Cascade)
+
+  @@index([kyc_id], map: "idx_kyc_documents_kyc_id")
+  @@index([document_type], map: "idx_kyc_documents_type")
+}
+
+model kyc_verification_history {
+  id              Int                                       @id @default(autoincrement())
+  kyc_id          Int
+  previous_status String?                                   @db.VarChar(50)
+  new_status      String                                    @db.VarChar(50)
+  action_by       Int?
+  action_type     enum_kyc_verification_history_action_type
+  notes           String?
+  changes         Json?                                     @db.Json
+  ip_address      String?                                   @db.VarChar(45)
+  user_agent      String?
+  created_at      DateTime                                  @db.Timestamptz(6)
+  users           users?                                    @relation(fields: [action_by], references: [id])
+  host_kyc        host_kyc                                  @relation(fields: [kyc_id], references: [id], onDelete: Cascade)
+
+  @@index([action_by], map: "idx_kyc_history_action_by")
+  @@index([created_at], map: "idx_kyc_history_created_at")
+  @@index([kyc_id], map: "idx_kyc_history_kyc_id")
+}
+
+model languages {
+  id             Int              @id @default(autoincrement())
+  name           String           @unique @db.VarChar(50)
+  code           String           @unique @db.VarChar(5)
+  native_name    String?          @db.VarChar(50)
+  is_active      Boolean?         @default(true)
+  created_at     DateTime         @db.Timestamptz(6)
+  updated_at     DateTime         @db.Timestamptz(6)
+  user_languages user_languages[]
+}
+
+model messages {
+  id              Int           @id @default(autoincrement())
+  conversation_id Int
+  sender_id       Int
+  content         String
+  message_type    String?       @default("text") @db.VarChar(20)
+  attachments     Json?         @default("[]")
+  is_read         Boolean?      @default(false)
+  read_at         DateTime?     @db.Timestamptz(6)
+  is_deleted      Boolean?      @default(false)
+  created_at      DateTime?     @db.Timestamptz(6)
+  conversations   conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  users           users         @relation(fields: [sender_id], references: [id], onDelete: NoAction)
+}
+
+model nationalities {
+  id               Int      @id @default(autoincrement())
+  country_code     String   @unique @db.VarChar(3)
+  nationality_name String   @db.VarChar(100)
+  adjective_form   String?  @db.VarChar(100)
+  is_active        Boolean? @default(true)
+  created_at       DateTime @db.Timestamptz(6)
+  updated_at       DateTime @db.Timestamptz(6)
+
+  @@index([is_active], map: "nationalities_is_active")
+  @@index([nationality_name], map: "nationalities_nationality_name")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model newsletter_subscriptions {
+  id              Int       @id @default(autoincrement())
+  email           String    @unique(map: "newsletter_subscriptions_email") @db.VarChar(100)
+  user_id         Int?
+  is_active       Boolean?  @default(true)
+  subscribed_at   DateTime? @db.Timestamptz(6)
+  unsubscribed_at DateTime? @db.Timestamptz(6)
+  users           users?    @relation(fields: [user_id], references: [id])
+
+  @@index([is_active], map: "newsletter_subscriptions_is_active")
+  @@index([user_id], map: "newsletter_subscriptions_user_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model newsletters {
+  id                            String    @id @db.Uuid
+  email                         String    @db.VarChar(255)
+  name                          String?   @db.VarChar(255)
+  user_id                       Int?
+  is_verified                   Boolean?  @default(false)
+  verification_token            String?   @db.VarChar(255)
+  verification_token_expires_at DateTime? @db.Timestamptz(6)
+  unsubscribe_token             String?   @db.VarChar(255)
+  is_subscribed                 Boolean?  @default(true)
+  frequency                     String?   @default("weekly") @db.VarChar(50)
+  categories                    String?
+  subscribed_at                 DateTime? @db.Timestamptz(6)
+  unsubscribed_at               DateTime? @db.Timestamptz(6)
+  verified_at                   DateTime? @db.Timestamptz(6)
+  last_email_sent_at            DateTime? @db.Timestamptz(6)
+  preferences                   Json?
+  subscription_source           String?   @db.VarChar(50)
+  created_at                    DateTime? @db.Timestamptz(6)
+  updated_at                    DateTime? @db.Timestamptz(6)
+  users                         users?    @relation(fields: [user_id], references: [id])
+
+  @@index([email], map: "newsletters_email")
+  @@index([is_subscribed], map: "newsletters_is_subscribed")
+  @@index([is_verified], map: "newsletters_is_verified")
+  @@index([user_id], map: "newsletters_user_id")
+}
+
+model notification_settings {
+  id               Int      @id @default(autoincrement())
+  user_id          Int?     @unique(map: "notification_settings_user_id")
+  email_bookings   Boolean? @default(true)
+  email_messages   Boolean? @default(true)
+  email_reviews    Boolean? @default(true)
+  email_promotions Boolean? @default(true)
+  email_updates    Boolean? @default(true)
+  push_bookings    Boolean? @default(true)
+  push_messages    Boolean? @default(true)
+  push_reviews     Boolean? @default(true)
+  created_at       DateTime @db.Timestamptz(6)
+  updated_at       DateTime @db.Timestamptz(6)
+  users            users?   @relation(fields: [user_id], references: [id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model notifications {
+  id         Int       @id @default(autoincrement())
+  uuid       String?   @unique @db.Uuid
+  user_id    Int
+  type       String    @db.VarChar(50)
+  title      String    @db.VarChar(255)
+  message    String
+  data       Json?     @default("{}")
+  read       Boolean   @default(false)
+  read_at    DateTime? @db.Timestamptz(6)
+  action_url String?   @db.VarChar(500)
+  created_at DateTime  @db.Timestamptz(6)
+  updated_at DateTime  @db.Timestamptz(6)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([created_at], map: "notifications_created_at")
+  @@index([read], map: "notifications_read")
+  @@index([type], map: "notifications_type")
+  @@index([user_id], map: "notifications_user_id")
+  @@index([user_id, read], map: "notifications_user_id_read")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model payments {
+  id                     Int              @id @default(autoincrement())
+  booking_id             Int
+  user_id                Int
+  amount                 Decimal          @db.Decimal(10, 2)
+  currency               String?          @default("USD") @db.VarChar(3)
+  status                 String?          @default("pending") @db.VarChar(20)
+  payment_date           DateTime?        @db.Timestamptz(6)
+  payment_gateway        String           @default("paypal") @db.VarChar(50)
+  gateway_payment_method String?          @db.VarChar(100)
+  gateway_transaction_id String?          @db.VarChar(255)
+  gateway_reference      String?          @db.VarChar(255)
+  gateway_data           Json?
+  platform_fee           Decimal?         @default(0) @db.Decimal(10, 2)
+  host_commission        Decimal?         @default(0) @db.Decimal(10, 2)
+  affiliate_commission   Decimal?         @default(0) @db.Decimal(10, 2)
+  commission_breakdown   Json?            @default("{}")
+  base_amount            Decimal?         @db.Decimal(10, 2)
+  total_with_fee         Decimal?         @db.Decimal(10, 2)
+  discount_amount        Decimal?         @default(0) @db.Decimal(10, 2)
+  promo_code_id          Int?
+  experience_price       Decimal          @db.Decimal(10, 2)
+  created_at             DateTime         @db.Timestamptz(6)
+  updated_at             DateTime         @db.Timestamptz(6)
+  bookings               bookings         @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  promotion_codes        promotion_codes? @relation(fields: [promo_code_id], references: [id])
+  users                  users            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model payout_history {
+  id                    Int                 @id @default(autoincrement())
+  user_id               Int
+  bank_account_id       Int?
+  amount                Decimal             @db.Decimal(12, 2)
+  currency              String              @default("IDR") @db.VarChar(3)
+  status                String              @default("pending") @db.VarChar(50)
+  payout_method         String              @db.VarChar(50)
+  transaction_reference String?             @db.VarChar(255)
+  notes                 String?
+  processed_at          DateTime?           @db.Timestamptz(6)
+  created_at            DateTime            @db.Timestamptz(6)
+  updated_at            DateTime            @db.Timestamptz(6)
+  user_bank_accounts    user_bank_accounts? @relation(fields: [bank_account_id], references: [id])
+  users                 users               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model payout_settings {
+  id             Int      @id @default(autoincrement())
+  user_id        Int      @unique
+  minimum_payout Decimal  @default(100000) @db.Decimal(10, 2)
+  payout_method  String?  @default("bank_transfer") @db.VarChar(50)
+  auto_payout    Boolean? @default(false)
+  created_at     DateTime @db.Timestamptz(6)
+  updated_at     DateTime @db.Timestamptz(6)
+  users          users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model promo_code_usage {
+  id                      Int             @id @default(autoincrement())
+  booking_id              Int
+  promo_code_id           Int
+  user_id                 Int
+  discount_amount         Decimal         @db.Decimal(10, 2)
+  currency                String          @db.VarChar(3)
+  original_booking_amount Decimal         @db.Decimal(10, 2)
+  final_booking_amount    Decimal         @db.Decimal(10, 2)
+  applied_at              DateTime        @db.Timestamptz(6)
+  ip_address              String?         @db.Inet
+  user_agent              String?
+  bookings                bookings        @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  promotion_codes         promotion_codes @relation(fields: [promo_code_id], references: [id], onDelete: Cascade)
+  users                   users           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([applied_at], map: "promo_code_usage_applied_at")
+  @@index([booking_id], map: "promo_code_usage_booking_id")
+  @@index([promo_code_id], map: "promo_code_usage_promo_code_id")
+  @@index([user_id], map: "promo_code_usage_user_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model promotion_codes {
+  id                                        Int                                @id @default(autoincrement())
+  code                                      String                             @unique @db.VarChar(50)
+  type                                      enum_promotion_codes_type
+  created_by                                Int?
+  discount_type                             enum_promotion_codes_discount_type
+  discount_value                            Decimal                            @db.Decimal(10, 2)
+  min_booking_amount                        Decimal                            @default(0) @db.Decimal(10, 2)
+  max_discount_amount                       Decimal?                           @db.Decimal(10, 2)
+  usage_limit                               Int?
+  usage_count                               Int                                @default(0)
+  stackable                                 Boolean                            @default(false)
+  category_restrictions                     String[]                           @default([]) @db.VarChar(255)
+  location_restrictions                     String[]                           @default([]) @db.VarChar(255)
+  valid_from                                DateTime                           @db.Timestamptz(6)
+  valid_until                               DateTime?                          @db.Timestamptz(6)
+  status                                    enum_promotion_codes_status        @default(active)
+  description                               String?
+  currency                                  String                             @default("IDR") @db.VarChar(3)
+  internal_notes                            String?
+  affiliate_id                              Int?
+  created_at                                DateTime                           @db.Timestamptz(6)
+  updated_at                                DateTime                           @db.Timestamptz(6)
+  payments                                  payments[]
+  promo_code_usage                          promo_code_usage[]
+  users_promotion_codes_affiliate_idTousers users?                             @relation("promotion_codes_affiliate_idTousers", fields: [affiliate_id], references: [id], onUpdate: NoAction)
+  users_promotion_codes_created_byTousers   users?                             @relation("promotion_codes_created_byTousers", fields: [created_by], references: [id])
+
+  @@index([affiliate_id], map: "promotion_codes_affiliate_id")
+  @@index([code], map: "promotion_codes_code")
+  @@index([status], map: "promotion_codes_status")
+  @@index([type], map: "promotion_codes_type")
+  @@index([valid_from, valid_until], map: "promotion_codes_valid_from_valid_until")
+}
+
+model reports {
+  id                               Int       @id @default(autoincrement())
+  reporter_id                      Int
+  offender_id                      Int
+  content_type                     String    @db.VarChar(50)
+  content_id                       Int
+  reason                           String    @db.VarChar(255)
+  description                      String?
+  status                           String    @default("pending") @db.VarChar(20)
+  resolved_by                      Int?
+  resolved_at                      DateTime? @db.Timestamptz(6)
+  xp_penalty                       Int       @default(0)
+  ltp_penalty                      Decimal   @default(0) @db.Decimal(18, 4)
+  created_at                       DateTime? @db.Timestamptz(6)
+  updated_at                       DateTime? @db.Timestamptz(6)
+  users_reports_offender_idTousers users     @relation("reports_offender_idTousers", fields: [offender_id], references: [id], onDelete: NoAction)
+  users_reports_reporter_idTousers users     @relation("reports_reporter_idTousers", fields: [reporter_id], references: [id], onDelete: NoAction)
+  users_reports_resolved_byTousers users?    @relation("reports_resolved_byTousers", fields: [resolved_by], references: [id])
+
+  @@index([offender_id], map: "reports_offender_id")
+  @@index([reporter_id], map: "reports_reporter_id")
+  @@index([status], map: "reports_status")
+}
+
+model reviews {
+  id                Int         @id @default(autoincrement())
+  experience_id     Int
+  user_id           Int
+  booking_id        Int?        @unique
+  rating            Int
+  title             String?     @db.VarChar(255)
+  comment           String?
+  images            Json?
+  host_response     String?
+  host_responded_at DateTime?   @db.Timestamptz(6)
+  host_reply        String?
+  host_replied_at   DateTime?   @db.Timestamptz(6)
+  is_verified       Boolean?    @default(false)
+  created_at        DateTime    @db.Timestamptz(6)
+  updated_at        DateTime    @db.Timestamptz(6)
+  bookings          bookings?   @relation(fields: [booking_id], references: [id])
+  experiences       experiences @relation(fields: [experience_id], references: [id], onDelete: Cascade)
+  users             users       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model roles {
+  id             Int      @id @default(autoincrement())
+  name           String   @unique @db.VarChar(50)
+  description    String?
+  is_system_role Boolean? @default(false)
+  permissions    Json?    @db.Json
+  created_at     DateTime @db.Timestamptz(6)
+  updated_at     DateTime @db.Timestamptz(6)
+  users          users[]
+
+  @@index([name], map: "roles_name")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model security_events {
+  id                                       Int       @id @default(autoincrement())
+  user_id                                  Int?
+  event_type                               String    @db.VarChar(100)
+  severity                                 String    @default("info") @db.VarChar(20)
+  ip_address                               String?   @db.Inet
+  user_agent                               String?
+  location                                 String?   @db.VarChar(255)
+  metadata                                 Json?
+  resolved                                 Boolean   @default(false)
+  risk_score                               Int?
+  resolved_by                              Int?
+  resolved_at                              DateTime? @db.Timestamptz(6)
+  created_at                               DateTime  @db.Timestamptz(6)
+  users_security_events_resolved_byTousers users?    @relation("security_events_resolved_byTousers", fields: [resolved_by], references: [id])
+  users_security_events_user_idTousers     users?    @relation("security_events_user_idTousers", fields: [user_id], references: [id])
+
+  @@index([created_at], map: "security_events_created_at")
+  @@index([event_type], map: "security_events_event_type")
+  @@index([ip_address], map: "security_events_ip_address")
+  @@index([resolved], map: "security_events_resolved")
+  @@index([risk_score], map: "security_events_risk_score")
+  @@index([severity], map: "security_events_severity")
+  @@index([severity, resolved, created_at], map: "security_events_severity_resolved_created_at")
+  @@index([user_id], map: "security_events_user_id")
+  @@index([user_id, event_type, created_at], map: "security_events_user_id_event_type_created_at")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model stories {
+  id                                  Int                  @id @default(autoincrement())
+  uuid                                String               @unique @db.VarChar(100)
+  title                               String               @db.VarChar(200)
+  slug                                String               @unique @db.VarChar(220)
+  content                             String
+  excerpt                             String?              @db.VarChar(500)
+  author_id                           Int
+  city_id                             Int?
+  cover_image                         String?              @db.VarChar(255)
+  images                              Json?                @default("[]") @db.Json
+  meta_title                          String?              @db.VarChar(60)
+  meta_description                    String?              @db.VarChar(160)
+  keywords                            Json?                @db.Json
+  tags                                Json?                @db.Json
+  reading_time                        Int?
+  language                            String?              @default("en") @db.VarChar(5)
+  status                              enum_stories_status? @default(draft)
+  admin_reason                        String?
+  is_active                           Boolean?             @default(true)
+  is_featured                         Boolean?             @default(false)
+  view_count                          Int?                 @default(0)
+  like_count                          Int?                 @default(0)
+  comment_count                       Int?                 @default(0)
+  share_count                         Int?                 @default(0)
+  approved_by                         Int?
+  approved_at                         DateTime?            @db.Timestamptz(6)
+  rejected_by                         Int?
+  rejected_at                         DateTime?            @db.Timestamptz(6)
+  published_by                        Int?
+  published_at                        DateTime?            @db.Timestamptz(6)
+  last_action_by                      Int?
+  last_action_at                      DateTime?            @db.Timestamptz(6)
+  approval_notes                      String?
+  created_at                          DateTime             @db.Timestamptz(6)
+  updated_at                          DateTime             @db.Timestamptz(6)
+  featured_stories                    featured_stories[]
+  users_stories_approved_byTousers    users?               @relation("stories_approved_byTousers", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_stories_author_idTousers      users                @relation("stories_author_idTousers", fields: [author_id], references: [id], onDelete: Cascade)
+  cities                              cities?              @relation(fields: [city_id], references: [id])
+  users_stories_last_action_byTousers users?               @relation("stories_last_action_byTousers", fields: [last_action_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_stories_published_byTousers   users?               @relation("stories_published_byTousers", fields: [published_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_stories_rejected_byTousers    users?               @relation("stories_rejected_byTousers", fields: [rejected_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  story_audit_log                     story_audit_log[]
+  story_bookmarks                     story_bookmarks[]
+  story_comments                      story_comments[]
+  story_likes                         story_likes[]
+  story_shares                        story_shares[]
+  story_views                         story_views[]
+
+  @@index([author_id, status], map: "stories_author_id_status")
+  @@index([city_id, status], map: "stories_city_id_status")
+  @@index([is_featured, status], map: "stories_is_featured_status")
+  @@index([slug], map: "stories_slug")
+  @@index([view_count, like_count], map: "stories_view_count_like_count")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model story_audit_log {
+  id              Int       @id @default(autoincrement())
+  story_id        Int
+  admin_id        Int
+  action          String    @db.VarChar(50)
+  previous_status String?   @db.VarChar(50)
+  new_status      String?   @db.VarChar(50)
+  reason          String?
+  notes           String?
+  metadata        Json?
+  created_at      DateTime? @db.Timestamptz(6)
+  users           users     @relation(fields: [admin_id], references: [id], onDelete: NoAction)
+  stories         stories   @relation(fields: [story_id], references: [id], onDelete: NoAction)
+
+  @@index([action], map: "story_audit_log_action")
+  @@index([admin_id], map: "story_audit_log_admin_id")
+  @@index([created_at], map: "story_audit_log_created_at")
+  @@index([story_id], map: "story_audit_log_story_id")
+  @@index([story_id, action], map: "story_audit_log_story_id_action")
+}
+
+model story_bookmarks {
+  id         Int       @id @default(autoincrement())
+  story_id   Int
+  user_id    Int
+  created_at DateTime? @db.Timestamptz(6)
+  stories    stories   @relation(fields: [story_id], references: [id], onDelete: Cascade)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([story_id, user_id], map: "story_bookmarks_story_id_user_id")
+  @@unique([story_id, user_id], map: "uq_story_bookmarks_story_user")
+  @@index([story_id], map: "story_bookmarks_story_id")
+  @@index([user_id], map: "story_bookmarks_user_id")
+}
+
+model story_comments {
+  id                   Int              @id @default(autoincrement())
+  story_id             Int
+  user_id              Int
+  parent_id            Int?
+  content              String
+  is_approved          Boolean?         @default(false)
+  created_at           DateTime         @db.Timestamptz(6)
+  updated_at           DateTime         @db.Timestamptz(6)
+  is_edited            Boolean?         @default(false)
+  deleted_at           DateTime?        @db.Timestamptz(6)
+  story_comments       story_comments?  @relation("story_commentsTostory_comments", fields: [parent_id], references: [id])
+  other_story_comments story_comments[] @relation("story_commentsTostory_comments")
+  stories              stories          @relation(fields: [story_id], references: [id], onDelete: Cascade)
+  users                users            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([story_id, parent_id], map: "story_comments_story_id_parent_id")
+  @@index([user_id], map: "story_comments_user_id")
+}
+
+model story_likes {
+  id         Int      @id @default(autoincrement())
+  story_id   Int
+  user_id    Int
+  created_at DateTime @db.Timestamptz(6)
+  updated_at DateTime @db.Timestamptz(6)
+  stories    stories  @relation(fields: [story_id], references: [id], onDelete: Cascade)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([story_id, user_id], map: "story_likes_story_id_user_id")
+}
+
+model story_shares {
+  id         Int                          @id @default(autoincrement())
+  story_id   Int?
+  user_id    Int?
+  share_type enum_story_shares_share_type
+  ip_address String                       @db.VarChar(45)
+  user_agent String?
+  referrer   String?
+  shared_at  DateTime                     @db.Timestamptz(6)
+  stories    stories?                     @relation(fields: [story_id], references: [id])
+  users      users?                       @relation(fields: [user_id], references: [id])
+
+  @@index([share_type], map: "story_shares_share_type")
+  @@index([shared_at], map: "story_shares_shared_at")
+  @@index([story_id], map: "story_shares_story_id")
+  @@index([story_id, share_type], map: "story_shares_story_id_share_type")
+  @@index([user_id], map: "story_shares_user_id")
+}
+
+model story_views {
+  id            Int                          @id @default(autoincrement())
+  story_id      Int?
+  user_id       Int?
+  ip_address    String                       @db.VarChar(45)
+  user_agent    String?
+  referrer      String?
+  session_id    String?                      @db.VarChar(255)
+  device_type   enum_story_views_device_type @default(unknown)
+  view_duration Int                          @default(0)
+  viewed_at     DateTime                     @db.Timestamptz(6)
+  stories       stories?                     @relation(fields: [story_id], references: [id])
+  users         users?                       @relation(fields: [user_id], references: [id])
+
+  @@index([ip_address, session_id, viewed_at], map: "story_views_ip_address_session_id_viewed_at")
+  @@index([story_id], map: "story_views_story_id")
+  @@index([user_id], map: "story_views_user_id")
+  @@index([viewed_at], map: "story_views_viewed_at")
+}
+
+model user_bank_accounts {
+  id                  Int              @id @default(autoincrement())
+  user_id             Int
+  bank_id             Int
+  account_number      String           @db.VarChar(50)
+  account_holder_name String           @db.VarChar(100)
+  branch_name         String?          @db.VarChar(100)
+  is_primary          Boolean?         @default(false)
+  is_verified         Boolean?         @default(false)
+  created_at          DateTime         @db.Timestamptz(6)
+  updated_at          DateTime         @db.Timestamptz(6)
+  payout_history      payout_history[]
+  banks               banks            @relation(fields: [bank_id], references: [id], onDelete: NoAction)
+  users               users            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, bank_id, account_number], map: "user_bank_accounts_user_id_bank_id_account_number")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model user_communication_contacts {
+  id                   Int                 @id @default(autoincrement())
+  user_id              Int?
+  communication_app_id Int?
+  contact_value        String              @db.VarChar(255)
+  is_verified          Boolean?            @default(false)
+  created_at           DateTime            @db.Timestamptz(6)
+  updated_at           DateTime            @db.Timestamptz(6)
+  communication_apps   communication_apps? @relation(fields: [communication_app_id], references: [id])
+  users                users?              @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, communication_app_id], map: "user_communication_contacts_user_id_communication_app_id")
+}
+
+model user_follows {
+  id                                     Int      @id @default(autoincrement())
+  follower_id                            Int?
+  following_id                           Int?
+  created_at                             DateTime @db.Timestamptz(6)
+  users_user_follows_follower_idTousers  users?   @relation("user_follows_follower_idTousers", fields: [follower_id], references: [id])
+  users_user_follows_following_idTousers users?   @relation("user_follows_following_idTousers", fields: [following_id], references: [id])
+
+  @@unique([follower_id, following_id], map: "user_follows_follower_id_following_id")
+  @@index([follower_id], map: "user_follows_follower_id")
+  @@index([following_id], map: "user_follows_following_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model user_host_categories {
+  id               Int              @id @default(autoincrement())
+  user_id          Int?
+  host_category_id Int?
+  is_primary       Boolean?         @default(false)
+  created_at       DateTime         @db.Timestamptz(6)
+  updated_at       DateTime         @db.Timestamptz(6)
+  host_categories  host_categories? @relation(fields: [host_category_id], references: [id])
+  users            users?           @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, host_category_id], map: "user_host_categories_user_id_host_category_id")
+  @@unique([user_id, host_category_id])
+  @@index([host_category_id], map: "user_host_categories_host_category_id")
+  @@index([is_primary], map: "user_host_categories_is_primary")
+  @@index([user_id], map: "user_host_categories_user_id")
+}
+
+model user_languages {
+  id                Int        @id @default(autoincrement())
+  user_id           Int?
+  language_id       Int?
+  proficiency_level String     @default("conversational") @db.VarChar(50)
+  created_at        DateTime   @db.Timestamptz(6)
+  updated_at        DateTime   @db.Timestamptz(6)
+  languages         languages? @relation(fields: [language_id], references: [id], onDelete: Cascade)
+  users             users?     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, language_id], map: "user_languages_user_id_language_id")
+  @@unique([user_id, language_id])
+}
+
+model user_ltp_daily_caps {
+  id            Int       @id @default(autoincrement())
+  user_id       Int
+  date          DateTime  @db.Date
+  amount_earned Decimal   @default(0) @db.Decimal(18, 4)
+  created_at    DateTime? @db.Timestamptz(6)
+  updated_at    DateTime? @db.Timestamptz(6)
+  users         users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, date], map: "uq_user_ltp_daily_caps_user_date")
+  @@index([user_id, date], map: "user_ltp_daily_caps_user_id_date")
+}
+
+model user_ltp_transactions {
+  id            String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id       Int
+  amount        Decimal   @db.Decimal(18, 4)
+  type          String    @db.VarChar(20)
+  activity_type String    @db.VarChar(50)
+  source_id     Int?
+  source_table  String?   @db.VarChar(50)
+  created_at    DateTime? @db.Timestamptz(6)
+  users         users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "user_ltp_transactions_user_id")
+}
+
+model user_ltp_wallets {
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    Int       @unique
+  balance    Decimal   @default(0) @db.Decimal(18, 4)
+  created_at DateTime? @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "user_ltp_wallets_user_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model user_sessions {
+  id               Int       @id @default(autoincrement())
+  user_id          Int?
+  session_token    String    @unique(map: "user_sessions_session_token") @db.VarChar(255)
+  device_type      String?   @db.VarChar(50)
+  browser          String?   @db.VarChar(100)
+  os               String?   @db.VarChar(100)
+  ip_address       String?   @db.Inet
+  user_agent       String?
+  location         String?   @db.VarChar(255)
+  device_id        String?   @db.VarChar(255)
+  platform         String?   @db.VarChar(50)
+  login_at         DateTime? @db.Timestamptz(6)
+  last_activity_at DateTime  @db.Timestamptz(6)
+  expires_at       DateTime? @db.Timestamptz(6)
+  is_active        Boolean   @default(true)
+  created_at       DateTime  @db.Timestamptz(6)
+  updated_at       DateTime  @db.Timestamptz(6)
+  fcm_token        String?   @db.VarChar(255)
+  users            users?    @relation(fields: [user_id], references: [id])
+
+  @@index([device_id], map: "user_sessions_device_id")
+  @@index([device_id, user_id], map: "user_sessions_device_id_user_id")
+  @@index([ip_address], map: "user_sessions_ip_address")
+  @@index([is_active], map: "user_sessions_is_active")
+  @@index([last_activity_at], map: "user_sessions_last_activity_at")
+  @@index([login_at], map: "user_sessions_login_at")
+  @@index([platform], map: "user_sessions_platform")
+  @@index([user_id], map: "user_sessions_user_id")
+  @@index([user_id, is_active, expires_at], map: "user_sessions_user_id_is_active_expires_at")
+}
+
+model user_xp {
+  id            Int       @id @default(autoincrement())
+  user_id       Int       @unique
+  total_xp      Int       @default(0)
+  current_level Int       @default(1)
+  created_at    DateTime? @db.Timestamptz(6)
+  updated_at    DateTime? @db.Timestamptz(6)
+  users         users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "user_xp_user_id")
+}
+
+model user_xp_history {
+  id            Int       @id @default(autoincrement())
+  user_id       Int
+  amount        Int
+  activity_type String    @db.VarChar(50)
+  source_id     Int?
+  source_table  String?   @db.VarChar(50)
+  created_at    DateTime? @db.Timestamptz(6)
+  users         users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "user_xp_history_user_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model users {
+  id                                                                         Int                            @id @default(autoincrement())
+  uuid                                                                       String?                        @unique @db.Uuid
+  username                                                                   String?                        @unique @db.VarChar(50)
+  name                                                                       String                         @db.VarChar(255)
+  email                                                                      String                         @unique @db.VarChar(255)
+  password_hash                                                              String?                        @db.VarChar(255)
+  role                                                                       String                         @default("traveller") @db.VarChar(50)
+  role_id                                                                    Int?
+  phone                                                                      String?                        @db.VarChar(50)
+  avatar_url                                                                 String?                        @db.VarChar(500)
+  bio                                                                        String?
+  city_id                                                                    Int?
+  is_verified                                                                Boolean?                       @default(false)
+  is_active                                                                  Boolean?                       @default(true)
+  is_trusted                                                                 Boolean?                       @default(false)
+  email_verified_at                                                          DateTime?                      @db.Timestamptz(6)
+  verification_token                                                         String?                        @db.VarChar(255)
+  password_reset_token                                                       String?                        @db.VarChar(255)
+  password_reset_expires_at                                                  DateTime?                      @db.Timestamptz(6)
+  last_login_at                                                              DateTime?                      @db.Timestamptz(6)
+  referral_code                                                              String?                        @unique @db.VarChar(50)
+  referred_by_user_id                                                        Int?
+  used_referral_code                                                         String?                        @db.VarChar(50)
+  passport_number                                                            String?                        @db.VarChar(50)
+  passport_expiry_date                                                       DateTime?                      @db.Date
+  nationality                                                                String?                        @db.VarChar(100)
+  emergency_contact_name                                                     String?                        @db.VarChar(255)
+  emergency_contact_phone                                                    String?                        @db.VarChar(50)
+  emergency_contact_relationship                                             String?                        @db.VarChar(100)
+  date_of_birth                                                              DateTime?                      @db.Date
+  identity_verified_at                                                       DateTime?                      @db.Timestamptz(6)
+  identity_verification_method                                               String?                        @db.VarChar(50)
+  created_at                                                                 DateTime                       @db.Timestamptz(6)
+  updated_at                                                                 DateTime                       @db.Timestamptz(6)
+  followers_count                                                            Int?                           @default(0)
+  following_count                                                            Int?                           @default(0)
+  has_completed_onboarding                                                   Boolean                        @default(false)
+  onboarding_interests                                                       Json?                          @db.Json
+  onboarding_preferred_cities                                                Json?                          @db.Json
+  fcm_token                                                                  String?                        @db.VarChar(255)
+  kyc_reward_status                                                          String                         @default("unclaimed") @db.VarChar(50)
+  affiliate_applications_affiliate_applications_reviewed_byTousers           affiliate_applications[]       @relation("affiliate_applications_reviewed_byTousers")
+  affiliate_applications_affiliate_applications_user_idTousers               affiliate_applications[]       @relation("affiliate_applications_user_idTousers")
+  affiliate_audit_logs_affiliate_audit_logs_performed_byTousers              affiliate_audit_logs[]         @relation("affiliate_audit_logs_performed_byTousers")
+  affiliate_audit_logs_affiliate_audit_logs_user_idTousers                   affiliate_audit_logs[]         @relation("affiliate_audit_logs_user_idTousers")
+  affiliate_programs                                                         affiliate_programs[]
+  audit_logs                                                                 audit_logs[]
+  banner_clicks                                                              banner_clicks[]
+  banners                                                                    banners[]
+  bookings                                                                   bookings[]
+  commission_settings                                                        commission_settings[]
+  commission_transactions                                                    commission_transactions[]
+  conversation_participants                                                  conversation_participants[]
+  conversations_conversations_participant1_idTousers                         conversations[]                @relation("conversations_participant1_idTousers")
+  conversations_conversations_participant2_idTousers                         conversations[]                @relation("conversations_participant2_idTousers")
+  experience_shares                                                          experience_shares[]
+  experience_views                                                           experience_views[]
+  experiences                                                                experiences[]
+  featured_cities                                                            featured_cities[]
+  featured_experiences                                                       featured_experiences[]
+  featured_hosts_featured_hosts_created_byTousers                            featured_hosts[]               @relation("featured_hosts_created_byTousers")
+  featured_hosts_featured_hosts_host_idTousers                               featured_hosts[]               @relation("featured_hosts_host_idTousers")
+  featured_stories                                                           featured_stories[]
+  host_commission_summaries                                                  host_commission_summaries[]
+  host_kyc_host_kyc_reviewed_byTousers                                       host_kyc[]                     @relation("host_kyc_reviewed_byTousers")
+  host_kyc_host_kyc_user_idTousers                                           host_kyc?                      @relation("host_kyc_user_idTousers")
+  identity_verification_audit_identity_verification_audit_user_idTousers     identity_verification_audit[]  @relation("identity_verification_audit_user_idTousers")
+  identity_verification_audit_identity_verification_audit_verified_byTousers identity_verification_audit[]  @relation("identity_verification_audit_verified_byTousers")
+  kyc_verification_history                                                   kyc_verification_history[]
+  messages                                                                   messages[]
+  newsletter_subscriptions                                                   newsletter_subscriptions[]
+  newsletters                                                                newsletters[]
+  notification_settings                                                      notification_settings?
+  notifications                                                              notifications[]
+  payments                                                                   payments[]
+  payout_history                                                             payout_history[]
+  payout_settings                                                            payout_settings?
+  promo_code_usage                                                           promo_code_usage[]
+  promotion_codes_promotion_codes_affiliate_idTousers                        promotion_codes[]              @relation("promotion_codes_affiliate_idTousers")
+  promotion_codes_promotion_codes_created_byTousers                          promotion_codes[]              @relation("promotion_codes_created_byTousers")
+  reports_reports_offender_idTousers                                         reports[]                      @relation("reports_offender_idTousers")
+  reports_reports_reporter_idTousers                                         reports[]                      @relation("reports_reporter_idTousers")
+  reports_reports_resolved_byTousers                                         reports[]                      @relation("reports_resolved_byTousers")
+  reviews                                                                    reviews[]
+  security_events_security_events_resolved_byTousers                         security_events[]              @relation("security_events_resolved_byTousers")
+  security_events_security_events_user_idTousers                             security_events[]              @relation("security_events_user_idTousers")
+  stories_stories_approved_byTousers                                         stories[]                      @relation("stories_approved_byTousers")
+  stories_stories_author_idTousers                                           stories[]                      @relation("stories_author_idTousers")
+  stories_stories_last_action_byTousers                                      stories[]                      @relation("stories_last_action_byTousers")
+  stories_stories_published_byTousers                                        stories[]                      @relation("stories_published_byTousers")
+  stories_stories_rejected_byTousers                                         stories[]                      @relation("stories_rejected_byTousers")
+  story_audit_log                                                            story_audit_log[]
+  story_bookmarks                                                            story_bookmarks[]
+  story_comments                                                             story_comments[]
+  story_likes                                                                story_likes[]
+  story_shares                                                               story_shares[]
+  story_views                                                                story_views[]
+  user_bank_accounts                                                         user_bank_accounts[]
+  user_communication_contacts                                                user_communication_contacts[]
+  user_follows_user_follows_follower_idTousers                               user_follows[]                 @relation("user_follows_follower_idTousers")
+  user_follows_user_follows_following_idTousers                              user_follows[]                 @relation("user_follows_following_idTousers")
+  user_host_categories                                                       user_host_categories[]
+  user_languages                                                             user_languages[]
+  user_ltp_daily_caps                                                        user_ltp_daily_caps[]
+  user_ltp_transactions                                                      user_ltp_transactions[]
+  user_ltp_wallets                                                           user_ltp_wallets?
+  user_sessions                                                              user_sessions[]
+  user_xp                                                                    user_xp?
+  user_xp_history                                                            user_xp_history[]
+  cities                                                                     cities?                        @relation(fields: [city_id], references: [id])
+  users                                                                      users?                         @relation("usersTousers", fields: [referred_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_users                                                                users[]                        @relation("usersTousers")
+  roles                                                                      roles?                         @relation(fields: [role_id], references: [id])
+  vibes_forum_post_dislikes                                                  vibes_forum_post_dislikes[]
+  vibes_forum_post_likes                                                     vibes_forum_post_likes[]
+  vibes_forum_posts                                                          vibes_forum_posts[]
+  vibes_forum_thread_dislikes                                                vibes_forum_thread_dislikes[]
+  vibes_forum_thread_followers                                               vibes_forum_thread_followers[]
+  vibes_forum_thread_likes                                                   vibes_forum_thread_likes[]
+  vibes_forum_thread_shares                                                  vibes_forum_thread_shares[]
+  vibes_forum_thread_views                                                   vibes_forum_thread_views[]
+  vibes_forum_threads_vibes_forum_threads_author_idTousers                   vibes_forum_threads[]          @relation("vibes_forum_threads_author_idTousers")
+  vibes_forum_threads_vibes_forum_threads_last_reply_byTousers               vibes_forum_threads[]          @relation("vibes_forum_threads_last_reply_byTousers")
+  vibes_travel_meetup_members                                                vibes_travel_meetup_members[]
+  vibes_travel_meetup_messages                                               vibes_travel_meetup_messages[]
+  vibes_travel_meetup_shares                                                 vibes_travel_meetup_shares[]
+  vibes_travel_meetup_views                                                  vibes_travel_meetup_views[]
+  vibes_travel_meetups                                                       vibes_travel_meetups[]
+  vibes_user_forum_reputation                                                vibes_user_forum_reputation?
+  user_reward_claims                                                         user_reward_claims[]
+  user_brand_claims                                                          user_brand_claims[]
+  content_reports                                                            content_reports[]
+}
+
+model vibes_forum_categories {
+  id                           Int                      @id @default(autoincrement())
+  parent_id                    Int?
+  name                         String                   @db.VarChar(100)
+  slug                         String                   @unique @db.VarChar(100)
+  description                  String?
+  icon                         String?                  @db.VarChar(50)
+  display_order                Int?                     @default(0)
+  is_active                    Boolean?                 @default(true)
+  thread_count                 Int?                     @default(0)
+  created_at                   DateTime?                @db.Timestamptz(6)
+  updated_at                   DateTime?                @db.Timestamptz(6)
+  vibes_forum_categories       vibes_forum_categories?  @relation("vibes_forum_categoriesTovibes_forum_categories", fields: [parent_id], references: [id])
+  other_vibes_forum_categories vibes_forum_categories[] @relation("vibes_forum_categoriesTovibes_forum_categories")
+  vibes_forum_threads          vibes_forum_threads[]
+}
+
+model vibes_forum_post_dislikes {
+  id                Int               @id @default(autoincrement())
+  post_id           Int
+  user_id           Int
+  created_at        DateTime?         @db.Timestamptz(6)
+  vibes_forum_posts vibes_forum_posts @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  users             users             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([post_id, user_id], map: "uq_vibes_forum_post_dislikes_post_user")
+  @@unique([post_id, user_id], map: "vibes_forum_post_dislikes_post_id_user_id")
+  @@index([post_id], map: "vibes_forum_post_dislikes_post_id")
+  @@index([user_id], map: "vibes_forum_post_dislikes_user_id")
+}
+
+model vibes_forum_post_likes {
+  id                Int               @id @default(autoincrement())
+  post_id           Int
+  user_id           Int
+  created_at        DateTime?         @db.Timestamptz(6)
+  vibes_forum_posts vibes_forum_posts @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  users             users             @relation(fields: [user_id], references: [id], onDelete: NoAction)
+
+  @@unique([post_id, user_id], map: "vibes_forum_post_likes_post_id_user_id")
+}
+
+model vibes_forum_posts {
+  id                        Int                         @id @default(autoincrement())
+  thread_id                 Int
+  parent_id                 Int?
+  author_id                 Int
+  content                   String
+  is_solution               Boolean?                    @default(false)
+  like_count                Int?                        @default(0)
+  status                    String?                     @default("active") @db.VarChar(20)
+  images                    Json?                       @default("[]")
+  deleted_at                DateTime?                   @db.Timestamptz(6)
+  created_at                DateTime?                   @db.Timestamptz(6)
+  updated_at                DateTime?                   @db.Timestamptz(6)
+  is_best_answer            Boolean?                    @default(false)
+  dislike_count             Int?                        @default(0)
+  is_edited                 Boolean?                    @default(false)
+  vibes_forum_post_dislikes vibes_forum_post_dislikes[]
+  vibes_forum_post_likes    vibes_forum_post_likes[]
+  users                     users                       @relation(fields: [author_id], references: [id], onDelete: NoAction)
+  vibes_forum_posts         vibes_forum_posts?          @relation("vibes_forum_postsTovibes_forum_posts", fields: [parent_id], references: [id])
+  other_vibes_forum_posts   vibes_forum_posts[]         @relation("vibes_forum_postsTovibes_forum_posts")
+  vibes_forum_threads       vibes_forum_threads         @relation(fields: [thread_id], references: [id], onDelete: Cascade)
+}
+
+model vibes_forum_thread_dislikes {
+  id                  Int                 @id @default(autoincrement())
+  thread_id           Int
+  user_id             Int
+  created_at          DateTime?           @db.Timestamptz(6)
+  vibes_forum_threads vibes_forum_threads @relation(fields: [thread_id], references: [id], onDelete: Cascade)
+  users               users               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([thread_id, user_id], map: "uq_vibes_forum_thread_dislikes_thread_user")
+  @@unique([thread_id, user_id], map: "vibes_forum_thread_dislikes_thread_id_user_id")
+  @@index([thread_id], map: "vibes_forum_thread_dislikes_thread_id")
+  @@index([user_id], map: "vibes_forum_thread_dislikes_user_id")
+}
+
+model vibes_forum_thread_followers {
+  id                  Int                 @id @default(autoincrement())
+  thread_id           Int
+  user_id             Int
+  created_at          DateTime?           @db.Timestamptz(6)
+  vibes_forum_threads vibes_forum_threads @relation(fields: [thread_id], references: [id], onDelete: Cascade)
+  users               users               @relation(fields: [user_id], references: [id], onDelete: NoAction)
+
+  @@unique([thread_id, user_id], map: "vibes_forum_thread_followers_thread_id_user_id")
+}
+
+model vibes_forum_thread_likes {
+  id                  Int                 @id @default(autoincrement())
+  thread_id           Int
+  user_id             Int
+  created_at          DateTime?           @db.Timestamptz(6)
+  vibes_forum_threads vibes_forum_threads @relation(fields: [thread_id], references: [id], onDelete: Cascade)
+  users               users               @relation(fields: [user_id], references: [id], onDelete: NoAction)
+
+  @@unique([thread_id, user_id], map: "vibes_forum_thread_likes_thread_id_user_id")
+}
+
+model vibes_forum_thread_shares {
+  id                  Int                                       @id @default(autoincrement())
+  thread_id           Int
+  user_id             Int?
+  share_type          enum_vibes_forum_thread_shares_share_type
+  ip_address          String                                    @db.VarChar(45)
+  user_agent          String?
+  shared_at           DateTime                                  @db.Timestamptz(6)
+  vibes_forum_threads vibes_forum_threads                       @relation(fields: [thread_id], references: [id], onDelete: Cascade)
+  users               users?                                    @relation(fields: [user_id], references: [id])
+
+  @@index([share_type], map: "vibes_forum_thread_shares_share_type")
+  @@index([shared_at], map: "vibes_forum_thread_shares_shared_at")
+  @@index([thread_id], map: "vibes_forum_thread_shares_thread_id")
+  @@index([thread_id, share_type], map: "vibes_forum_thread_shares_thread_id_share_type")
+  @@index([user_id], map: "vibes_forum_thread_shares_user_id")
+}
+
+model vibes_forum_thread_tags {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique @db.VarChar(50)
+  slug         String   @unique @db.VarChar(50)
+  thread_count Int?     @default(0)
+  is_active    Boolean? @default(true)
+  created_at   DateTime @db.Timestamptz(6)
+  updated_at   DateTime @db.Timestamptz(6)
+}
+
+model vibes_forum_thread_views {
+  id                  Int                 @id @default(autoincrement())
+  thread_id           Int
+  user_id             Int?
+  ip_address          String              @db.VarChar(45)
+  user_agent          String?
+  session_id          String?             @db.VarChar(255)
+  viewed_at           DateTime            @db.Timestamptz(6)
+  vibes_forum_threads vibes_forum_threads @relation(fields: [thread_id], references: [id], onDelete: Cascade)
+  users               users?              @relation(fields: [user_id], references: [id])
+
+  @@index([ip_address, session_id, viewed_at], map: "vibes_forum_thread_views_ip_address_session_id_viewed_at")
+  @@index([thread_id], map: "vibes_forum_thread_views_thread_id")
+  @@index([user_id], map: "vibes_forum_thread_views_user_id")
+  @@index([viewed_at], map: "vibes_forum_thread_views_viewed_at")
+}
+
+model vibes_forum_threads {
+  id                                             Int                            @id @default(autoincrement())
+  category_id                                    Int
+  author_id                                      Int
+  title                                          String                         @db.VarChar(255)
+  slug                                           String                         @db.VarChar(255)
+  content                                        String
+  is_pinned                                      Boolean?                       @default(false)
+  is_locked                                      Boolean?                       @default(false)
+  is_featured                                    Boolean?                       @default(false)
+  view_count                                     Int?                           @default(0)
+  reply_count                                    Int?                           @default(0)
+  like_count                                     Int?                           @default(0)
+  last_reply_at                                  DateTime?                      @db.Timestamptz(6)
+  last_reply_by                                  Int?
+  status                                         String?                        @default("active") @db.VarChar(20)
+  images                                         Json?                          @default("[]")
+  experience_type_id                             Int?
+  meta_title                                     String?                        @db.VarChar(60)
+  meta_description                               String?                        @db.VarChar(160)
+  meta_keywords                                  String?
+  deleted_at                                     DateTime?                      @db.Timestamptz(6)
+  created_at                                     DateTime?                      @db.Timestamptz(6)
+  updated_at                                     DateTime?                      @db.Timestamptz(6)
+  dislike_count                                  Int?                           @default(0)
+  vibes_forum_posts                              vibes_forum_posts[]
+  vibes_forum_thread_dislikes                    vibes_forum_thread_dislikes[]
+  vibes_forum_thread_followers                   vibes_forum_thread_followers[]
+  vibes_forum_thread_likes                       vibes_forum_thread_likes[]
+  vibes_forum_thread_shares                      vibes_forum_thread_shares[]
+  vibes_forum_thread_views                       vibes_forum_thread_views[]
+  users_vibes_forum_threads_author_idTousers     users                          @relation("vibes_forum_threads_author_idTousers", fields: [author_id], references: [id], onDelete: NoAction)
+  vibes_forum_categories                         vibes_forum_categories         @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  experience_types                               experience_types?              @relation(fields: [experience_type_id], references: [id])
+  users_vibes_forum_threads_last_reply_byTousers users?                         @relation("vibes_forum_threads_last_reply_byTousers", fields: [last_reply_by], references: [id])
+}
+
+model vibes_forum_threads_tags {
+  thread_id  Int
+  tag_id     Int
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@id([thread_id, tag_id])
+  @@index([tag_id], map: "idx_vibes_forum_threads_tags_tag_id")
+  @@index([thread_id], map: "idx_vibes_forum_threads_tags_thread_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model vibes_travel_meetup_members {
+  id                   Int                  @id @default(autoincrement())
+  meetup_id            Int
+  user_id              Int
+  status               String?              @default("pending") @db.VarChar(20)
+  is_creator           Boolean?             @default(false)
+  joined_at            DateTime?            @db.Timestamptz(6)
+  approved_at          DateTime?            @db.Timestamptz(6)
+  left_at              DateTime?            @db.Timestamptz(6)
+  vibes_travel_meetups vibes_travel_meetups @relation(fields: [meetup_id], references: [id], onDelete: Cascade)
+  users                users                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([meetup_id, user_id], map: "vibes_travel_meetup_members_meetup_id_user_id")
+  @@unique([meetup_id, user_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model vibes_travel_meetup_messages {
+  id                   Int                  @id @default(autoincrement())
+  meetup_id            Int
+  user_id              Int
+  content              String
+  images               Json?                @default("[]")
+  is_deleted           Boolean              @default(false)
+  created_at           DateTime             @db.Timestamptz(6)
+  updated_at           DateTime             @db.Timestamptz(6)
+  vibes_travel_meetups vibes_travel_meetups @relation(fields: [meetup_id], references: [id], onDelete: Cascade)
+  users                users                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([created_at], map: "vibes_travel_meetup_messages_created_at")
+  @@index([is_deleted], map: "vibes_travel_meetup_messages_is_deleted")
+  @@index([meetup_id], map: "vibes_travel_meetup_messages_meetup_id")
+  @@index([meetup_id, created_at], map: "vibes_travel_meetup_messages_meetup_id_created_at")
+  @@index([user_id], map: "vibes_travel_meetup_messages_user_id")
+}
+
+model vibes_travel_meetup_shares {
+  id                   Int                                        @id @default(autoincrement())
+  meetup_id            Int
+  user_id              Int?
+  share_type           enum_vibes_travel_meetup_shares_share_type
+  ip_address           String                                     @db.VarChar(45)
+  user_agent           String?
+  shared_at            DateTime                                   @db.Timestamptz(6)
+  vibes_travel_meetups vibes_travel_meetups                       @relation(fields: [meetup_id], references: [id], onDelete: Cascade)
+  users                users?                                     @relation(fields: [user_id], references: [id])
+
+  @@index([meetup_id], map: "vibes_travel_meetup_shares_meetup_id")
+  @@index([meetup_id, share_type], map: "vibes_travel_meetup_shares_meetup_id_share_type")
+  @@index([share_type], map: "vibes_travel_meetup_shares_share_type")
+  @@index([shared_at], map: "vibes_travel_meetup_shares_shared_at")
+  @@index([user_id], map: "vibes_travel_meetup_shares_user_id")
+}
+
+model vibes_travel_meetup_views {
+  id                   Int                  @id @default(autoincrement())
+  meetup_id            Int
+  user_id              Int?
+  ip_address           String               @db.VarChar(45)
+  user_agent           String?
+  session_id           String?              @db.VarChar(255)
+  viewed_at            DateTime             @db.Timestamptz(6)
+  vibes_travel_meetups vibes_travel_meetups @relation(fields: [meetup_id], references: [id], onDelete: Cascade)
+  users                users?               @relation(fields: [user_id], references: [id])
+
+  @@index([ip_address, session_id, viewed_at], map: "vibes_travel_meetup_views_ip_address_session_id_viewed_at")
+  @@index([meetup_id], map: "vibes_travel_meetup_views_meetup_id")
+  @@index([user_id], map: "vibes_travel_meetup_views_user_id")
+  @@index([viewed_at], map: "vibes_travel_meetup_views_viewed_at")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model vibes_travel_meetups {
+  id                           Int                            @id @default(autoincrement())
+  creator_id                   Int
+  city_id                      Int
+  title                        String                         @db.VarChar(255)
+  slug                         String                         @unique @db.VarChar(255)
+  description                  String?
+  start_date                   DateTime                       @db.Date
+  end_date                     DateTime                       @db.Date
+  duration_days                Int?
+  max_members                  Int?
+  current_member_count         Int?                           @default(1)
+  status                       String?                        @default("active") @db.VarChar(20)
+  join_type                    String                         @default("public") @db.VarChar(20)
+  view_count                   Int?                           @default(0)
+  images                       Json?                          @default("[]")
+  recap_images                 Json?                          @default("[]")
+  experience_type_id           Int?
+  deleted_at                   DateTime?                      @db.Timestamptz(6)
+  created_at                   DateTime?                      @db.Timestamptz(6)
+  updated_at                   DateTime?                      @db.Timestamptz(6)
+  vibes_travel_meetup_members  vibes_travel_meetup_members[]
+  vibes_travel_meetup_messages vibes_travel_meetup_messages[]
+  vibes_travel_meetup_shares   vibes_travel_meetup_shares[]
+  vibes_travel_meetup_views    vibes_travel_meetup_views[]
+  cities                       cities                         @relation(fields: [city_id], references: [id], onDelete: NoAction)
+  users                        users                          @relation(fields: [creator_id], references: [id], onDelete: NoAction)
+  experience_types             experience_types?              @relation(fields: [experience_type_id], references: [id])
+}
+
+model vibes_user_forum_reputation {
+  id                     Int       @id @default(autoincrement())
+  user_id                Int       @unique
+  reputation_points      Int?      @default(0)
+  reputation_level       String?   @default("Newbie") @db.VarChar(20)
+  total_threads          Int?      @default(0)
+  total_posts            Int?      @default(0)
+  total_likes_received   Int?      @default(0)
+  total_solutions_marked Int?      @default(0)
+  badges                 Json?     @default("[]")
+  last_activity_at       DateTime? @db.Timestamptz(6)
+  created_at             DateTime? @db.Timestamptz(6)
+  updated_at             DateTime? @db.Timestamptz(6)
+  users                  users     @relation(fields: [user_id], references: [id], onDelete: NoAction)
+}
+
+enum enum_affiliate_audit_logs_action_type {
+  application_created
+  application_submitted
+  review_started
+  review_completed
+  approved
+  rejected
+  revision_requested
+  program_activated
+  program_suspended
+  program_terminated
+  tier_upgraded
+  tier_downgraded
+  commission_rate_changed
+  payout_threshold_changed
+  notes_added
+}
+
+enum enum_affiliate_programs_status {
+  active
+  pending
+  suspended
+  terminated
+}
+
+enum enum_affiliate_programs_tier {
+  micro_1
+  micro_2
+  micro_3
+  macro
+  brand_ambassador
+}
+
+enum enum_banners_tier {
+  premium
+  regular
+}
+
+enum enum_commission_transactions_commission_type {
+  platform_fee
+  host_commission
+  affiliate_commission
+  referral_commission
+}
+
+enum enum_commission_transactions_status {
+  pending
+  approved
+  paid
+  cancelled
+  failed
+}
+
+enum enum_experiences_status {
+  draft
+  pending_review
+  published
+  rejected
+  suspended
+  archived
+  paused
+}
+
+enum enum_faqs_category {
+  general
+  booking
+  payment
+  host
+  traveller
+  technical
+}
+
+enum enum_featured_testimonials_category {
+  host
+  traveller
+}
+
+enum enum_host_kyc_gender {
+  male
+  female
+  other
+}
+
+enum enum_host_kyc_id_type {
+  ktp
+  passport
+  drivers_license
+}
+
+enum enum_host_kyc_status {
+  pending
+  submitted
+  under_review
+  approved
+  rejected
+  resubmission_required
+}
+
+enum enum_kyc_documents_document_type {
+  id_card_front
+  id_card_back
+  passport
+  selfie_with_id
+  business_license
+  tax_card
+  certificate
+  address_proof
+  other
+}
+
+enum enum_kyc_documents_verification_status {
+  pending
+  verified
+  rejected
+}
+
+enum enum_kyc_verification_history_action_type {
+  created
+  submitted
+  reviewed
+  approved
+  rejected
+  resubmission_requested
+  resubmitted
+  updated
+}
+
+enum enum_promotion_codes_discount_type {
+  percentage
+  fixed_amount
+}
+
+enum enum_promotion_codes_status {
+  active
+  inactive
+  expired
+  disabled
+}
+
+enum enum_promotion_codes_type {
+  platform
+  influencer
+  host
+  referral
+}
+
+enum enum_stories_status {
+  draft
+  pending_review
+  published
+  scheduled
+  archived
+}
+
+enum enum_story_shares_share_type {
+  facebook
+  twitter
+  whatsapp
+  copy_link
+  email
+  telegram
+  linkedin
+  instagram
+}
+
+enum enum_story_views_device_type {
+  desktop
+  mobile
+  tablet
+  unknown
+}
+
+enum enum_vibes_forum_thread_shares_share_type {
+  facebook
+  twitter
+  whatsapp
+  copy_link
+  email
+  telegram
+  linkedin
+  instagram
+}
+
+enum enum_vibes_travel_meetup_shares_share_type {
+  facebook
+  twitter
+  whatsapp
+  copy_link
+  email
+  telegram
+  linkedin
+  instagram
+}
+
+model reward_system_settings {
+  id            Int      @id @default(autoincrement())
+  setting_key   String   @unique @db.VarChar(100)
+  setting_value String   @db.VarChar(255)
+  description   String?  @db.Text
+  updated_at    DateTime @default(now()) @updatedAt
+}
+
+model reward_level_tiers {
+  level                 Int      @id
+  name_id               String   @db.VarChar(100)
+  name_en               String   @db.VarChar(100)
+  min_xp                Int
+  badge_icon            String   @db.VarChar(50)
+  ltp_bonus             Int      @default(0)
+  reward_type           String   @default("NONE") @db.VarChar(50)
+  reward_title_id       String?  @db.VarChar(255)
+  reward_title_en       String?  @db.VarChar(255)
+  reward_description_id String?  @db.Text
+  reward_description_en String?  @db.Text
+  claim_required        Boolean  @default(false)
+  is_active             Boolean  @default(true)
+  created_at            DateTime @default(now())
+}
+
+model reward_action_rules {
+  id             Int      @id @default(autoincrement())
+  action_code    String   @unique @db.VarChar(100)
+  category       String   @db.VarChar(50)
+  name_id        String   @db.VarChar(150)
+  name_en        String   @db.VarChar(150)
+  description_id String?  @db.Text
+  description_en String?  @db.Text
+  xp_reward      Int      @default(0)
+  ltp_reward     Int      @default(0)
+  max_frequency  String   @default("UNLIMITED") @db.VarChar(50)
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now()) @updatedAt
+}
+
+model user_reward_claims {
+  id               Int       @id @default(autoincrement())
+  user_id          Int
+  level            Int
+  reward_type      String    @db.VarChar(50)
+  reward_title     String    @db.VarChar(255)
+  status           String    @default("PENDING") @db.VarChar(50) // PENDING, PROCESSING, SHIPPED, COMPLETED
+  shipping_address Json?
+  tracking_number  String?   @db.VarChar(100)
+  voucher_code     String?   @db.VarChar(100)
+  claimed_at       DateTime  @default(now())
+  fulfilled_at     DateTime?
+
+  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+// 1. Profil Mitra Brand
+model brand_partners {
+  id              Int               @id @default(autoincrement())
+  name            String            @db.VarChar(150)
+  slug            String            @unique @db.VarChar(150)
+  category        String            @db.VarChar(50) // 'HOSPITALITY', 'OUTDOOR_GEAR', 'FNB', 'TRANSPORT', 'INSURANCE'
+  logo_url        String            @db.VarChar(500)
+  banner_url      String?           @db.VarChar(500)
+  website_url     String?           @db.VarChar(255)
+  contact_person  String            @db.VarChar(100)
+  contact_email   String            @db.VarChar(150)
+  contact_phone   String            @db.VarChar(50)
+  description     String?           @db.Text
+  status          String            @default("PENDING") @db.VarChar(30) // 'PENDING', 'APPROVED', 'ACTIVE', 'PAUSED', 'REJECTED'
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @default(now()) @updatedAt
+
+  campaigns       brand_campaigns[]
+}
+
+// 2. Kampanye Promosi / Penawaran Voucher Brand
+model brand_campaigns {
+  id              Int                   @id @default(autoincrement())
+  partner_id      Int
+  title           String                @db.VarChar(255)
+  slug            String                @unique @db.VarChar(255)
+  description     String                @db.Text
+  terms           String?               @db.Text
+  image_url       String                @db.VarChar(500)
+  
+  // Paket Tier Promosi (Hybrid: Barter vs Berbayar)
+  tier_package    String                @default("COMMUNITY_BARTER") // 'COMMUNITY_BARTER', 'FEATURED_PARTNER', 'PREMIUM_SPONSOR'
+  placement_fee   Decimal               @default(0) @db.Decimal(12, 2)
+  payment_status  String                @default("WAIVED_BARTER") // 'UNPAID', 'PAID', 'WAIVED_BARTER'
+  is_featured     Boolean               @default(false)
+  
+  // Persyaratan Klaim User
+  cost_in_ltp     Int                   @default(0)     // Jumlah LTP yang ditukarkan (0 jika gratis)
+  min_xp_level    Int                   @default(1)     // Batas minimum level XP pengguna
+  
+  // Kuota & Masa Berlaku
+  total_quota     Int                   @default(100)
+  claimed_quota   Int                   @default(0)
+  start_date      DateTime              @default(now())
+  end_date        DateTime
+  is_active       Boolean               @default(true)
+  created_at      DateTime              @default(now())
+
+  partner         brand_partners        @relation(fields: [partner_id], references: [id], onDelete: Cascade)
+  vouchers        brand_voucher_codes[]
+  claims          user_brand_claims[]
+}
+
+// 3. Pool Kode Voucher Unik yang Disetor Brand
+model brand_voucher_codes {
+  id                  Int             @id @default(autoincrement())
+  campaign_id         Int
+  code                String          @db.VarChar(100)
+  is_claimed          Boolean         @default(false)
+  claimed_at          DateTime?
+  claimed_by_user_id  Int?
+
+  campaign            brand_campaigns @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+}
+
+// 4. Riwayat Klaim Voucher oleh Pengguna
+model user_brand_claims {
+  id              Int             @id @default(autoincrement())
+  user_id         Int
+  campaign_id     Int
+  voucher_code    String          @db.VarChar(100)
+  ltp_spent       Int             @default(0)
+  status          String          @default("ACTIVE") @db.VarChar(30) // 'ACTIVE', 'USED', 'EXPIRED'
+  claimed_at      DateTime        @default(now())
+  used_at         DateTime?
+
+  campaign        brand_campaigns @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+  user            users           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+// 5. Laporan Konten Komunitas (Reports to Admin)
+model content_reports {
+  id          Int      @id @default(autoincrement())
+  target_type String   @db.VarChar(50) // 'forum_thread', 'forum_post', 'story', 'meetup'
+  target_id   Int      // ID of the reported thread, post, or story
+  reporter_id Int      // User ID who submitted the report
+  reason      String   @db.VarChar(255) // Reason category (spam, hate_speech, inappropriate, copyright, harassment)
+  description String?
+  status      String   @default("pending") @db.VarChar(50) // pending, reviewed, resolved, dismissed
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  reporter    users    @relation(fields: [reporter_id], references: [id], onDelete: Cascade)
+
+  @@index([target_type, target_id], map: "idx_content_reports_target")
+  @@index([reporter_id], map: "idx_content_reports_reporter")
+  @@index([status], map: "idx_content_reports_status")
+}
+

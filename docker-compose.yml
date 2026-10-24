@@ -1,0 +1,96 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: locallytrip_postgres_local
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-locallytrip_new}
+      POSTGRES_USER: ${POSTGRES_USER:-locallytrip_prod_new}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-locallytrip_secure_password_new}
+    ports:
+      - "5434:5432"
+    volumes:
+      - locallytrip_pgdata:/var/lib/postgresql/data
+      - ./prisma/init-seed.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - locallytrip_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-locallytrip_prod_new} -d ${POSTGRES_DB:-locallytrip_new}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: locallytrip_app_local
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-locallytrip_prod_new}:${POSTGRES_PASSWORD:-locallytrip_secure_password_new}@postgres:5432/${POSTGRES_DB:-locallytrip_new}?schema=public}
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3001}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3001}
+      NEXT_PUBLIC_ADMIN_URL: ${NEXT_PUBLIC_ADMIN_URL:-http://localhost:3002}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3001}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-63cc127cb954806ae930d176c9008501f2390b182b729d4e026bffaff52a4757}
+      JWT_SECRET: ${JWT_SECRET:-63cc127cb954806ae930d176c9008501f2390b182b729d4e026bffaff52a4757}
+      PAYPAL_ENVIRONMENT: ${PAYPAL_ENVIRONMENT:-live}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
+      NEXT_PUBLIC_PAYPAL_CLIENT_ID: ${NEXT_PUBLIC_PAYPAL_CLIENT_ID:-}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
+      PAYPAL_WEBHOOK_ID: ${PAYPAL_WEBHOOK_ID:-}
+      EMAIL_SERVICE: ${EMAIL_SERVICE:-smtp}
+      EMAIL_HOST: ${EMAIL_HOST:-pro.turbo-smtp.com}
+      EMAIL_PORT: ${EMAIL_PORT:-2525}
+      EMAIL_SECURE: ${EMAIL_SECURE:-false}
+      EMAIL_TLS: ${EMAIL_TLS:-true}
+      EMAIL_USER: ${EMAIL_USER:-}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}
+      EMAIL_NOREPLY: ${EMAIL_NOREPLY:-noreply@locallytrip.com}
+      EMAIL_BOOKING: ${EMAIL_BOOKING:-booking@locallytrip.com}
+      EMAIL_SUPPORT: ${EMAIL_SUPPORT:-support@locallytrip.com}
+      MAILJET_API_KEY: ${MAILJET_API_KEY:-}
+      MAILJET_SECRET_KEY: ${MAILJET_SECRET_KEY:-}
+      MAILJET_SENDER_EMAIL: ${MAILJET_SENDER_EMAIL:-noreply@locallytrip.com}
+      MAILJET_CAMPAIGN_EMAIL: ${MAILJET_CAMPAIGN_EMAIL:-hello@locallytrip.com}
+      MAILJET_CAMPAIGN_NAME: ${MAILJET_CAMPAIGN_NAME:-Nope & Tim Locallytrip}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      FREE_CURRENCY_API_KEY: ${FREE_CURRENCY_API_KEY:-}
+      SCHEDULED_TASK_API_KEY: ${SCHEDULED_TASK_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./public/images:/app/public/images
+    networks:
+      - locallytrip_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: locallytrip_nginx_local
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+      - "3002:3002"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./public/images:/var/www/public/images:ro
+    depends_on:
+      - app
+    networks:
+      - locallytrip_network
+
+volumes:
+  locallytrip_pgdata:
+    name: locallytrip_pgdata
+
+networks:
+  locallytrip_network:
+    name: locallytrip_network
+

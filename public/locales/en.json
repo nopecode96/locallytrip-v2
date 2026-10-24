@@ -1,0 +1,38 @@
+{
+  "common": {
+    "appName": "Locallytrip",
+    "tagline": "Discover authentic local experiences & communities",
+    "search": "Search local experiences, cities, or stories...",
+    "searchBtn": "Search",
+    "login": "Sign In",
+    "register": "Sign Up",
+    "becomeHost": "Become a Host",
+    "allRightsReserved": "All rights reserved.",
+    "perPerson": "/ person",
+    "viewDetails": "View Details",
+    "topRated": "Top Rated",
+    "featured": "Featured"
+  },
+  "nav": {
+    "explore": "Explore",
+    "experiences": "Experiences",
+    "community": "Community",
+    "forums": "Vibes Forum",
+    "meetups": "Travel Meetups",
+    "stories": "Stories"
+  },
+  "home": {
+    "badge": "Modern Unified Monolith",
+    "heroTitle": "Explore The World With Authentic Local Hosts",
+    "heroSubtitle": "Discover curated activities, connect with adventurous travelers, and build unforgettable memories.",
+    "searchPlaceholder": "Where do you want to explore? (e.g. Bandung, Tokyo, Da Nang...)",
+    "featuredExperiences": "Featured Local Experiences",
+    "featuredExperiencesSub": "Unique activities hosted by verified local experts",
+    "communitySection": "Vibes Community & Travel Stories",
+    "communitySectionSub": "Traveler discussions, local meetups, and real journey stories",
+    "forumSnippet": "Trending Forum Discussions",
+    "meetupSnippet": "Upcoming Community Meetups",
+    "storiesSnippet": "Real Traveler Stories",
+    "noExperiences": "No experiences found matching your query."
+  }
+}
