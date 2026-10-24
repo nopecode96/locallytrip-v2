@@ -43,9 +43,9 @@ export function SidebarRelatedExperiences({
   };
 
   const formatRating = (ratingVal: number | string | null) => {
-    if (!ratingVal) return '4.9';
+    if (!ratingVal) return '5.0';
     const num = typeof ratingVal === 'string' ? parseFloat(ratingVal) : ratingVal;
-    return num > 0 ? num.toFixed(1) : '4.9';
+    return num > 0 ? num.toFixed(1) : '5.0';
   };
 
   return (

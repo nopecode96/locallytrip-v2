@@ -111,13 +111,20 @@ export function LocalGuidesSection({
                       <MapPin className="w-3 h-3 text-violet-600 shrink-0" />
                       <span className="truncate">{host.city_name}</span>
                     </p>
-                    <div className="flex items-center gap-1 text-xs text-amber-500 font-bold mt-1">
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span>{host.rating_average > 0 ? host.rating_average.toFixed(1) : '4.9'}</span>
-                      <span className="text-slate-400 font-normal text-[11px]">
-                        ({host.rating_count > 0 ? host.rating_count : 24})
-                      </span>
-                    </div>
+                    {host.rating_count > 0 ? (
+                      <div className="flex items-center gap-1 text-xs text-amber-500 font-bold mt-1">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <span>{host.rating_average.toFixed(1)}</span>
+                        <span className="text-slate-400 font-normal text-[11px]">
+                          ({host.rating_count})
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold mt-1">
+                        <Star className="w-3 h-3 fill-emerald-500 text-emerald-500" />
+                        <span>{locale === 'id' ? 'Pemandu Baru' : 'New Guide'}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

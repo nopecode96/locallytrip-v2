@@ -263,8 +263,8 @@ export default async function MarketplacePage({
       is_verified: isKycApproved,
       bio: h.bio,
       city_name: h.cities?.name || exp?.cities?.name || 'Indonesia',
-      rating_average: exp?.rating_average ? Number(exp.rating_average) : 4.9,
-      rating_count: exp?.rating_count ?? 24,
+      rating_average: exp?.rating_average ? Number(exp.rating_average) : 5.0,
+      rating_count: exp?.rating_count ?? 0,
     };
   });
 

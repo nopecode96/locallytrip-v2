@@ -266,12 +266,18 @@ export async function getExperienceBySlug(
   try {
     const isId = /^\d+$/.test(slugOrId);
     const numericId = isId ? parseInt(slugOrId, 10) : undefined;
+    const normalizedSlug = decodeURIComponent(slugOrId).trim().toLowerCase();
+    const cleanSlug = normalizedSlug.replace(/-+$/, '');
+    const slugWithDash = `${cleanSlug}-`;
 
     const exp = await prisma.experiences.findFirst({
       where: {
         OR: [
           ...(numericId ? [{ id: numericId }] : []),
           { slug: slugOrId },
+          { slug: normalizedSlug },
+          { slug: cleanSlug },
+          { slug: slugWithDash },
         ],
         is_active: true,
         status: enum_experiences_status.published,

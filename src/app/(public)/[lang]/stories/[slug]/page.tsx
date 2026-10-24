@@ -506,7 +506,7 @@ export default async function StoryDetailPage({ params }: StoryDetailPageProps) 
     slug: exp.slug || String(exp.id),
     price: exp.package_price ? Number(exp.package_price) : 0,
     currency: exp.currency,
-    rating: exp.rating_average ? Number(exp.rating_average) : 4.9,
+    rating: exp.rating_average ? Number(exp.rating_average) : 5.0,
     review_count: exp.rating_count || 0,
     image: getPublicImageUrl(exp.images, 'experiences'),
     cityName: exp.cities?.name || null,

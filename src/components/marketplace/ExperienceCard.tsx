@@ -29,16 +29,19 @@ export function ExperienceCard({ experience, dict, homeDict }: ExperienceCardPro
 
   const hrefSlug = `/${locale}/experiences/${experience.slug || experience.id}`;
 
-  const ratingVal = experience.ratingAverage > 0 ? experience.ratingAverage.toFixed(1) : '4.9';
-  const ratingCountVal = experience.ratingCount > 0 ? experience.ratingCount : 28;
-  const reviewsLabel = homeDict?.reviews || 'ulasan';
+  const hasReviews = (experience.ratingCount || 0) > 0;
+  const ratingVal = hasReviews && experience.ratingAverage > 0 ? experience.ratingAverage.toFixed(1) : null;
+  const ratingCountVal = experience.ratingCount || 0;
+  const reviewsLabel = homeDict?.reviews || (locale === 'id' ? 'ulasan' : 'reviews');
   const durationText = experience.durationHours
-    ? `${experience.durationHours} ${dict?.hours || 'Jam'}`
-    : `3 ${dict?.hours || 'Jam'}`;
+    ? `${experience.durationHours} ${dict?.hours || (locale === 'id' ? 'Jam' : 'Hours')}`
+    : `3 ${dict?.hours || (locale === 'id' ? 'Jam' : 'Hours')}`;
 
   const hostName = experience.host?.name || 'Local Host';
   const hostLevel = experience.host?.level || 1;
-  const joinedMembers = experience.ratingCount > 0 ? experience.ratingCount : (experience.maxParticipants ? Math.min(experience.maxParticipants, 8) : 6);
+  const joinedMembers = hasReviews
+    ? Math.max(ratingCountVal, 3)
+    : (experience.maxParticipants ? Math.min(experience.maxParticipants, 6) : 4);
   const formattedPrice = formatPrice(experience.packagePrice, experience.currency || 'USD');
 
   return (
@@ -79,13 +82,20 @@ export function ExperienceCard({ experience, dict, homeDict }: ExperienceCardPro
         <div className="space-y-2.5">
           {/* Rating Bintang (xx ulasan) + Durasi Kegiatan */}
           <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
-            <span className="flex items-center gap-1 text-amber-500 font-bold">
-              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-              <span>{ratingVal}</span>
-              <span className="text-slate-400 font-normal text-xs">
-                ({ratingCountVal} {reviewsLabel})
+            {hasReviews ? (
+              <span className="flex items-center gap-1 text-amber-500 font-bold">
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                <span>{ratingVal}</span>
+                <span className="text-slate-400 font-normal text-xs">
+                  ({ratingCountVal} {reviewsLabel})
+                </span>
               </span>
-            </span>
+            ) : (
+              <span className="flex items-center gap-1 text-emerald-700 font-semibold text-xs bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
+                <Star className="w-3 h-3 fill-emerald-500 text-emerald-500" />
+                <span>{locale === 'id' ? 'Baru' : 'New'}</span>
+              </span>
+            )}
             <span className="text-slate-300">•</span>
             <span className="text-slate-500 flex items-center gap-1 text-xs sm:text-sm">
               <Clock className="w-3.5 h-3.5 text-slate-400" />
