@@ -54,184 +54,218 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // 2. Query Data Dinamis dari Prisma secara Paralel
+  // 2. Query Data Dinamis dari Prisma dengan Individual Try-Catch & Safe Fallback
+
+  // 2.1 Pengalaman Tur Terbit & Aktif (Experiences)
   try {
-    const [experiences, stories, meetups, forumThreads, cities] = await Promise.all([
-      // Pengalaman Tur Terbit & Aktif
-      prisma.experiences.findMany({
-        where: {
-          status: enum_experiences_status.published,
-          is_active: true,
-        },
-        select: {
-          id: true,
-          slug: true,
-          updated_at: true,
-          created_at: true,
-        },
-      }),
+    const experiences = await prisma.experiences.findMany({
+      where: {
+        status: enum_experiences_status.published,
+        is_active: true,
+      },
+      select: {
+        id: true,
+        slug: true,
+        updated_at: true,
+        created_at: true,
+      },
+    });
 
-      // Cerita Wisata / Travel Stories Terbit
-      prisma.stories.findMany({
-        where: {
-          status: 'published',
-          is_active: true,
-        },
-        select: {
-          id: true,
-          slug: true,
-          updated_at: true,
-          created_at: true,
-        },
-      }),
+    if (!experiences || experiences.length === 0) {
+      console.warn('[sitemap] Warning: No active experiences found in database.');
+    } else {
+      for (const exp of experiences) {
+        const cleanSlug = exp.slug ? exp.slug.replace(/-+$/, '') : String(exp.id);
+        const lastMod = exp.updated_at || exp.created_at || now;
 
-      // Temu Komunitas / Travel Meetups Aktif
-      prisma.vibes_travel_meetups.findMany({
-        where: {
-          status: 'active',
-        },
-        select: {
-          id: true,
-          slug: true,
-          updated_at: true,
-          created_at: true,
-        },
-      }),
-
-      // Forum Diskusi Komunitas Aktif
-      prisma.vibes_forum_threads.findMany({
-        where: {
-          status: 'active',
-        },
-        select: {
-          id: true,
-          slug: true,
-          updated_at: true,
-          created_at: true,
-        },
-      }),
-
-      // Kota / Destinasi Aktif
-      prisma.cities.findMany({
-        where: {
-          is_active: true,
-        },
-        select: {
-          id: true,
-          name: true,
-          updated_at: true,
-          created_at: true,
-        },
-      }),
-    ]);
-
-    // 3. Entries untuk Pengalaman Tur (Experiences)
-    for (const exp of experiences) {
-      const cleanSlug = exp.slug ? exp.slug.replace(/-+$/, '') : String(exp.id);
-      const lastMod = exp.updated_at || exp.created_at || now;
-
-      for (const locale of LOCALES) {
-        sitemapEntries.push({
-          url: `${baseUrl}/${locale}/experiences/${cleanSlug}`,
-          lastModified: lastMod,
-          changeFrequency: 'weekly',
-          priority: 0.8,
-          alternates: {
-            languages: {
-              id: `${baseUrl}/id/experiences/${cleanSlug}`,
-              en: `${baseUrl}/en/experiences/${cleanSlug}`,
+        for (const locale of LOCALES) {
+          sitemapEntries.push({
+            url: `${baseUrl}/${locale}/experiences/${cleanSlug}`,
+            lastModified: lastMod,
+            changeFrequency: 'weekly',
+            priority: 0.8,
+            alternates: {
+              languages: {
+                id: `${baseUrl}/id/experiences/${cleanSlug}`,
+                en: `${baseUrl}/en/experiences/${cleanSlug}`,
+              },
             },
-          },
-        });
-      }
-    }
-
-    // 4. Entries untuk Cerita Wisata (Stories)
-    for (const story of stories) {
-      const cleanSlug = story.slug ? story.slug.replace(/-+$/, '') : String(story.id);
-      const lastMod = story.updated_at || story.created_at || now;
-
-      for (const locale of LOCALES) {
-        sitemapEntries.push({
-          url: `${baseUrl}/${locale}/stories/${cleanSlug}`,
-          lastModified: lastMod,
-          changeFrequency: 'weekly',
-          priority: 0.7,
-          alternates: {
-            languages: {
-              id: `${baseUrl}/id/stories/${cleanSlug}`,
-              en: `${baseUrl}/en/stories/${cleanSlug}`,
-            },
-          },
-        });
-      }
-    }
-
-    // 5. Entries untuk Temu Komunitas (Meetups)
-    for (const meetup of meetups) {
-      const cleanSlug = meetup.slug ? meetup.slug.replace(/-+$/, '') : String(meetup.id);
-      const lastMod = meetup.updated_at || meetup.created_at || now;
-
-      for (const locale of LOCALES) {
-        sitemapEntries.push({
-          url: `${baseUrl}/${locale}/community/meetups/${cleanSlug}`,
-          lastModified: lastMod,
-          changeFrequency: 'weekly',
-          priority: 0.7,
-          alternates: {
-            languages: {
-              id: `${baseUrl}/id/community/meetups/${cleanSlug}`,
-              en: `${baseUrl}/en/community/meetups/${cleanSlug}`,
-            },
-          },
-        });
-      }
-    }
-
-    // 6. Entries untuk Forum Diskusi (Forums)
-    for (const thread of forumThreads) {
-      const cleanSlug = thread.slug ? thread.slug.replace(/-+$/, '') : String(thread.id);
-      const lastMod = thread.updated_at || thread.created_at || now;
-
-      for (const locale of LOCALES) {
-        sitemapEntries.push({
-          url: `${baseUrl}/${locale}/community/forums/${cleanSlug}`,
-          lastModified: lastMod,
-          changeFrequency: 'weekly',
-          priority: 0.7,
-          alternates: {
-            languages: {
-              id: `${baseUrl}/id/community/forums/${cleanSlug}`,
-              en: `${baseUrl}/en/community/forums/${cleanSlug}`,
-            },
-          },
-        });
-      }
-    }
-
-    // 7. Entries untuk Destinasi / Kota (Destination Hubs)
-    for (const city of cities) {
-      const citySlug = city.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-      if (!citySlug) continue;
-      const lastMod = city.updated_at || city.created_at || now;
-
-      for (const locale of LOCALES) {
-        sitemapEntries.push({
-          url: `${baseUrl}/${locale}/destination/${citySlug}`,
-          lastModified: lastMod,
-          changeFrequency: 'weekly',
-          priority: 0.8,
-          alternates: {
-            languages: {
-              id: `${baseUrl}/id/destination/${citySlug}`,
-              en: `${baseUrl}/en/destination/${citySlug}`,
-            },
-          },
-        });
+          });
+        }
       }
     }
   } catch (error) {
-    console.error('Error generating dynamic sitemap from database:', error);
+    console.warn('[sitemap] Error fetching experiences for sitemap:', error);
+  }
+
+  // 2.2 Cerita Wisata / Travel Stories Terbit (Stories)
+  try {
+    const stories = await prisma.stories.findMany({
+      where: {
+        status: 'published',
+        is_active: true,
+      },
+      select: {
+        id: true,
+        slug: true,
+        updated_at: true,
+        created_at: true,
+      },
+    });
+
+    if (!stories || stories.length === 0) {
+      console.warn('[sitemap] Warning: No active stories found in database.');
+    } else {
+      for (const story of stories) {
+        const cleanSlug = story.slug ? story.slug.replace(/-+$/, '') : String(story.id);
+        const lastMod = story.updated_at || story.created_at || now;
+
+        for (const locale of LOCALES) {
+          sitemapEntries.push({
+            url: `${baseUrl}/${locale}/stories/${cleanSlug}`,
+            lastModified: lastMod,
+            changeFrequency: 'weekly',
+            priority: 0.7,
+            alternates: {
+              languages: {
+                id: `${baseUrl}/id/stories/${cleanSlug}`,
+                en: `${baseUrl}/en/stories/${cleanSlug}`,
+              },
+            },
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('[sitemap] Error fetching stories for sitemap:', error);
+  }
+
+  // 2.3 Temu Komunitas / Travel Meetups Aktif (Meetups)
+  try {
+    // Dukung delegate vibesTravelMeetups maupun vibes_travel_meetups
+    const meetupsDelegate = (prisma as any).vibesTravelMeetups || prisma.vibes_travel_meetups;
+    const meetups = await meetupsDelegate.findMany({
+      where: {
+        status: 'active',
+      },
+      select: {
+        id: true,
+        slug: true,
+        updated_at: true,
+        created_at: true,
+      },
+    });
+
+    if (!meetups || meetups.length === 0) {
+      console.warn('[sitemap] Warning: No active meetups found in database.');
+    } else {
+      for (const meetup of meetups) {
+        const cleanSlug = meetup.slug ? meetup.slug.replace(/-+$/, '') : String(meetup.id);
+        const lastMod = meetup.updated_at || meetup.created_at || now;
+
+        for (const locale of LOCALES) {
+          sitemapEntries.push({
+            url: `${baseUrl}/${locale}/community/meetups/${cleanSlug}`,
+            lastModified: lastMod,
+            changeFrequency: 'weekly',
+            priority: 0.7,
+            alternates: {
+              languages: {
+                id: `${baseUrl}/id/community/meetups/${cleanSlug}`,
+                en: `${baseUrl}/en/community/meetups/${cleanSlug}`,
+              },
+            },
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('[sitemap] Error fetching meetups for sitemap:', error);
+  }
+
+  // 2.4 Forum Diskusi Komunitas Aktif (Forums)
+  try {
+    // Dukung delegate vibesForumThreads maupun vibes_forum_threads
+    const forumDelegate = (prisma as any).vibesForumThreads || prisma.vibes_forum_threads;
+    const forumThreads = await forumDelegate.findMany({
+      where: {
+        status: 'active',
+      },
+      select: {
+        id: true,
+        slug: true,
+        updated_at: true,
+        created_at: true,
+      },
+    });
+
+    if (!forumThreads || forumThreads.length === 0) {
+      console.warn('[sitemap] Warning: No active forum threads found in database.');
+    } else {
+      for (const thread of forumThreads) {
+        const cleanSlug = thread.slug ? thread.slug.replace(/-+$/, '') : String(thread.id);
+        const lastMod = thread.updated_at || thread.created_at || now;
+
+        for (const locale of LOCALES) {
+          sitemapEntries.push({
+            url: `${baseUrl}/${locale}/community/forums/${cleanSlug}`,
+            lastModified: lastMod,
+            changeFrequency: 'weekly',
+            priority: 0.7,
+            alternates: {
+              languages: {
+                id: `${baseUrl}/id/community/forums/${cleanSlug}`,
+                en: `${baseUrl}/en/community/forums/${cleanSlug}`,
+              },
+            },
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('[sitemap] Error fetching forum threads for sitemap:', error);
+  }
+
+  // 2.5 Destinasi / Kota Aktif (Destination Hubs)
+  try {
+    const cities = await prisma.cities.findMany({
+      where: {
+        is_active: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        updated_at: true,
+        created_at: true,
+      },
+    });
+
+    if (!cities || cities.length === 0) {
+      console.warn('[sitemap] Warning: No active cities found in database.');
+    } else {
+      for (const city of cities) {
+        const citySlug = city.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+        if (!citySlug) continue;
+        const lastMod = city.updated_at || city.created_at || now;
+
+        for (const locale of LOCALES) {
+          sitemapEntries.push({
+            url: `${baseUrl}/${locale}/destination/${citySlug}`,
+            lastModified: lastMod,
+            changeFrequency: 'weekly',
+            priority: 0.8,
+            alternates: {
+              languages: {
+                id: `${baseUrl}/id/destination/${citySlug}`,
+                en: `${baseUrl}/en/destination/${citySlug}`,
+              },
+            },
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('[sitemap] Error fetching cities for sitemap:', error);
   }
 
   return sitemapEntries;
