@@ -1,7 +1,12 @@
 import React from 'react';
 import { Metadata } from 'next';
-
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import CookieConsentBanner from '@/components/layout/CookieConsentBanner';
+import BrowserNotificationRequest from '@/components/notifications/BrowserNotificationRequest';
 import ScrollToTop from '@/components/common/ScrollToTop';
+import { getDictionary } from '@/lib/getDictionary';
+import { Locale } from '@/lib/i18n';
 
 interface PublicLayoutProps {
   children: React.ReactNode;
@@ -80,6 +85,8 @@ export default async function PublicLayout({
 }: PublicLayoutProps) {
   const resolvedParams = await params;
   const lang = resolvedParams.lang === 'en' ? 'en' : 'id';
+  const currentLocale = lang as Locale;
+  const dict = await getDictionary(currentLocale);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://locallytrip.com';
 
   // Schema Organization / Corporation & LocalBusiness Legalitas
@@ -124,7 +131,7 @@ export default async function PublicLayout({
   };
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-slate-50/50 text-slate-900">
       {/* Skema JSON-LD Organization & BreadcrumbList untuk E-E-A-T & Google Knowledge Graph */}
       <script
         type="application/ld+json"
@@ -134,8 +141,12 @@ export default async function PublicLayout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      {children}
+      <Header dict={dict} />
+      <main className="flex-1 w-full max-w-full overflow-x-hidden">{children}</main>
+      <Footer dict={dict} locale={currentLocale} />
+      <CookieConsentBanner />
+      <BrowserNotificationRequest />
       <ScrollToTop />
-    </>
+    </div>
   );
 }
