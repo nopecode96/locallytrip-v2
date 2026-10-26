@@ -56,12 +56,27 @@ export default function AdminLoginPage() {
   }, [router]);
 
   const callbackUrlParam = searchParams.get('callbackUrl');
-  const defaultRedirect = isSubdomain ? '/dashboard' : '/admin/dashboard';
-  const targetCallback = callbackUrlParam
-    ? isSubdomain
-      ? callbackUrlParam.replace(/^\/admin/, '').replace(/^\/(en|id)/, '') || '/dashboard'
-      : callbackUrlParam
-    : defaultRedirect;
+
+  const getSafeCallback = (isSub: boolean) => {
+    const defaultRedirect = isSub ? '/dashboard' : '/admin/dashboard';
+    if (!callbackUrlParam) return defaultRedirect;
+
+    let clean = callbackUrlParam;
+    if (clean.startsWith('http://') || clean.startsWith('https://')) {
+      try {
+        clean = new URL(clean).pathname;
+      } catch {
+        return defaultRedirect;
+      }
+    }
+
+    clean = clean.replace(/^\/admin/, '').replace(/^\/(en|id)(\/|$)/, '/');
+    if (!clean || clean === '/' || clean === '/en' || clean === '/id' || clean === '/login') {
+      clean = '/dashboard';
+    }
+
+    return isSub ? clean : (clean.startsWith('/admin') ? clean : `/admin${clean}`);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,7 +115,14 @@ export default function AdminLoginPage() {
       }
 
       // Successful admin login
-      router.push(targetCallback);
+      const isSub =
+        typeof window !== 'undefined'
+          ? (window.location.hostname.startsWith('admin.') ||
+             window.location.port === '3002' ||
+             !window.location.pathname.startsWith('/admin'))
+          : isSubdomain;
+      const target = getSafeCallback(isSub);
+      router.push(target);
       router.refresh();
     } catch (err: any) {
       console.error('Admin authentication error:', err);

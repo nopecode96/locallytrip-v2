@@ -21,7 +21,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // 2. Deteksi apakah request berasal dari Subdomain Admin atau port testing
-  const cleanHost = host.toLowerCase().split(':')[0];
+  const firstHost = host.split(',')[0].trim();
+  const cleanHost = firstHost.toLowerCase().split(':')[0];
   const isAdminHost =
     cleanHost === 'admin.locallytrip.com' ||
     cleanHost === 'admin.locallytrip.local' ||

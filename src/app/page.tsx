@@ -3,8 +3,8 @@ import { cookies, headers } from 'next/headers';
 
 export default async function RootPage() {
   const headersList = await headers();
-  const host = headersList.get('x-forwarded-host') || headersList.get('host') || '';
-  const cleanHost = host.toLowerCase().split(':')[0];
+  const rawHost = (headersList.get('x-forwarded-host') || headersList.get('host') || '').split(',')[0].trim();
+  const cleanHost = rawHost.toLowerCase().split(':')[0];
   const isAdminHost =
     cleanHost === 'admin.locallytrip.com' ||
     cleanHost === 'admin.locallytrip.local' ||

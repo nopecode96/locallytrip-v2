@@ -5,6 +5,13 @@ import { revalidatePath } from 'next/cache';
 import { getAdminStaffSession } from '@/lib/admin-auth';
 import { getPublicImageUrl } from '@/lib/images';
 
+export interface AdminVoucherCodeSummary {
+  id: number;
+  code: string;
+  isClaimed: boolean;
+  claimedAt?: string | null;
+}
+
 export interface AdminB2BCampaignSummary {
   id: number;
   title: string;
@@ -19,6 +26,7 @@ export interface AdminB2BCampaignSummary {
   startDate: string;
   endDate: string;
   isActive: boolean;
+  vouchersList?: AdminVoucherCodeSummary[];
 }
 
 export interface AdminB2BPartnerItem {
@@ -170,7 +178,15 @@ export async function getAdminB2BPartnersData(
           campaigns: {
             include: {
               claims: { select: { id: true } },
-              vouchers: { select: { id: true } },
+              vouchers: {
+                select: {
+                  id: true,
+                  code: true,
+                  is_claimed: true,
+                  claimed_at: true,
+                },
+                orderBy: { id: 'asc' },
+              },
             },
           },
         },
@@ -215,6 +231,14 @@ export async function getAdminB2BPartnersData(
         partnerBookings += camp.claims.length || camp.claimed_quota || 0;
         partnerEarnings += Number(camp.placement_fee) || 0;
         totalVouchers += camp.vouchers.length;
+
+        const vouchersList: AdminVoucherCodeSummary[] = camp.vouchers.map((v) => ({
+          id: v.id,
+          code: v.code,
+          isClaimed: v.is_claimed,
+          claimedAt: v.claimed_at ? v.claimed_at.toISOString() : null,
+        }));
+
         return {
           id: camp.id,
           title: camp.title,
@@ -229,6 +253,7 @@ export async function getAdminB2BPartnersData(
           startDate: camp.start_date.toISOString(),
           endDate: camp.end_date.toISOString(),
           isActive: camp.is_active,
+          vouchersList,
         };
       });
 
@@ -638,6 +663,73 @@ export async function rejectB2BPartner(partnerId: number, reason?: string): Prom
     return {
       success: false,
       message: error?.message || 'Gagal menolak kemitraan.',
+      error: error?.message,
+    };
+  }
+}
+
+/**
+ * 8. Add more voucher codes to an existing campaign (Top up pool)
+ */
+export async function addVoucherCodesToCampaign(
+  campaignId: number,
+  rawCodes: string
+): Promise<B2BActionResult> {
+  try {
+    await requireAdminOrMarketingSession();
+
+    const campaign = await prisma.brand_campaigns.findUnique({
+      where: { id: campaignId },
+      include: { partner: true },
+    });
+
+    if (!campaign) {
+      return { success: false, message: 'Kampanye tidak ditemukan.' };
+    }
+
+    const codes = rawCodes
+      .split(/[\r\n,;]+/)
+      .map((c) => c.trim().toUpperCase())
+      .filter((c) => c.length > 0);
+
+    const uniqueCodes = Array.from(new Set(codes));
+    if (uniqueCodes.length === 0) {
+      return { success: false, message: 'Mohon masukkan setidaknya 1 kode voucher.' };
+    }
+
+    const inserted = await prisma.brand_voucher_codes.createMany({
+      data: uniqueCodes.map((code) => ({
+        campaign_id: campaignId,
+        code,
+        is_claimed: false,
+      })),
+      skipDuplicates: true,
+    });
+
+    // Update total quota
+    const totalCount = await prisma.brand_voucher_codes.count({
+      where: { campaign_id: campaignId },
+    });
+
+    await prisma.brand_campaigns.update({
+      where: { id: campaignId },
+      data: { total_quota: totalCount },
+    });
+
+    revalidatePath('/admin/b2b');
+    revalidatePath('/admin/marketing/vouchers');
+    revalidatePath('/id/community/perks');
+    revalidatePath('/en/community/perks');
+
+    return {
+      success: true,
+      message: `Berhasil menambahkan ${inserted.count} kode voucher baru ke kampanye "${campaign.title}". Total pool sekarang: ${totalCount} kode.`,
+    };
+  } catch (error: any) {
+    console.error('Error adding voucher codes:', error);
+    return {
+      success: false,
+      message: error?.message || 'Gagal menambahkan kode voucher.',
       error: error?.message,
     };
   }

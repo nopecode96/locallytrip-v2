@@ -158,9 +158,18 @@ export const authOptions: NextAuthOptions = {
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
       // Jika URL adalah path relatif, tambahkan baseUrl
       if (url.startsWith('/')) return `${baseUrl}${url}`;
-      // Jika URL berasal dari origin yang sama, izinkan
+      // Jika URL berasal dari origin yang sama atau subdomain locallytrip, izinkan
       try {
-        if (new URL(url).origin === baseUrl) return url;
+        const parsedUrl = new URL(url);
+        const parsedBase = new URL(baseUrl);
+        if (
+          parsedUrl.origin === parsedBase.origin ||
+          parsedUrl.hostname.endsWith('locallytrip.com') ||
+          parsedUrl.hostname.endsWith('locallytrip.local') ||
+          parsedUrl.hostname.endsWith('localhost')
+        ) {
+          return url;
+        }
       } catch {
         return baseUrl;
       }
