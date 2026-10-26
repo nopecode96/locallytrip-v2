@@ -44,13 +44,18 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }: any) {
       if (account?.provider === 'google') {
         try {
+          if (!user?.email) {
+            console.error('Google sign-in error: user email is missing');
+            return false;
+          }
+
           const email = user.email.toLowerCase().trim();
           let existingUser = await prisma.users.findUnique({ where: { email } });
 
           if (!existingUser) {
-            // Generate username unik dari bagian depan email
+            // Generate username unik dari bagian depan email (maksimal 30 karakter)
             const baseUsername =
-              email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').toLowerCase() || 'traveler';
+              email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').toLowerCase().slice(0, 30) || 'traveler';
             let uniqueUsername = baseUsername;
             let counter = 1;
             while (await prisma.users.findUnique({ where: { username: uniqueUsername } })) {
@@ -75,8 +80,23 @@ export const authOptions: NextAuthOptions = {
               },
             });
 
-            // Inisialisasi Welcome Airdrop (1.000 LTP & 500 XP)
-            await grantReward(existingUser.id, 'WELCOME_AIRDROP', existingUser.id, 'users');
+            // Inisialisasi Welcome Airdrop (1.000 LTP & 500 XP) secara aman
+            await grantReward(existingUser.id, 'WELCOME_AIRDROP', existingUser.id, 'users').catch(() => null);
+          } else {
+            // Jika user sudah ada tetapi belum verifikasi email, tandai verified via Google
+            if (!existingUser.email_verified_at) {
+              await prisma.users.update({
+                where: { id: existingUser.id },
+                data: { email_verified_at: new Date() },
+              }).catch(() => {});
+            }
+            // Jika avatar belum ada dan Google menyediakan foto
+            if (!existingUser.avatar_url && user.image) {
+              await prisma.users.update({
+                where: { id: existingUser.id },
+                data: { avatar_url: user.image },
+              }).catch(() => {});
+            }
           }
           return true;
         } catch (error) {
