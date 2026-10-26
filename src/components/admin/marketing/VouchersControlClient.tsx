@@ -27,6 +27,7 @@ import {
   Layers,
   ShoppingBag,
   Building2,
+  ArrowRight,
 } from 'lucide-react';
 import {
   AdminVoucherItem,
@@ -405,6 +406,28 @@ export function VouchersControlClient({
           </button>
         </div>
       </motion.div>
+
+      {/* Informational Callout: Vouchers vs Brand Perks */}
+      <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 dark:from-purple-950/20 dark:via-indigo-950/20 dark:to-blue-950/20 border border-purple-200/80 dark:border-purple-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+        <div className="flex items-start sm:items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 shrink-0">
+            <Building2 className="w-4 h-4" />
+          </div>
+          <div className="text-slate-700 dark:text-slate-300 leading-relaxed">
+            <span className="font-bold text-slate-900 dark:text-white">
+              Navigasi Cepat Manajemen Promo:
+            </span>{' '}
+            Halaman ini mengelola <strong className="text-purple-700 dark:text-purple-300">Kupon Diskon Booking Platform</strong> (checkout tur). Untuk mengelola <strong className="text-indigo-700 dark:text-indigo-300">Reward / Perks Mitra Brand Komunitas</strong> (seperti Bobocabin, EIGER, Kopi Kenangan yang tampil di <code>/community/perks</code>), kunjungi panel B2B.
+          </div>
+        </div>
+        <a
+          href="/b2b"
+          className="shrink-0 px-3.5 py-1.5 rounded-xl bg-purple-900 hover:bg-purple-950 text-white font-bold transition flex items-center gap-1.5 shadow-xs"
+        >
+          <span>Buka B2B & Mitra Brand</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </a>
+      </div>
 
       {/* Banner Feedback Alert */}
       <AnimatePresence>
