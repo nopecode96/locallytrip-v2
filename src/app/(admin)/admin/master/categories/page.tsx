@@ -16,12 +16,10 @@ export default async function AdminCategoriesPage() {
   ]);
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      <CategoriesControlClient
-        initialForumCategories={forumsRes.data || []}
-        initialExperienceTypes={experiencesRes.data || []}
-        initialStoryCategories={storiesRes.data || []}
-      />
-    </div>
+    <CategoriesControlClient
+      initialForumCategories={forumsRes.data || []}
+      initialExperienceTypes={experiencesRes.data || []}
+      initialStoryCategories={storiesRes.data || []}
+    />
   );
 }
