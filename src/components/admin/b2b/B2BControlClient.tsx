@@ -41,6 +41,7 @@ import {
 } from '@/actions/admin/b2b';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
 import { getPublicImageUrl } from '@/lib/images';
+import { ImageUploadDropzone } from '@/components/shared/ImageUploadDropzone';
 
 interface B2BControlClientProps {
   initialPartners: AdminB2BPartnerItem[];
@@ -996,37 +997,42 @@ export function B2BControlClient({
                   </div>
                 </div>
 
-                {/* Commission Rate & Logo URL */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Bagi Hasil Komisi (%)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min={0}
-                      max={100}
-                      value={formData.commissionRate ?? 10}
-                      onChange={(e) =>
-                        setFormData({ ...formData, commissionRate: parseFloat(e.target.value) || 0 })
-                      }
-                      className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+                {/* Commission Rate */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Bagi Hasil Komisi (%)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min={0}
+                    max={100}
+                    value={formData.commissionRate ?? 10}
+                    onChange={(e) =>
+                      setFormData({ ...formData, commissionRate: parseFloat(e.target.value) || 0 })
+                    }
+                    className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Logo Image URL
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.logoUrl || ''}
-                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                      placeholder="https://.../logo.png"
-                      className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+                {/* Logo Image Upload via Drag & Drop */}
+                <div>
+                  <ImageUploadDropzone
+                    folder="partners"
+                    value={formData.logoUrl || ''}
+                    onChange={(url: string) =>
+                      setFormData((prev) => ({ ...prev, logoUrl: url }))
+                    }
+                    label="Logo Resmi Brand Mitra"
+                    description="Seret & lepas berkas PNG transparan atau JPG/WebP logo perusahaan."
+                  />
+                  {formData.logoUrl && (
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-mono truncate max-w-xs">
+                        {formData.logoUrl}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Description */}

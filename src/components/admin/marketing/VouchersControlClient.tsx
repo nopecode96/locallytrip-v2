@@ -32,6 +32,8 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { ImageUploadDropzone } from '@/components/shared/ImageUploadDropzone';
 import {
   AdminVoucherItem,
   AdminVoucherStats,
@@ -44,6 +46,8 @@ import {
   AdminBrandCampaignItem,
   toggleBrandCampaignStatus,
   deleteBrandCampaign,
+  createBrandPerkCampaign,
+  CreateBrandCampaignInput,
 } from '@/actions/admin/vouchers';
 import { AdminPagination, PaginationState } from '@/components/admin/ui/AdminPagination';
 
@@ -53,6 +57,7 @@ interface VouchersControlClientProps {
   initialStats: AdminVoucherStats;
   brandPartners?: BrandPartnerOption[];
   initialBrandCampaigns?: AdminBrandCampaignItem[];
+  initialMasterTab?: 'booking_coupons' | 'brand_perks';
 }
 
 type FilterTab = 'all' | 'active' | 'expired' | 'disabled';
@@ -63,12 +68,46 @@ export function VouchersControlClient({
   initialStats,
   brandPartners = [],
   initialBrandCampaigns = [],
+  initialMasterTab = 'booking_coupons',
 }: VouchersControlClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const getEffectiveTab = () => {
+    const tabParam = searchParams?.get('tab');
+    if (tabParam === 'perks') return 'brand_perks';
+    if (tabParam === 'coupons' || tabParam === 'vouchers') return 'booking_coupons';
+    return initialMasterTab;
+  };
+
   const [vouchers, setVouchers] = useState<AdminVoucherItem[]>(initialVouchers);
   const [brandCampaigns, setBrandCampaigns] = useState<AdminBrandCampaignItem[]>(initialBrandCampaigns);
-  const [masterTab, setMasterTab] = useState<'booking_coupons' | 'brand_perks'>('booking_coupons');
+  const [masterTab, setMasterTab] = useState<'booking_coupons' | 'brand_perks'>(getEffectiveTab());
   const [campaignSearchQuery, setCampaignSearchQuery] = useState('');
   const [campaignCategoryFilter, setCampaignCategoryFilter] = useState('ALL');
+
+  React.useEffect(() => {
+    const tabParam = searchParams?.get('tab');
+    if (tabParam === 'perks') {
+      setMasterTab('brand_perks');
+    } else if (tabParam === 'coupons' || tabParam === 'vouchers') {
+      setMasterTab('booking_coupons');
+    }
+  }, [searchParams]);
+
+  const handleMasterTabChange = (target: 'booking_coupons' | 'brand_perks') => {
+    setMasterTab(target);
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    if (target === 'brand_perks') {
+      params.set('tab', 'perks');
+    } else {
+      params.set('tab', 'coupons');
+    }
+    const qs = params.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
   const [pagination, setPagination] = useState<PaginationState>(
     initialPagination || {
       totalItems: initialStats.totalVouchers || initialVouchers.length,
@@ -84,6 +123,23 @@ export function VouchersControlClient({
 
   // Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreatePerkModalOpen, setIsCreatePerkModalOpen] = useState(false);
+  const [perkFormData, setPerkFormData] = useState<CreateBrandCampaignInput>({
+    partnerId: brandPartners[0]?.id || 0,
+    title: '',
+    slug: '',
+    description: '',
+    terms: '',
+    imageUrl: '',
+    tierPackage: 'COMMUNITY_BARTER',
+    isFeatured: false,
+    costInLtp: 250,
+    minXpLevel: 1,
+    totalQuota: 50,
+    startDate: new Date().toISOString().slice(0, 10),
+    endDate: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString().slice(0, 10),
+    voucherCodes: '',
+  });
   const [isPending, startTransition] = useTransition();
 
   const fetchData = (
@@ -354,6 +410,71 @@ export function VouchersControlClient({
     });
   };
 
+  // Generate random sample codes for perk
+  const generateRandomPerkCodes = (count: number = 20) => {
+    const partner = brandPartners.find((p) => p.id === Number(perkFormData.partnerId));
+    const prefix = (partner?.name || perkFormData.title || 'PERK')
+      .replace(/[^A-Za-z0-9]/g, '')
+      .slice(0, 4)
+      .toUpperCase();
+    const codes: string[] = [];
+    for (let i = 0; i < count; i++) {
+      codes.push(`${prefix}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
+    }
+    setPerkFormData((prev) => ({
+      ...prev,
+      voucherCodes: codes.join('\n'),
+    }));
+  };
+
+  // Create Brand Perk Submit
+  const handleCreatePerkSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!perkFormData.partnerId) {
+      setBannerAlert({ type: 'error', message: 'Silakan pilih Mitra Brand Partner terlebih dahulu.' });
+      return;
+    }
+    if (!perkFormData.title.trim()) {
+      setBannerAlert({ type: 'error', message: 'Judul promo perk wajib diisi.' });
+      return;
+    }
+    if (!perkFormData.imageUrl.trim()) {
+      setBannerAlert({ type: 'error', message: 'Gambar banner promo wajib diunggah (drag & drop).' });
+      return;
+    }
+    startTransition(async () => {
+      try {
+        const res = await createBrandPerkCampaign(perkFormData);
+        if (res.success && res.campaign) {
+          setBrandCampaigns((prev) => [res.campaign!, ...prev]);
+          setIsCreatePerkModalOpen(false);
+          setBannerAlert({ type: 'success', message: res.message });
+          // Reset form
+          setPerkFormData({
+            partnerId: brandPartners[0]?.id || 0,
+            title: '',
+            slug: '',
+            description: '',
+            terms: '',
+            imageUrl: '',
+            tierPackage: 'COMMUNITY_BARTER',
+            isFeatured: false,
+            costInLtp: 250,
+            minXpLevel: 1,
+            totalQuota: 50,
+            startDate: new Date().toISOString().slice(0, 10),
+            endDate: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString().slice(0, 10),
+            voucherCodes: '',
+          });
+        } else {
+          setBannerAlert({ type: 'error', message: res.message });
+        }
+      } catch (err: any) {
+        setBannerAlert({ type: 'error', message: err?.message || 'Gagal menerbitkan perk mitra.' });
+      }
+    });
+  };
+
   // Create Submit
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -471,16 +592,26 @@ export function VouchersControlClient({
             <Download className="w-3.5 h-3.5 text-purple-500" />
             <span>Export CSV</span>
           </button>
-          <button
-            onClick={() => {
-              generateRandomCode();
-              setIsCreateModalOpen(true);
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-500/25 transition"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Buat Voucher Baru</span>
-          </button>
+          {masterTab === 'booking_coupons' ? (
+            <button
+              onClick={() => {
+                generateRandomCode();
+                setIsCreateModalOpen(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-500/25 transition"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Buat Kupon Diskon Baru</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsCreatePerkModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md shadow-indigo-500/25 transition"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span>Buat Perk Mitra Baru</span>
+            </button>
+          )}
         </div>
       </motion.div>
 
@@ -488,7 +619,7 @@ export function VouchersControlClient({
       <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 dark:bg-white/5 rounded-2xl w-fit border border-slate-200/80 dark:border-white/10">
         <button
           type="button"
-          onClick={() => setMasterTab('booking_coupons')}
+          onClick={() => handleMasterTabChange('booking_coupons')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
             masterTab === 'booking_coupons'
               ? 'bg-white dark:bg-[#1A1D21] text-purple-900 dark:text-purple-300 shadow-sm'
@@ -504,7 +635,7 @@ export function VouchersControlClient({
 
         <button
           type="button"
-          onClick={() => setMasterTab('brand_perks')}
+          onClick={() => handleMasterTabChange('brand_perks')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
             masterTab === 'brand_perks'
               ? 'bg-white dark:bg-[#1A1D21] text-indigo-900 dark:text-indigo-300 shadow-sm'
@@ -976,15 +1107,25 @@ export function VouchersControlClient({
             </a>.
           </div>
         </div>
-        <a
-          href="/id/community/perks"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="shrink-0 px-3.5 py-1.5 rounded-xl bg-indigo-900 hover:bg-indigo-950 text-white font-bold transition flex items-center gap-1.5 shadow-xs"
-        >
-          <span>Pratinjau Publik</span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </a>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsCreatePerkModalOpen(true)}
+            className="shrink-0 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition flex items-center gap-1.5 shadow-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Buat Perk Baru</span>
+          </button>
+          <a
+            href="/id/community/perks"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 px-3.5 py-1.5 rounded-xl bg-indigo-900 hover:bg-indigo-950 text-white font-bold transition flex items-center gap-1.5 shadow-xs"
+          >
+            <span>Pratinjau Publik</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
       </div>
 
       {/* Telemetry Summary Cards for Brand Perks */}
@@ -1600,6 +1741,313 @@ export function VouchersControlClient({
                   >
                     {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     <span>Terbitkan Voucher</span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CREATE BRAND PERK CAMPAIGN MODAL (WITH DRAG & DROP BANNER UPLOAD) */}
+      <AnimatePresence>
+        {isCreatePerkModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-xl rounded-3xl bg-white dark:bg-[#1A1D21] border border-slate-200 dark:border-white/10 p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                    <Gift className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-900 dark:text-white text-base">
+                      Buat Perk / Reward Mitra Brand Baru
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Voucher reward penukaran koin LTP yang langsung tampil di <code>/community/perks</code>.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsCreatePerkModalOpen(false)}
+                  className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreatePerkSubmit} className="mt-4 space-y-4">
+                {/* 1. Mitra Brand Partner */}
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Pilih Mitra Brand Partner <span className="text-rose-500">*</span>
+                    </label>
+                    <a
+                      href="/b2b"
+                      target="_blank"
+                      className="text-[11px] text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 font-semibold"
+                    >
+                      <span>+ Tambah Mitra di B2B</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                  <select
+                    required
+                    value={perkFormData.partnerId || ''}
+                    onChange={(e) =>
+                      setPerkFormData({
+                        ...perkFormData,
+                        partnerId: Number(e.target.value),
+                      })
+                    }
+                    className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="">-- Pilih Brand Partner --</option>
+                    {brandPartners.map((bp) => (
+                      <option key={bp.id} value={bp.id}>
+                        {bp.name} ({bp.category})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 2. Judul Kampanye Promo */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Judul Penawaran Promo <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={perkFormData.title}
+                    onChange={(e) => setPerkFormData({ ...perkFormData, title: e.target.value })}
+                    placeholder="Contoh: Diskon 30% Perlengkapan Gunung & Hiking Apparel"
+                    className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                {/* 3. Drag & Drop Banner Upload */}
+                <div>
+                  <ImageUploadDropzone
+                    folder="promotions"
+                    value={perkFormData.imageUrl}
+                    onChange={(url: string) => setPerkFormData((prev) => ({ ...prev, imageUrl: url }))}
+                    label="Gambar Banner Promo Perk"
+                    description="Seret & lepas gambar banner promo beresolusi tinggi (format JPG, PNG, WebP rasio landscape 16:9 disarankan)."
+                  />
+                  {perkFormData.imageUrl && (
+                    <div className="mt-1 flex items-center gap-1.5 text-[10px] text-slate-400 font-mono truncate">
+                      <span>URL:</span>
+                      <span className="truncate">{perkFormData.imageUrl}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Deskripsi & Syarat Penggunaan */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Deskripsi Singkat Penawaran <span className="text-rose-500">*</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={perkFormData.description}
+                    onChange={(e) => setPerkFormData({ ...perkFormData, description: e.target.value })}
+                    placeholder="Contoh: Dapatkan diskon 30% untuk seluruh koleksi apparel dan perlengkapan hiking di outlet resmi."
+                    className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Syarat & Ketentuan Penggunaan (Terms & Conditions)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={perkFormData.terms || ''}
+                    onChange={(e) => setPerkFormData({ ...perkFormData, terms: e.target.value })}
+                    placeholder="1. Masukkan kode voucher saat checkout di situs resmi.\n2. Tunjukkan barcode di kasir fisik..."
+                    className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                {/* 5. Parameter LTP & Level XP */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Biaya Tukar Koin (LTP) <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      required
+                      value={perkFormData.costInLtp}
+                      onChange={(e) =>
+                        setPerkFormData({ ...perkFormData, costInLtp: Number(e.target.value) })
+                      }
+                      placeholder="0 = Gratis"
+                      className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-0.5">Isi 0 jika voucher gratis untuk traveler.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Syarat Min. Level XP <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={perkFormData.minXpLevel}
+                      onChange={(e) =>
+                        setPerkFormData({ ...perkFormData, minXpLevel: Number(e.target.value) })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value={1}>Level 1 (Semua Pengguna)</option>
+                      <option value={2}>Level 2 (Explorer)</option>
+                      <option value={3}>Level 3 (Adventurer)</option>
+                      <option value={4}>Level 4 (Trailblazer)</option>
+                      <option value={5}>Level 5 (VIP Elite)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* 6. Kuota, Paket Tier & Featured Flag */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Total Kuota Voucher <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      required
+                      value={perkFormData.totalQuota}
+                      onChange={(e) =>
+                        setPerkFormData({ ...perkFormData, totalQuota: Number(e.target.value) })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Paket Kemitraan Tier
+                    </label>
+                    <select
+                      value={perkFormData.tierPackage}
+                      onChange={(e) =>
+                        setPerkFormData({ ...perkFormData, tierPackage: e.target.value })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="COMMUNITY_BARTER">Community Barter</option>
+                      <option value="FEATURED_PARTNER">Featured Partner</option>
+                      <option value="PREMIUM_SPONSOR">Premium Sponsor</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Featured Highlight Checkbox */}
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40">
+                  <input
+                    type="checkbox"
+                    id="isFeaturedPerk"
+                    checked={Boolean(perkFormData.isFeatured)}
+                    onChange={(e) =>
+                      setPerkFormData({ ...perkFormData, isFeatured: e.target.checked })
+                    }
+                    className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                  />
+                  <label htmlFor="isFeaturedPerk" className="text-xs font-bold text-amber-900 dark:text-amber-200 cursor-pointer">
+                    Tampilkan sebagai Promo Featured (Berada di paling atas dengan lencana emas)
+                  </label>
+                </div>
+
+                {/* 7. Masa Berlaku */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Mulai Tayang
+                    </label>
+                    <input
+                      type="date"
+                      value={perkFormData.startDate}
+                      onChange={(e) =>
+                        setPerkFormData({ ...perkFormData, startDate: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Batas Berakhir <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={perkFormData.endDate}
+                      onChange={(e) =>
+                        setPerkFormData({ ...perkFormData, endDate: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                {/* 8. Pool Kode Voucher Kasir */}
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Pool Kode Voucher Kasir Unik (Opsional)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => generateRandomPerkCodes(20)}
+                      className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>Acak 20 Kode Contoh</span>
+                    </button>
+                  </div>
+                  <textarea
+                    rows={3}
+                    value={perkFormData.voucherCodes || ''}
+                    onChange={(e) =>
+                      setPerkFormData({ ...perkFormData, voucherCodes: e.target.value })
+                    }
+                    placeholder={'Contoh:\nEIGER-DISC30-101\nEIGER-DISC30-102\n(Atau kosongkan agar sistem membuat kode acak otomatis sesuai kuota)'}
+                    className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Jika dikosongkan, sistem secara otomatis menerbitkan {perkFormData.totalQuota} kode alfanumerik unik beserta barcode kasir saat traveler melakukan klaim.
+                  </p>
+                </div>
+
+                {/* Submit Actions */}
+                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setIsCreatePerkModalOpen(false)}
+                    disabled={isPending}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isPending}
+                    className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-indigo-500/25"
+                  >
+                    {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <span>Terbitkan Perk ke Publik</span>
                   </button>
                 </div>
               </form>

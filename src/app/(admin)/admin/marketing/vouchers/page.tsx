@@ -14,7 +14,17 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminVouchersPage() {
+interface AdminVouchersPageProps {
+  searchParams?: Promise<{
+    tab?: string;
+  }>;
+}
+
+export default async function AdminVouchersPage({ searchParams }: AdminVouchersPageProps) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const initialMasterTab =
+    resolvedParams?.tab === 'perks' ? 'brand_perks' : 'booking_coupons';
+
   const [
     { vouchers = [], stats, pagination },
     brandPartnersRes,
@@ -43,6 +53,7 @@ export default async function AdminVouchersPage() {
       }
       brandPartners={brandPartnersRes.data || []}
       initialBrandCampaigns={brandCampaignsRes.campaigns || []}
+      initialMasterTab={initialMasterTab}
     />
   );
 }

@@ -731,3 +731,165 @@ export async function deleteBrandCampaign(
     };
   }
 }
+
+export interface CreateBrandCampaignInput {
+  partnerId: number;
+  title: string;
+  slug?: string;
+  description: string;
+  terms?: string;
+  imageUrl: string;
+  tierPackage?: string;
+  isFeatured?: boolean;
+  costInLtp?: number;
+  minXpLevel?: number;
+  totalQuota?: number;
+  startDate?: string;
+  endDate: string;
+  voucherCodes?: string;
+}
+
+/**
+ * 8. Create Brand Perk Campaign (with image and initial voucher codes pool)
+ */
+export async function createBrandPerkCampaign(
+  input: CreateBrandCampaignInput
+): Promise<{
+  success: boolean;
+  message: string;
+  campaign?: AdminBrandCampaignItem;
+  error?: string;
+}> {
+  try {
+    await requireAdminOrMarketingSession();
+
+    if (!input.partnerId) {
+      return { success: false, message: 'Wajib memilih Mitra Brand Partner.' };
+    }
+    if (!input.title || !input.title.trim()) {
+      return { success: false, message: 'Judul kampanye promo wajib diisi.' };
+    }
+    if (!input.imageUrl || !input.imageUrl.trim()) {
+      return { success: false, message: 'Gambar banner promo wajib diunggah.' };
+    }
+    if (!input.endDate) {
+      return { success: false, message: 'Tanggal batas berakhir promo wajib ditentukan.' };
+    }
+
+    // Slug generation
+    const baseSlug = (input.slug || input.title)
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    const existingSlug = await prisma.brand_campaigns.findUnique({
+      where: { slug: baseSlug },
+    });
+    const finalSlug = existingSlug ? `${baseSlug}-${Date.now().toString().slice(-4)}` : baseSlug;
+
+    const totalQuota = Math.max(1, Number(input.totalQuota) || 50);
+
+    const campaign = await prisma.brand_campaigns.create({
+      data: {
+        partner_id: Number(input.partnerId),
+        title: input.title.trim(),
+        slug: finalSlug,
+        description: input.description.trim() || input.title.trim(),
+        terms: input.terms?.trim() || null,
+        image_url: input.imageUrl.trim(),
+        tier_package: input.tierPackage || 'COMMUNITY_BARTER',
+        is_featured: Boolean(input.isFeatured),
+        cost_in_ltp: Math.max(0, Number(input.costInLtp) || 0),
+        min_xp_level: Math.max(1, Number(input.minXpLevel) || 1),
+        total_quota: totalQuota,
+        claimed_quota: 0,
+        start_date: input.startDate ? new Date(input.startDate) : new Date(),
+        end_date: new Date(input.endDate),
+        is_active: true,
+      },
+      include: {
+        partner: {
+          select: {
+            id: true,
+            name: true,
+            logo_url: true,
+            category: true,
+            slug: true,
+          },
+        },
+      },
+    });
+
+    // Populate initial voucher codes pool
+    let codes: string[] = [];
+    if (input.voucherCodes && input.voucherCodes.trim()) {
+      codes = input.voucherCodes
+        .split(/[\n,;]+/)
+        .map((c) => c.trim().toUpperCase())
+        .filter(Boolean);
+    } else {
+      // Auto generate unique codes
+      const prefix = input.title
+        .replace(/[^A-Za-z0-9]/g, '')
+        .slice(0, 5)
+        .toUpperCase() || 'PERK';
+      const count = Math.min(totalQuota, 100);
+      for (let i = 0; i < count; i++) {
+        codes.push(`${prefix}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
+      }
+    }
+
+    if (codes.length > 0) {
+      await prisma.brand_voucher_codes.createMany({
+        data: codes.map((code) => ({
+          campaign_id: campaign.id,
+          code,
+          is_claimed: false,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    revalidatePath('/admin/marketing/vouchers');
+    revalidatePath('/id/community/perks');
+    revalidatePath('/en/community/perks');
+
+    return {
+      success: true,
+      message: `Kampanye perk "${campaign.title}" berhasil diterbitkan dan langsung tayang di katalog perks publik.`,
+      campaign: {
+        id: campaign.id,
+        partnerId: campaign.partner.id,
+        partnerName: campaign.partner.name,
+        partnerLogo: campaign.partner.logo_url,
+        partnerCategory: campaign.partner.category,
+        partnerSlug: campaign.partner.slug,
+        title: campaign.title,
+        slug: campaign.slug,
+        description: campaign.description,
+        terms: campaign.terms,
+        imageUrl: campaign.image_url,
+        tierPackage: campaign.tier_package,
+        isFeatured: campaign.is_featured,
+        costInLtp: campaign.cost_in_ltp,
+        minXpLevel: campaign.min_xp_level,
+        totalQuota: campaign.total_quota,
+        claimedQuota: 0,
+        remainingVouchers: codes.length,
+        startDate: campaign.start_date.toISOString(),
+        endDate: campaign.end_date.toISOString(),
+        isActive: campaign.is_active,
+        createdAt: campaign.created_at.toISOString(),
+      },
+    };
+  } catch (error: any) {
+    console.error('Error creating brand perk campaign:', error);
+    return {
+      success: false,
+      message: error?.message || 'Gagal membuat kampanye perk mitra.',
+      error: error?.message,
+    };
+  }
+}

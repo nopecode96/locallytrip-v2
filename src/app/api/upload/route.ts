@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getCurrentUserSession } from '@/actions/bookings';
+import { getAdminStaffSession } from '@/lib/admin-auth';
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
@@ -38,6 +39,8 @@ const ALLOWED_FOLDERS = [
   'forums',
   'meetups',
   'users',
+  'partners',
+  'brands',
 ] as const;
 
 type AllowedFolder = (typeof ALLOWED_FOLDERS)[number];
@@ -57,6 +60,11 @@ export async function POST(request: NextRequest) {
       const rawSession = await getCurrentUserSession();
       if (rawSession?.isLoggedIn && rawSession.email) {
         userEmail = rawSession.email;
+      } else {
+        const adminSession = await getAdminStaffSession();
+        if (adminSession?.isLoggedIn && adminSession.email) {
+          userEmail = adminSession.email;
+        }
       }
     }
 
