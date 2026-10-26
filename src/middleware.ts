@@ -38,13 +38,29 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 4. Jika di subdomain admin tapi URL masih menyertakan prefix /admin,
-  // lakukan 307 redirect untuk membersihkan address bar menjadi root-relative
-  if (isAdminHost && pathname.startsWith('/admin')) {
-    const strippedPath = pathname.replace(/^\/admin/, '') || '/';
+  // 4a. Jika di subdomain admin tapi ada prefix bahasa (/en atau /id),
+  // bersihkan prefix dan arahkan ke rute admin yang benar
+  if (isAdminHost && /^\/(en|id)(\/.*)?$/.test(pathname)) {
+    const strippedPath = pathname.replace(/^\/(en|id)/, '') || '/dashboard';
     const cleanUrl = new URL(strippedPath, request.url);
     cleanUrl.search = request.nextUrl.search;
     return NextResponse.redirect(cleanUrl);
+  }
+
+  // 4b. Jika di subdomain admin tapi URL masih menyertakan prefix /admin,
+  // lakukan 307 redirect untuk membersihkan address bar menjadi root-relative
+  if (isAdminHost && pathname.startsWith('/admin')) {
+    const strippedPath = pathname.replace(/^\/admin/, '') || '/dashboard';
+    const cleanUrl = new URL(strippedPath, request.url);
+    cleanUrl.search = request.nextUrl.search;
+    return NextResponse.redirect(cleanUrl);
+  }
+
+  // 4c. Jika di subdomain admin mengakses root '/', redirect ke /dashboard
+  if (isAdminHost && pathname === '/') {
+    const dashboardUrl = new URL('/dashboard', request.url);
+    dashboardUrl.search = request.nextUrl.search;
+    return NextResponse.redirect(dashboardUrl);
   }
 
   // 5. Periksa sesi token JWT pengguna
@@ -65,7 +81,7 @@ export async function middleware(request: NextRequest) {
     // Jika staf/admin sudah login, arahkan langsung ke root atau dashboard
     if (token && isStaff) {
       const destination = isAdminHost
-        ? new URL('/', request.url)
+        ? new URL('/dashboard', request.url)
         : new URL('/admin/dashboard', request.url);
       return NextResponse.redirect(destination);
     }

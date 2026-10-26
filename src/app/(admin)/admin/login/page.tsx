@@ -50,16 +50,16 @@ export default function AdminLoginPage() {
     getSession().then((session) => {
       const role = (session?.user?.role as string)?.toLowerCase().trim();
       if (role && ADMIN_ROLES.includes(role)) {
-        router.replace(isSub ? '/' : '/admin/dashboard');
+        router.replace(isSub ? '/dashboard' : '/admin/dashboard');
       }
     });
   }, [router]);
 
   const callbackUrlParam = searchParams.get('callbackUrl');
-  const defaultRedirect = isSubdomain ? '/' : '/admin/dashboard';
+  const defaultRedirect = isSubdomain ? '/dashboard' : '/admin/dashboard';
   const targetCallback = callbackUrlParam
     ? isSubdomain
-      ? callbackUrlParam.replace(/^\/admin/, '') || '/'
+      ? callbackUrlParam.replace(/^\/admin/, '').replace(/^\/(en|id)/, '') || '/dashboard'
       : callbackUrlParam
     : defaultRedirect;
 
