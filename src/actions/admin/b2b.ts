@@ -200,8 +200,6 @@ export async function getAdminB2BPartnersData(
         totalVouchers += camp.vouchers.length;
       }
 
-      const commissionRate = parseCommissionFromText(item.description, 10);
-
       return {
         id: item.id,
         name: item.name,
@@ -213,9 +211,9 @@ export async function getAdminB2BPartnersData(
         contactPerson: item.contact_person,
         contactEmail: item.contact_email,
         contactPhone: item.contact_phone,
-        description: item.description,
+        description: item.description?.replace(/\(Commission: [^)]+\)/, '').trim() || null,
         status: statusUpper === 'APPROVED' ? 'ACTIVE' : statusUpper,
-        commissionRate,
+        commissionRate: 0,
         totalCampaigns: item.campaigns.length,
         totalVouchersPool: totalVouchers,
         totalBookingsReferred: partnerBookings,
@@ -312,10 +310,7 @@ export async function createB2BPartner(
       suffix += 1;
     }
 
-    const commissionPercent = input.commissionRate ?? 10;
-    const descWithCommission = input.description
-      ? `${input.description.trim()} (Commission: ${commissionPercent}%)`
-      : `Corporate B2B partner (Commission: ${commissionPercent}%)`;
+    const cleanDesc = input.description?.trim() || null;
 
     const created = await prisma.brand_partners.create({
       data: {
@@ -329,7 +324,7 @@ export async function createB2BPartner(
         contact_person: input.contactPerson.trim() || 'Partnership Lead',
         contact_email: emailClean,
         contact_phone: input.contactPhone.trim() || '-',
-        description: descWithCommission,
+        description: cleanDesc,
         status: (input.status || 'ACTIVE').toUpperCase(),
         created_at: new Date(),
         updated_at: new Date(),
@@ -341,7 +336,7 @@ export async function createB2BPartner(
 
     return {
       success: true,
-      message: `Mitra B2B "${created.name}" berhasil didaftarkan dengan komisi ${commissionPercent}%.`,
+      message: `Mitra Brand "${created.name}" berhasil didaftarkan.`,
     };
   } catch (error: any) {
     console.error('Error creating B2B partner:', error);
@@ -385,12 +380,9 @@ export async function updateB2BPartner(
     if (input.logoUrl) updateData.logo_url = input.logoUrl.trim();
     if (input.status) updateData.status = input.status.toUpperCase();
 
-    if (input.commissionRate !== undefined || input.description !== undefined) {
-      const baseDesc = input.description !== undefined ? input.description : (partner.description || '');
-      const rate = input.commissionRate !== undefined ? input.commissionRate : parseCommissionFromText(baseDesc, 10);
-      // clean old commission mention and re-append
-      const cleanDesc = baseDesc.replace(/\(Commission: [^)]+\)/, '').trim();
-      updateData.description = `${cleanDesc} (Commission: ${rate}%)`.trim();
+    if (input.description !== undefined) {
+      const baseDesc = input.description ? input.description.replace(/\(Commission: [^)]+\)/, '').trim() : null;
+      updateData.description = baseDesc;
     }
 
     const updated = await prisma.brand_partners.update({

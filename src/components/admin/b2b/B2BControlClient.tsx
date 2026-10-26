@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2,
   Briefcase,
-  Percent,
   CheckCircle2,
   XCircle,
   AlertCircle,
@@ -132,7 +131,6 @@ export function B2BControlClient({
     contactPhone: '',
     websiteUrl: '',
     logoUrl: '',
-    commissionRate: 12.5,
     status: 'ACTIVE',
     description: '',
   });
@@ -172,9 +170,10 @@ export function B2BControlClient({
       'Contact Person',
       'Email',
       'Phone',
-      'Commission Rate (%)',
-      'Total Bookings Referred',
-      'Total Earnings (IDR)',
+      'Active Campaigns',
+      'Total Vouchers Pool',
+      'Total Claims/Bookings',
+      'Total Placement Fee (IDR)',
       'Status',
       'Website',
     ];
@@ -186,7 +185,8 @@ export function B2BControlClient({
       `"${p.contactPerson.replace(/"/g, '""')}"`,
       p.contactEmail,
       p.contactPhone,
-      `${p.commissionRate}%`,
+      p.totalCampaigns,
+      p.totalVouchersPool,
       p.totalBookingsReferred,
       p.totalEarningsIdr,
       p.status,
@@ -220,7 +220,6 @@ export function B2BControlClient({
       contactPhone: '',
       websiteUrl: '',
       logoUrl: '',
-      commissionRate: 12.5,
       status: 'ACTIVE',
       description: '',
     });
@@ -238,7 +237,6 @@ export function B2BControlClient({
       contactPhone: partner.contactPhone,
       websiteUrl: partner.websiteUrl || '',
       logoUrl: partner.logoUrl || '',
-      commissionRate: partner.commissionRate,
       status: partner.status,
       description: partner.description || '',
     });
@@ -327,7 +325,6 @@ export function B2BControlClient({
                       contactPhone: formData.contactPhone,
                       websiteUrl: formData.websiteUrl || null,
                       logoUrl: formData.logoUrl || p.logoUrl,
-                      commissionRate: formData.commissionRate ?? p.commissionRate,
                       status: formData.status || p.status,
                       description: formData.description || null,
                     }
@@ -358,7 +355,7 @@ export function B2BControlClient({
               contactPhone: formData.contactPhone,
               description: formData.description || null,
               status: formData.status || 'ACTIVE',
-              commissionRate: formData.commissionRate ?? 10,
+              commissionRate: 0,
               totalCampaigns: 0,
               totalVouchersPool: 0,
               totalBookingsReferred: 0,
@@ -402,13 +399,13 @@ export function B2BControlClient({
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-semibold mb-2">
             <Building2 className="w-3.5 h-3.5" />
-            <span>Corporate Travel & Agency Gateway</span>
+            <span>Corporate Travel & Brand Gateway</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            B2B Partners & Corporate Accounts
+            B2B Partners & Brand Sponsors
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Kelola kemitraan korporat, agen perjalanan, brand sponsors, struktur bagi hasil komisi, dan tracking pemesanan referal.
+            Kelola kemitraan brand partner, sponsorship perks barter komunitas, dan monitoring kampanye voucher.
           </p>
         </div>
 
@@ -649,9 +646,8 @@ export function B2BControlClient({
               <tr>
                 <th className="px-5 py-3.5 font-bold">Perusahaan Mitra</th>
                 <th className="px-5 py-3.5 font-bold">Kontak Person (PIC)</th>
-                <th className="px-5 py-3.5 font-bold">Skema Komisi</th>
-                <th className="px-5 py-3.5 font-bold">Performa Referal</th>
-                <th className="px-5 py-3.5 font-bold">Placement / Earnings</th>
+                <th className="px-5 py-3.5 font-bold">Kampanye & Kupon Perks</th>
+                <th className="px-5 py-3.5 font-bold">Placement / Nilai Kerjasama</th>
                 <th className="px-5 py-3.5 font-bold">Status</th>
                 <th className="px-5 py-3.5 font-bold text-right">Moderasi</th>
               </tr>
@@ -733,24 +729,14 @@ export function B2BControlClient({
                         </div>
                       </td>
 
-                      {/* Commission Rate */}
+                      {/* Kampanye & Kupon Perks */}
                       <td className="px-5 py-4 whitespace-nowrap">
-                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 font-bold text-xs">
-                          <Percent className="w-3.5 h-3.5 text-purple-500" />
-                          <span>{item.commissionRate}% Share</span>
-                        </div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">
-                          Tier B2B Standar
-                        </div>
-                      </td>
-
-                      {/* Referrals Performance */}
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <div className="font-black text-slate-900 dark:text-white">
-                          {item.totalBookingsReferred} Booking
+                        <div className="font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                          <span>{item.totalCampaigns} Kampanye Aktif</span>
                         </div>
                         <div className="text-[11px] text-slate-500 mt-0.5">
-                          {item.totalCampaigns} Kampanye Aktif ({item.totalVouchersPool} Voucher)
+                          {item.totalVouchersPool} Kupon Voucher ({item.totalBookingsReferred} Klaim)
                         </div>
                       </td>
 
@@ -826,7 +812,7 @@ export function B2BControlClient({
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-slate-400">
+                  <td colSpan={6} className="px-5 py-12 text-center text-slate-400">
                     <div className="flex flex-col items-center justify-center">
                       <Building2 className="w-10 h-10 text-slate-300 dark:text-slate-700 mb-2" />
                       <div className="font-bold text-slate-600 dark:text-slate-300">
@@ -995,24 +981,6 @@ export function B2BControlClient({
                       className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
-                </div>
-
-                {/* Commission Rate */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Bagi Hasil Komisi (%)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min={0}
-                    max={100}
-                    value={formData.commissionRate ?? 10}
-                    onChange={(e) =>
-                      setFormData({ ...formData, commissionRate: parseFloat(e.target.value) || 0 })
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
                 </div>
 
                 {/* Logo Image Upload via Drag & Drop */}
