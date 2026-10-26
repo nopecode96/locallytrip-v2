@@ -9,6 +9,8 @@ import { ExperienceCard } from '@/components/marketplace/ExperienceCard';
 import { StoryCard, StoryItem } from '@/components/marketplace/StoryCard';
 import { ExperienceItem } from '@/actions/experiences';
 import { resolveMeetupDisplayImage } from '@/lib/utils/images';
+import { SafeImage } from '@/components/common/SafeImage';
+import { resolveAvatarUrl } from '@/lib/avatar';
 import {
   MapPin,
   Calendar,
@@ -55,13 +57,10 @@ async function getCityBySlug(slug: string) {
   const normalizedSlug = decodeURIComponent(slug).toLowerCase().trim();
   const searchName = normalizedSlug.replace(/-/g, ' ');
 
-  // 1. Coba pencarian langsung dengan name insensitive
+  // 1. Coba pencarian langsung dengan name equals (case-insensitive)
   let city = await prisma.cities.findFirst({
     where: {
-      OR: [
-        { name: { equals: searchName, mode: 'insensitive' } },
-        { name: { contains: searchName, mode: 'insensitive' } },
-      ],
+      name: { equals: searchName, mode: 'insensitive' },
       is_active: true,
     },
     include: {
@@ -69,7 +68,20 @@ async function getCityBySlug(slug: string) {
     },
   });
 
-  // 2. Jika tidak ditemukan secara langsung, periksa semua kota yang aktif dengan slugifikasi
+  // 2. Jika tidak ditemukan secara persis, coba pencarian contains
+  if (!city) {
+    city = await prisma.cities.findFirst({
+      where: {
+        name: { contains: searchName, mode: 'insensitive' },
+        is_active: true,
+      },
+      include: {
+        countries: true,
+      },
+    });
+  }
+
+  // 3. Jika masih belum ditemukan, periksa semua kota yang aktif dengan slugifikasi
   if (!city) {
     const allCities = await prisma.cities.findMany({
       where: { is_active: true },
@@ -791,30 +803,29 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {meetupsRaw.map((meetup) => {
                 const startDate = new Date(meetup.start_date);
-                const monthShort = startDate
-                  .toLocaleDateString(locale === 'en' ? 'en-US' : 'id-ID', { month: 'short' })
-                  .toUpperCase();
-                const dayNum = startDate.getDate();
-                const weekday = startDate.toLocaleDateString(
-                  locale === 'en' ? 'en-US' : 'id-ID',
-                  { weekday: 'short' }
-                );
-                const timeFormatted = startDate.toLocaleTimeString(
-                  locale === 'en' ? 'en-US' : 'id-ID',
-                  {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  }
-                );
+                const isValidDate = !isNaN(startDate.getTime());
+                const monthShort = isValidDate
+                  ? startDate
+                      .toLocaleDateString(locale === 'en' ? 'en-US' : 'id-ID', { month: 'short' })
+                      .toUpperCase()
+                  : 'TBA';
+                const dayNum = isValidDate ? startDate.getDate() : '--';
+                const weekday = isValidDate
+                  ? startDate.toLocaleDateString(locale === 'en' ? 'en-US' : 'id-ID', { weekday: 'short' })
+                  : '';
+                const timeFormatted = isValidDate
+                  ? startDate.toLocaleTimeString(locale === 'en' ? 'en-US' : 'id-ID', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : 'TBA';
 
                 const coverImg = resolveMeetupDisplayImage(
                   meetup.images,
                   meetup.cities?.image_url
                 );
 
-                const creatorAvatar = meetup.users?.avatar_url
-                  ? `/images/users/avatars/${meetup.users.avatar_url}`
-                  : '/images/default.jpg';
+                const creatorAvatar = resolveAvatarUrl(meetup.users);
 
                 const isFree = meetup.join_type === 'public';
                 const maxSlots = meetup.max_members || 10;
@@ -836,18 +847,13 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
                       {/* Media Cover Aspect 16/10 */}
                       <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900">
                         <figure className="relative w-full h-full m-0">
-                          <img
+                          <SafeImage
                             src={coverImg}
                             alt={meetup.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                             loading="lazy"
-                            onError={(e) => {
-                              const target = e.currentTarget;
-                              const fallback = '/images/default-meetup-cover.jpg';
-                              if (target.src !== fallback && !target.src.endsWith(fallback)) {
-                                target.src = fallback;
-                              }
-                            }}
+                            category="meetups"
+                            fallbackSrc="/images/default-meetup-cover.jpg"
                           />
                           <figcaption className="sr-only">
                             Dokumentasi meetup komunitas di {city.name}
@@ -967,11 +973,7 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
                               .map((mem: any, idx: number) => (
                                 <img
                                   key={idx}
-                                  src={
-                                    mem.users?.avatar_url
-                                      ? `/images/users/avatars/${mem.users.avatar_url}`
-                                      : '/images/default.jpg'
-                                  }
+                                  src={resolveAvatarUrl(mem.users)}
                                   alt={mem.users?.name || 'Member'}
                                   className="inline-block h-6 w-6 rounded-full ring-2 ring-white object-cover shadow-2xs"
                                 />
@@ -1059,11 +1061,7 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
             <div className="space-y-4">
               {forumThreadsRaw.map((thread) => {
                 const author = thread.users_vibes_forum_threads_author_idTousers;
-                const authorAvatar = author?.avatar_url
-                  ? author.avatar_url.startsWith('/')
-                    ? author.avatar_url
-                    : `/images/users/avatars/${author.avatar_url}`
-                  : '/images/default.jpg';
+                const authorAvatar = resolveAvatarUrl(author);
 
                 const formattedDate = thread.created_at
                   ? new Date(thread.created_at).toLocaleDateString(
@@ -1076,7 +1074,7 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
                     )
                   : '';
 
-                const snippet = thread.content
+                const snippet = (thread.content || '')
                   .replace(/[#*`_~>[\]()!]/g, '')
                   .replace(/\n+/g, ' ')
                   .trim();
