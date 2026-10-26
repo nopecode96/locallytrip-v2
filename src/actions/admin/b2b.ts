@@ -5,6 +5,22 @@ import { revalidatePath } from 'next/cache';
 import { getAdminStaffSession } from '@/lib/admin-auth';
 import { getPublicImageUrl } from '@/lib/images';
 
+export interface AdminB2BCampaignSummary {
+  id: number;
+  title: string;
+  description: string;
+  terms?: string | null;
+  tierPackage: string;
+  isFeatured: boolean;
+  costInLtp: number;
+  minXpLevel: number;
+  totalQuota: number;
+  claimedQuota: number;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+}
+
 export interface AdminB2BPartnerItem {
   id: number;
   name: string;
@@ -17,7 +33,7 @@ export interface AdminB2BPartnerItem {
   contactEmail: string;
   contactPhone: string;
   description: string | null;
-  status: 'ACTIVE' | 'PENDING' | 'SUSPENDED' | 'PAUSED' | string;
+  status: 'ACTIVE' | 'PENDING' | 'SUSPENDED' | 'PAUSED' | 'REJECTED' | string;
   commissionRate: number; // Percentage, e.g. 10.0%, 12.5%
   totalCampaigns: number;
   totalVouchersPool: number;
@@ -25,6 +41,7 @@ export interface AdminB2BPartnerItem {
   totalEarningsIdr: number;
   createdAt: string;
   updatedAt: string;
+  campaignsList?: AdminB2BCampaignSummary[];
 }
 
 export interface AdminB2BStats {
@@ -194,11 +211,26 @@ export async function getAdminB2BPartnersData(
       let partnerEarnings = 0;
       let totalVouchers = 0;
 
-      for (const camp of item.campaigns) {
+      const campaignsList: AdminB2BCampaignSummary[] = item.campaigns.map((camp) => {
         partnerBookings += camp.claims.length || camp.claimed_quota || 0;
         partnerEarnings += Number(camp.placement_fee) || 0;
         totalVouchers += camp.vouchers.length;
-      }
+        return {
+          id: camp.id,
+          title: camp.title,
+          description: camp.description,
+          terms: camp.terms,
+          tierPackage: camp.tier_package,
+          isFeatured: camp.is_featured,
+          costInLtp: camp.cost_in_ltp,
+          minXpLevel: camp.min_xp_level,
+          totalQuota: camp.total_quota,
+          claimedQuota: camp.claimed_quota,
+          startDate: camp.start_date.toISOString(),
+          endDate: camp.end_date.toISOString(),
+          isActive: camp.is_active,
+        };
+      });
 
       return {
         id: item.id,
@@ -220,6 +252,7 @@ export async function getAdminB2BPartnersData(
         totalEarningsIdr: partnerEarnings,
         createdAt: item.created_at.toISOString(),
         updatedAt: item.updated_at.toISOString(),
+        campaignsList,
       };
     });
 
@@ -509,6 +542,102 @@ export async function deleteB2BPartner(
     return {
       success: false,
       message: error?.message || 'Gagal menghapus data mitra B2B.',
+      error: error?.message,
+    };
+  }
+}
+
+/**
+ * 6. Approve B2B Partner Application
+ */
+export async function approveB2BPartner(partnerId: number): Promise<B2BActionResult> {
+  try {
+    await requireAdminOrMarketingSession();
+
+    const partner = await prisma.brand_partners.findUnique({
+      where: { id: partnerId },
+      include: { campaigns: true },
+    });
+
+    if (!partner) {
+      return { success: false, message: 'Mitra B2B tidak ditemukan.' };
+    }
+
+    await prisma.$transaction([
+      prisma.brand_partners.update({
+        where: { id: partnerId },
+        data: {
+          status: 'ACTIVE',
+          updated_at: new Date(),
+        },
+      }),
+      prisma.brand_campaigns.updateMany({
+        where: { partner_id: partnerId },
+        data: { is_active: true },
+      }),
+    ]);
+
+    revalidatePath('/admin/b2b');
+    revalidatePath('/admin/marketing/b2b');
+    revalidatePath('/admin/marketing/vouchers');
+    revalidatePath('/id/community/perks');
+    revalidatePath('/en/community/perks');
+
+    return {
+      success: true,
+      message: `Kemitraan brand "${partner.name}" berhasil disetujui (ACTIVE). Kampanye penawaran langsung aktif di katalog Perks publik.`,
+    };
+  } catch (error: any) {
+    console.error('Error approving B2B partner:', error);
+    return {
+      success: false,
+      message: error?.message || 'Gagal menyetujui kemitraan.',
+      error: error?.message,
+    };
+  }
+}
+
+/**
+ * 7. Reject B2B Partner Application
+ */
+export async function rejectB2BPartner(partnerId: number, reason?: string): Promise<B2BActionResult> {
+  try {
+    await requireAdminOrMarketingSession();
+
+    const partner = await prisma.brand_partners.findUnique({
+      where: { id: partnerId },
+    });
+
+    if (!partner) {
+      return { success: false, message: 'Mitra B2B tidak ditemukan.' };
+    }
+
+    await prisma.$transaction([
+      prisma.brand_partners.update({
+        where: { id: partnerId },
+        data: {
+          status: 'REJECTED',
+          updated_at: new Date(),
+        },
+      }),
+      prisma.brand_campaigns.updateMany({
+        where: { partner_id: partnerId },
+        data: { is_active: false },
+      }),
+    ]);
+
+    revalidatePath('/admin/b2b');
+    revalidatePath('/admin/marketing/b2b');
+
+    return {
+      success: true,
+      message: `Permohonan kemitraan brand "${partner.name}" telah ditolak (REJECTED).`,
+    };
+  } catch (error: any) {
+    console.error('Error rejecting B2B partner:', error);
+    return {
+      success: false,
+      message: error?.message || 'Gagal menolak kemitraan.',
       error: error?.message,
     };
   }

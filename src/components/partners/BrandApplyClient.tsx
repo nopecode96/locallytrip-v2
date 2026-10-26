@@ -19,8 +19,13 @@ import {
   Star,
   Gift,
   HelpCircle,
+  FileText,
+  X,
+  Scale,
+  Check,
 } from 'lucide-react';
 import { submitBrandPartnershipApplication } from '@/actions/partners/brand-actions';
+import { ImageUploadDropzone } from '@/components/shared/ImageUploadDropzone';
 
 interface BrandApplyClientProps {
   locale: string;
@@ -55,6 +60,9 @@ export function BrandApplyClient({ locale }: BrandApplyClientProps) {
     voucherCodes: '',
   });
 
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [termsLanguage, setTermsLanguage] = useState<'id' | 'en'>(isId ? 'id' : 'en');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<{
@@ -86,6 +94,15 @@ export function BrandApplyClient({ locale }: BrandApplyClientProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+
+    if (!agreedToTerms) {
+      setErrorMsg(
+        isId
+          ? 'Mohon centang persetujuan Perjanjian Kemitraan Digital (MoU) sebelum mengirimkan formulir.'
+          : 'Please agree to the Digital Partnership Agreement (MoU) before submitting the application.'
+      );
+      return;
+    }
 
     if (voucherCount === 0) {
       setErrorMsg(
@@ -349,17 +366,22 @@ export function BrandApplyClient({ locale }: BrandApplyClientProps) {
                   </div>
 
                   <div className="space-y-1.5 sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      {isId ? 'URL Logo Brand (PNG / SVG Transparan)' : 'Brand Logo URL'}
-                    </label>
-                    <input
-                      type="url"
-                      name="logoUrl"
+                    <ImageUploadDropzone
+                      folder="partners"
                       value={formData.logoUrl}
-                      onChange={handleChange}
-                      placeholder="https://brand-anda.com/logo.png"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-600 transition"
+                      onChange={(url: string) => setFormData((prev) => ({ ...prev, logoUrl: url }))}
+                      label={isId ? 'Logo Resmi Brand (Unggah / Drag & Drop)' : 'Official Brand Logo (Upload / Drag & Drop)'}
+                      description={
+                        isId
+                          ? 'Seret & lepas berkas logo format PNG transparan, SVG, WebP atau JPG (Maks. 5MB).'
+                          : 'Drag & drop PNG transparent, SVG, WebP or JPG logo files (Max 5MB).'
+                      }
                     />
+                    {formData.logoUrl && (
+                      <p className="text-[11px] text-slate-400 font-mono truncate">
+                        URL: {formData.logoUrl}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5 sm:col-span-2">
@@ -689,6 +711,49 @@ export function BrandApplyClient({ locale }: BrandApplyClientProps) {
                 </div>
               </div>
 
+              {/* Digital MoU Agreement Checkbox */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-purple-50/70 border border-purple-200/80 space-y-3">
+                <label className="flex items-start gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="mt-1 w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 cursor-pointer shrink-0"
+                  />
+                  <div className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                    <span>
+                      {isId
+                        ? 'Saya menyatakan berwenang mewakili perusahaan ini dan menyetujui seluruh isi '
+                        : 'I hereby confirm authority to represent this company and agree to the '}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsTermsModalOpen(true);
+                      }}
+                      className="font-bold text-purple-700 hover:text-purple-900 underline inline-flex items-center gap-1"
+                    >
+                      <FileText className="w-3.5 h-3.5 inline" />
+                      <span>
+                        {isId
+                          ? 'Perjanjian Kemitraan Digital (Digital MoU) & Ketentuan Voucher Brand'
+                          : 'Digital Partnership Agreement (Digital MoU) & Brand Perks Terms'}
+                      </span>
+                    </button>
+                    <span>.</span>
+                  </div>
+                </label>
+                <div className="text-[11px] text-slate-500 flex items-center gap-1.5 pl-7">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>
+                    {isId
+                      ? 'Persetujuan ini mengikat secara hukum secara elektronik (Clickwrap Agreement) tanpa memerlukan penandatanganan berkas fisik.'
+                      : 'This digital submission serves as a legally binding electronic agreement without requiring physical paperwork.'}
+                  </span>
+                </div>
+              </div>
+
               {/* Tombol Kirim Permohonan */}
               <div className="pt-2">
                 <button
@@ -713,6 +778,223 @@ export function BrandApplyClient({ locale }: BrandApplyClientProps) {
                 </button>
               </div>
             </form>
+          )}
+
+          {/* POP-UP MODAL: RINGKASAN HAK & KEWAJIBAN MITRA BRAND (DIGITAL MOU) DALAM 2 BAHASA */}
+          {isTermsModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="w-full max-w-2xl rounded-3xl bg-white border border-slate-200 p-6 sm:p-8 shadow-2xl max-h-[88vh] flex flex-col">
+                {/* Header */}
+                <div className="flex items-start justify-between pb-4 border-b border-slate-100 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                      <Scale className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-serif font-bold text-slate-900 text-lg sm:text-xl">
+                        {termsLanguage === 'id'
+                          ? 'Perjanjian Kemitraan Digital (Digital MoU)'
+                          : 'Digital Partnership Agreement (Digital MoU)'}
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        {termsLanguage === 'id'
+                          ? 'Ringkasan Hak, Kewajiban & Ketentuan Voucher Brand di Platform Locallytrip'
+                          : 'Summary of Partner Rights, Obligations & Voucher Redemption Terms'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsTermsModalOpen(false)}
+                    className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 transition"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Language Switcher Tabs */}
+                <div className="flex items-center gap-2 pt-3 pb-2 shrink-0">
+                  <span className="text-xs font-bold text-slate-500">Bahasa / Language:</span>
+                  <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setTermsLanguage('id')}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                        termsLanguage === 'id'
+                          ? 'bg-white text-purple-700 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      🇮🇩 Bahasa Indonesia
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTermsLanguage('en')}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                        termsLanguage === 'en'
+                          ? 'bg-white text-purple-700 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      🇬🇧 English
+                    </button>
+                  </div>
+                </div>
+
+                {/* Scrollable Terms Content */}
+                <div className="overflow-y-auto pr-2 py-3 space-y-4 text-xs sm:text-sm text-slate-600 leading-relaxed font-sans">
+                  {termsLanguage === 'id' ? (
+                    <>
+                      <div className="p-3.5 rounded-xl bg-purple-50/70 border border-purple-100 text-purple-900 text-xs">
+                        <strong>Perjanjian Kerja Sama Digital (MoU):</strong> Syarat dan ketentuan ini berlaku sah antara <strong>PT Locallytrip Nusantara Gemilang (&quot;Locallytrip&quot;)</strong> dan <strong>Mitra Brand yang Mendaftar (&quot;Mitra&quot;)</strong> sebagai dasar operasional program penayangan promosi dan barter voucher reward komunitas.
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                          <span>1. Ruang Lingkup Kemitraan</span>
+                        </h4>
+                        <p>
+                          Locallytrip menyediakan infrastruktur teknologi katalog Perks Komunitas bagi Mitra untuk menerbitkan kode voucher penawaran/diskon. Pengguna terverifikasi Locallytrip dapat menukarkan koin loyalitas (LTP) atau pencapaian level XP mereka untuk memperoleh kode voucher unik Mitra.
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                          <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>2. Hak Mitra Brand</span>
+                        </h4>
+                        <ul className="list-disc pl-5 space-y-1 text-slate-600">
+                          <li>Mendapatkan penayangan materi promosi, logo resmi, dan deskripsi penawaran di etalase Perks Publik Locallytrip selama durasi kampanye aktif.</li>
+                          <li>Menerima promosi tambahan dengan lencana <em>Featured Partner</em> dan posisi baris teratas (sesuai paket Founding Partner atau Sponsorship berbayar).</li>
+                          <li>Memperoleh laporan telemetri jumlah kode voucher yang telah diklaim oleh pengguna secara transparan.</li>
+                          <li>Mengajukan pembaharuan informasi kontak PIC atau data profil brand melalui komunikasi ke tim Locallytrip.</li>
+                        </ul>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                          <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
+                          <span>3. Kewajiban Mitra Brand</span>
+                        </h4>
+                        <ul className="list-disc pl-5 space-y-1 text-slate-600">
+                          <li><strong>Validitas Kode:</strong> Menjamin bahwa seluruh kode voucher unik yang disetorkan ke sistem adalah asli, aktif, dan dapat digunakan sesuai Syarat &amp; Ketentuan penukaran yang tercantum.</li>
+                          <li><strong>Penghormatan Klaim:</strong> Wajib melayani dan menerima penukaran voucher yang ditunjukkan oleh traveler di kasir fisik maupun checkout online tanpa diskriminasi.</li>
+                          <li><strong>Larangan Pembatalan Sepihak:</strong> Tidak membatalkan program penawaran secara sepihak sebelum masa berlaku berakhir atau sebelum kuota yang disetor habis, kecuali dengan pemberitahuan resmi kepada Locallytrip.</li>
+                          <li><strong>Kerahasiaan &amp; Hukum:</strong> Bertanggung jawab penuh atas kualitas produk/jasa yang ditawarkan serta mematuhi peraturan perlindungan konsumen Republik Indonesia.</li>
+                        </ul>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                          <span>4. Hak &amp; Kewajiban Platform Locallytrip</span>
+                        </h4>
+                        <ul className="list-disc pl-5 space-y-1 text-slate-600">
+                          <li>Locallytrip berkewajiban mendistribusikan kode voucher secara aman dan terenkripsi (satu kode unik hanya diberikan kepada 1 pengguna yang sah).</li>
+                          <li>Locallytrip berhak meninjau, menolak, atau menonaktifkan kampanye jika materi promosi mengandung unsur melanggar hukum, penipuan, atau apabila voucher dilaporkan tidak dapat ditukarkan di lapangan oleh pengguna.</li>
+                          <li>Locallytrip tidak memungut biaya bagi hasil komisi per transaksi penukaran voucher barter komunitas.</li>
+                        </ul>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                          <span>5. Keberlakuan Hukum (Legal Enforceability)</span>
+                        </h4>
+                        <p>
+                          Dengan mencentang persetujuan ini dan mengirimkan formulir pendaftaran, perwakilan Mitra menyatakan memiliki wewenang legal untuk mengikat perusahaan. Dokumen ini sah sebagai Nota Kesepahaman Elektronik (Digital MoU) dan mulai berlaku efektif sejak disetujui oleh tim kurasi Locallytrip.
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="p-3.5 rounded-xl bg-purple-50/70 border border-purple-100 text-purple-900 text-xs">
+                        <strong>Digital Partnership Agreement (MoU):</strong> These terms and conditions constitute a legally binding electronic agreement between <strong>PT Locallytrip Nusantara Gemilang (&quot;Locallytrip&quot;)</strong> and the <strong>Applying Brand Partner (&quot;Partner&quot;)</strong> governing the promotional listing and community voucher perks exchange.
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                          <span>1. Scope of Partnership</span>
+                        </h4>
+                        <p>
+                          Locallytrip provides the digital Perks Marketplace infrastructure enabling the Partner to distribute discount vouchers. Verified Locallytrip travelers may redeem their loyalty LTP coins or XP tier achievements to acquire Partner&apos;s unique voucher codes.
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                          <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>2. Partner Rights</span>
+                        </h4>
+                        <ul className="list-disc pl-5 space-y-1 text-slate-600">
+                          <li>Promotional placement of official brand logo, description, and offer details in Locallytrip&apos;s Public Community Perks directory during the active campaign period.</li>
+                          <li>Priority sticky placement and Featured Partner badge (subject to selected Founding Partner or Sponsorship tier).</li>
+                          <li>Transparent real-time telemetry on voucher claim volume and redemption analytics.</li>
+                          <li>Right to update designated contact person and corporate profile data via Locallytrip partnership liaison.</li>
+                        </ul>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                          <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
+                          <span>3. Partner Obligations</span>
+                        </h4>
+                        <ul className="list-disc pl-5 space-y-1 text-slate-600">
+                          <li><strong>Code Validity:</strong> Warrant that all unique voucher codes deposited into the system are genuine, valid, and redeemable according to specified terms.</li>
+                          <li><strong>Redemption Fulfillment:</strong> Honor voucher redemptions presented by travelers at retail checkout or online webstores without discrimination.</li>
+                          <li><strong>Non-Revocation:</strong> Refrain from unilaterally terminating or invalidating deposited codes before the agreed expiration date or quota exhaustion.</li>
+                          <li><strong>Quality &amp; Compliance:</strong> Maintain full responsibility for goods and services delivered, complying with all applicable consumer protection regulations.</li>
+                        </ul>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                          <span>4. Platform Rights &amp; Responsibilities</span>
+                        </h4>
+                        <ul className="list-disc pl-5 space-y-1 text-slate-600">
+                          <li>Locallytrip securely encrypts and distributes one unique voucher code per eligible claimer.</li>
+                          <li>Locallytrip reserves the right to review, pause, or remove any campaign violating community guidelines, fraudulent activity, or unhonored redemptions.</li>
+                          <li>Locallytrip charges zero transaction commission on community barter perks.</li>
+                        </ul>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                          <span>5. Legal Enforceability</span>
+                        </h4>
+                        <p>
+                          By checking the agreement box and submitting this application, the representative certifies full authority to bind the company. This document is enforceable as an Electronic Memorandum of Understanding (Digital MoU) upon approval by Locallytrip administrators.
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Footer Actions */}
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsTermsModalOpen(false)}
+                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                  >
+                    {termsLanguage === 'id' ? 'Tutup' : 'Close'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAgreedToTerms(true);
+                      setIsTermsModalOpen(false);
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-purple-900 hover:bg-purple-950 text-white font-bold text-xs flex items-center gap-2 shadow-md transition"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>
+                      {termsLanguage === 'id'
+                        ? 'Saya Menyetujui Ketentuan (Setuju)'
+                        : 'I Agree & Accept Terms'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>

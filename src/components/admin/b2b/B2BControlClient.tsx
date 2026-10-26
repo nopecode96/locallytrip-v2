@@ -27,6 +27,10 @@ import {
   Layers,
   Sparkles,
   ShieldCheck,
+  Eye,
+  FileText,
+  Gift,
+  Calendar,
 } from 'lucide-react';
 import {
   AdminB2BPartnerItem,
@@ -35,6 +39,8 @@ import {
   updateB2BPartner,
   toggleB2BPartnerStatus,
   deleteB2BPartner,
+  approveB2BPartner,
+  rejectB2BPartner,
   CreateB2BPartnerInput,
   getAdminB2BPartnersData,
 } from '@/actions/admin/b2b';
@@ -115,6 +121,7 @@ export function B2BControlClient({
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<AdminB2BPartnerItem | null>(null);
+  const [selectedDetailPartner, setSelectedDetailPartner] = useState<AdminB2BPartnerItem | null>(null);
 
   // Banner Feedback Alert
   const [bannerAlert, setBannerAlert] = useState<{
@@ -294,6 +301,59 @@ export function B2BControlClient({
         setBannerAlert({
           type: 'error',
           message: err?.message || 'Gagal menghapus mitra B2B.',
+        });
+      }
+    });
+  };
+
+  // Approve Partner Application
+  const handleApprovePartner = (partnerId: number) => {
+    startTransition(async () => {
+      try {
+        const res = await approveB2BPartner(partnerId);
+        if (res.success) {
+          setPartners((prev) =>
+            prev.map((p) => (p.id === partnerId ? { ...p, status: 'ACTIVE' } : p))
+          );
+          setStats((prev) => ({
+            ...prev,
+            activePartners: prev.activePartners + 1,
+          }));
+          setBannerAlert({ type: 'success', message: res.message });
+          setSelectedDetailPartner(null);
+        } else {
+          setBannerAlert({ type: 'error', message: res.message });
+        }
+      } catch (err: any) {
+        setBannerAlert({
+          type: 'error',
+          message: err?.message || 'Gagal menyetujui kemitraan.',
+        });
+      }
+    });
+  };
+
+  // Reject Partner Application
+  const handleRejectPartner = (partnerId: number) => {
+    if (!confirm('Apakah Anda yakin ingin menolak permohonan kemitraan ini?')) {
+      return;
+    }
+    startTransition(async () => {
+      try {
+        const res = await rejectB2BPartner(partnerId);
+        if (res.success) {
+          setPartners((prev) =>
+            prev.map((p) => (p.id === partnerId ? { ...p, status: 'REJECTED' } : p))
+          );
+          setBannerAlert({ type: 'success', message: res.message });
+          setSelectedDetailPartner(null);
+        } else {
+          setBannerAlert({ type: 'error', message: res.message });
+        }
+      } catch (err: any) {
+        setBannerAlert({
+          type: 'error',
+          message: err?.message || 'Gagal menolak permohonan kemitraan.',
         });
       }
     });
@@ -759,13 +819,28 @@ export function B2BControlClient({
                           </span>
                         )}
                         {isPendingStatus && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-[11px] font-semibold">
-                            <span>Pending Review</span>
-                          </span>
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-[11px] font-bold">
+                              <span>Pending Review</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDetailPartner(item)}
+                              className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline inline-flex items-center gap-0.5"
+                            >
+                              <Eye className="w-3 h-3" />
+                              <span>Tinjau Aplikasi</span>
+                            </button>
+                          </div>
                         )}
                         {isSuspendedStatus && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-[11px] font-semibold">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-semibold">
                             <span>Suspended</span>
+                          </span>
+                        )}
+                        {item.status === 'REJECTED' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-[11px] font-semibold">
+                            <span>Ditolak</span>
                           </span>
                         )}
                       </td>
@@ -773,17 +848,42 @@ export function B2BControlClient({
                       {/* Actions */}
                       <td className="px-5 py-4 text-right whitespace-nowrap">
                         <div className="inline-flex items-center gap-1.5">
+                          {/* View Detail & Review Button */}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedDetailPartner(item)}
+                            className="p-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition"
+                            title="Lihat detail lengkap & tinjau permohonan"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Quick Approve Button for Pending */}
+                          {isPendingStatus && (
+                            <button
+                              type="button"
+                              onClick={() => handleApprovePartner(item.id)}
+                              disabled={isPending}
+                              className="p-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition"
+                              title="Setujui Kemitraan (Approve)"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
                           {/* Edit Partner Button */}
                           <button
+                            type="button"
                             onClick={() => handleOpenEditModal(item)}
                             className="p-1.5 rounded-xl border border-gray-200/90 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition"
-                            title="Edit data mitra"
+                            title="Edit data profil perusahaan"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
 
                           {/* Toggle Active / Suspended Button */}
                           <button
+                            type="button"
                             onClick={() => handleToggleStatus(item.id, item.status)}
                             disabled={isPending}
                             className={`p-1.5 rounded-xl border transition ${
@@ -798,6 +898,7 @@ export function B2BControlClient({
 
                           {/* Delete Button */}
                           <button
+                            type="button"
                             onClick={() => handleDelete(item.id, item.name)}
                             disabled={isPending}
                             className="p-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-600 hover:bg-rose-100 transition"
@@ -1006,13 +1107,13 @@ export function B2BControlClient({
                 {/* Description */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Deskripsi / Perjanjian Kerjasama (MoU)
+                    Profil Singkat / Catatan Perusahaan (Opsional)
                   </label>
                   <textarea
                     rows={2}
                     value={formData.description || ''}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Catatan skema kemitraan korporat, target booking, atau syarat khusus."
+                    placeholder="Catatan profil perusahaan, keunggulan produk/layanan, atau catatan internal kemitraan."
                     className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A1D21] border border-gray-200/90 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -1037,6 +1138,314 @@ export function B2BControlClient({
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* PARTNER DETAIL & APPLICATION REVIEW MODAL */}
+      <AnimatePresence>
+        {selectedDetailPartner && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-2xl rounded-3xl bg-white dark:bg-[#1A1D21] border border-slate-200 dark:border-white/10 p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1 flex items-center justify-center overflow-hidden shrink-0">
+                    {selectedDetailPartner.logoUrl ? (
+                      <img
+                        src={getPublicImageUrl(selectedDetailPartner.logoUrl, 'badges')}
+                        alt={selectedDetailPartner.name}
+                        className="w-full h-full object-cover rounded-xl"
+                      />
+                    ) : (
+                      <Building2 className="w-6 h-6 text-slate-400" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-black text-slate-900 dark:text-white text-lg">
+                        {selectedDetailPartner.name}
+                      </h3>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300">
+                        {selectedDetailPartner.category}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 font-mono mt-0.5">
+                      Partner ID: #B2B-{selectedDetailPartner.id} • Terdaftar pada{' '}
+                      {new Date(selectedDetailPartner.createdAt).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDetailPartner(null)}
+                  className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="mt-4 space-y-4">
+                {/* Status Bar */}
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/80 dark:border-white/10">
+                  <div>
+                    <span className="text-xs font-bold text-slate-500 block">Status Kemitraan:</span>
+                    <span className={`text-sm font-black uppercase ${
+                      selectedDetailPartner.status === 'ACTIVE'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : selectedDetailPartner.status === 'PENDING'
+                        ? 'text-amber-600 dark:text-amber-400'
+                        : 'text-rose-600 dark:text-rose-400'
+                    }`}>
+                      {selectedDetailPartner.status === 'ACTIVE'
+                        ? 'Aktif (Disetujui)'
+                        : selectedDetailPartner.status === 'PENDING'
+                        ? 'Pending Review (Menunggu Persetujuan)'
+                        : selectedDetailPartner.status}
+                    </span>
+                  </div>
+                  {/* Digital MoU badge */}
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                    <span>MoU Digital Terikat &amp; Sah</span>
+                  </div>
+                </div>
+
+                {/* PIC & Company Contacts */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/10 text-xs">
+                  <div className="space-y-1.5">
+                    <span className="text-slate-400 font-bold block uppercase text-[10px]">
+                      Kontak PIC (Person in Charge)
+                    </span>
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{selectedDetailPartner.contactPerson}</span>
+                    </div>
+                    <div className="text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-slate-400" />
+                      <a
+                        href={`mailto:${selectedDetailPartner.contactEmail}`}
+                        className="hover:underline text-blue-600 dark:text-blue-400"
+                      >
+                        {selectedDetailPartner.contactEmail}
+                      </a>
+                    </div>
+                    {selectedDetailPartner.contactPhone && (
+                      <div className="text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-slate-400" />
+                        <a
+                          href={`tel:${selectedDetailPartner.contactPhone}`}
+                          className="hover:underline text-blue-600 dark:text-blue-400"
+                        >
+                          {selectedDetailPartner.contactPhone}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <span className="text-slate-400 font-bold block uppercase text-[10px]">
+                      Situs Web &amp; Profil
+                    </span>
+                    <div className="text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                      <Globe className="w-3.5 h-3.5 text-slate-400" />
+                      {selectedDetailPartner.websiteUrl ? (
+                        <a
+                          href={selectedDetailPartner.websiteUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline text-blue-600 dark:text-blue-400 flex items-center gap-1 font-semibold truncate"
+                        >
+                          <span>{selectedDetailPartner.websiteUrl}</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        <span className="text-slate-400 italic">Tidak ada website dicantumkan</span>
+                      )}
+                    </div>
+                    <div className="pt-1">
+                      <span className="text-slate-400 font-bold block uppercase text-[10px]">
+                        Deskripsi Profil Perusahaan
+                      </span>
+                      <p className="text-slate-700 dark:text-slate-300 text-xs mt-0.5">
+                        {selectedDetailPartner.description || 'Tidak ada catatan tambahan.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submitted Campaigns & Vouchers */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <Gift className="w-3.5 h-3.5 text-purple-600" />
+                      <span>Kampanye Perks Yang Diajukan ({selectedDetailPartner.campaignsList?.length || 0})</span>
+                    </h4>
+                    <span className="text-[11px] text-slate-400">
+                      Total {selectedDetailPartner.totalVouchersPool} Kupon Disetor
+                    </span>
+                  </div>
+
+                  {selectedDetailPartner.campaignsList && selectedDetailPartner.campaignsList.length > 0 ? (
+                    <div className="space-y-2.5">
+                      {selectedDetailPartner.campaignsList.map((camp) => (
+                        <div
+                          key={camp.id}
+                          className="p-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] space-y-2"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+                                <span>{camp.title}</span>
+                                {camp.isFeatured && (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                                    FEATURED
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                                {camp.description}
+                              </p>
+                            </div>
+                            <span className="px-2.5 py-1 rounded-xl text-xs font-black bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 shrink-0">
+                              {camp.tierPackage}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-200/60 dark:border-white/5 text-[11px]">
+                            <div>
+                              <span className="text-slate-400 block">Biaya Tukar:</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">
+                                {camp.costInLtp} LTP
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 block">Min. Level XP:</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">
+                                Level {camp.minXpLevel}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 block">Kuota Voucher:</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">
+                                {camp.totalQuota} Kupon ({camp.claimedQuota} Diklaim)
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 block">Masa Berlaku:</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">
+                                s/d {new Date(camp.endDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </span>
+                            </div>
+                          </div>
+
+                          {camp.terms && (
+                            <div className="pt-1.5 text-[11px] text-slate-500 font-mono bg-white dark:bg-black/20 p-2.5 rounded-xl border border-slate-100 dark:border-white/5">
+                              <span className="font-bold text-slate-700 dark:text-slate-300 block mb-0.5 font-sans">
+                                Syarat &amp; Ketentuan Penggunaan (T&amp;C):
+                              </span>
+                              <div className="whitespace-pre-line">{camp.terms}</div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
+                      Mitra ini belum memiliki kampanye perk atau didaftarkan secara manual oleh admin.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex flex-wrap items-center justify-between gap-2.5 pt-5 mt-5 border-t border-slate-100 dark:border-white/10">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const p = selectedDetailPartner;
+                      setSelectedDetailPartner(null);
+                      handleOpenEditModal(p);
+                    }}
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    <span>Edit Profil Perusahaan</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDetailPartner(null)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  >
+                    Tutup
+                  </button>
+
+                  {selectedDetailPartner.status === 'PENDING' && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleRejectPartner(selectedDetailPartner.id)}
+                        disabled={isPending}
+                        className="px-4 py-2 rounded-xl text-xs font-bold border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/30 text-rose-600 hover:bg-rose-100 transition flex items-center gap-1"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                        <span>Tolak (Reject)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApprovePartner(selectedDetailPartner.id)}
+                        disabled={isPending}
+                        className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/25 transition flex items-center gap-1.5"
+                      >
+                        {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                        <span>Setujui Kemitraan (Approve)</span>
+                      </button>
+                    </>
+                  )}
+
+                  {selectedDetailPartner.status === 'ACTIVE' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleToggleStatus(selectedDetailPartner.id, 'ACTIVE');
+                        setSelectedDetailPartner(null);
+                      }}
+                      disabled={isPending}
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition flex items-center gap-1.5"
+                    >
+                      <Power className="w-3.5 h-3.5" />
+                      <span>Suspend Kemitraan</span>
+                    </button>
+                  )}
+
+                  {(selectedDetailPartner.status === 'SUSPENDED' || selectedDetailPartner.status === 'REJECTED') && (
+                    <button
+                      type="button"
+                      onClick={() => handleApprovePartner(selectedDetailPartner.id)}
+                      disabled={isPending}
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1.5"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Aktifkan Kembali</span>
+                    </button>
+                  )}
+                </div>
+              </div>
             </motion.div>
           </div>
         )}
