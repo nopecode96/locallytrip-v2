@@ -556,3 +556,178 @@ export async function getActiveBrandPartnersForSelect(): Promise<{
     };
   }
 }
+
+export interface AdminBrandCampaignItem {
+  id: number;
+  partnerId: number;
+  partnerName: string;
+  partnerLogo: string;
+  partnerCategory: string;
+  partnerSlug: string;
+  title: string;
+  slug: string;
+  description: string;
+  terms: string | null;
+  imageUrl: string;
+  tierPackage: string;
+  isFeatured: boolean;
+  costInLtp: number;
+  minXpLevel: number;
+  totalQuota: number;
+  claimedQuota: number;
+  remainingVouchers: number;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+/**
+ * 5. Fetch all Brand Perks campaigns (displayed on /community/perks)
+ */
+export async function getAdminBrandCampaigns(): Promise<{
+  success: boolean;
+  campaigns: AdminBrandCampaignItem[];
+  error?: string;
+}> {
+  try {
+    const raw = await prisma.brand_campaigns.findMany({
+      include: {
+        partner: {
+          select: {
+            id: true,
+            name: true,
+            logo_url: true,
+            category: true,
+            slug: true,
+          },
+        },
+        _count: {
+          select: {
+            vouchers: { where: { is_claimed: false } },
+          },
+        },
+      },
+      orderBy: [
+        { is_featured: 'desc' },
+        { created_at: 'desc' },
+      ],
+    });
+
+    const campaigns: AdminBrandCampaignItem[] = raw.map((c) => ({
+      id: c.id,
+      partnerId: c.partner.id,
+      partnerName: c.partner.name,
+      partnerLogo: c.partner.logo_url,
+      partnerCategory: c.partner.category,
+      partnerSlug: c.partner.slug,
+      title: c.title,
+      slug: c.slug,
+      description: c.description,
+      terms: c.terms,
+      imageUrl: c.image_url,
+      tierPackage: c.tier_package,
+      isFeatured: c.is_featured,
+      costInLtp: c.cost_in_ltp,
+      minXpLevel: c.min_xp_level,
+      totalQuota: c.total_quota,
+      claimedQuota: c.claimed_quota,
+      remainingVouchers: c._count.vouchers,
+      startDate: c.start_date.toISOString(),
+      endDate: c.end_date.toISOString(),
+      isActive: c.is_active,
+      createdAt: c.created_at.toISOString(),
+    }));
+
+    return {
+      success: true,
+      campaigns,
+    };
+  } catch (error: any) {
+    console.error('Error fetching admin brand campaigns:', error);
+    return {
+      success: false,
+      campaigns: [],
+      error: error?.message,
+    };
+  }
+}
+
+/**
+ * 6. Toggle Brand Perk Campaign status (active/inactive)
+ */
+export async function toggleBrandCampaignStatus(
+  campaignId: number,
+  targetStatus: boolean
+): Promise<VoucherActionResult> {
+  try {
+    await requireAdminOrMarketingSession();
+
+    const campaign = await prisma.brand_campaigns.update({
+      where: { id: campaignId },
+      data: { is_active: targetStatus },
+      select: { title: true, is_active: true },
+    });
+
+    revalidatePath('/admin/marketing/vouchers');
+    revalidatePath('/id/community/perks');
+    revalidatePath('/en/community/perks');
+
+    return {
+      success: true,
+      message: `Status promo "${campaign.title}" berhasil diubah menjadi ${
+        campaign.is_active ? 'AKTIF' : 'NONAKTIF'
+      }.`,
+    };
+  } catch (error: any) {
+    console.error('Error toggling brand campaign status:', error);
+    return {
+      success: false,
+      message: error?.message || 'Gagal mengubah status promo mitra.',
+      error: error?.message,
+    };
+  }
+}
+
+/**
+ * 7. Delete Brand Perk Campaign permanently
+ */
+export async function deleteBrandCampaign(
+  campaignId: number
+): Promise<VoucherActionResult> {
+  try {
+    await requireAdminOrMarketingSession();
+
+    const campaign = await prisma.brand_campaigns.findUnique({
+      where: { id: campaignId },
+      select: { title: true },
+    });
+
+    if (!campaign) {
+      return {
+        success: false,
+        message: 'Data promo reward mitra tidak ditemukan.',
+      };
+    }
+
+    await prisma.brand_campaigns.delete({
+      where: { id: campaignId },
+    });
+
+    revalidatePath('/admin/marketing/vouchers');
+    revalidatePath('/id/community/perks');
+    revalidatePath('/en/community/perks');
+
+    return {
+      success: true,
+      message: `Promo reward mitra "${campaign.title}" berhasil dihapus dari database. Halaman perks telah diperbarui.`,
+    };
+  } catch (error: any) {
+    console.error('Error deleting brand campaign:', error);
+    return {
+      success: false,
+      message: error?.message || 'Gagal menghapus promo reward mitra.',
+      error: error?.message,
+    };
+  }
+}

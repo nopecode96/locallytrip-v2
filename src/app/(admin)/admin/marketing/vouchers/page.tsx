@@ -1,5 +1,9 @@
 import React from 'react';
-import { getAdminVouchersData, getActiveBrandPartnersForSelect } from '@/actions/admin/vouchers';
+import {
+  getAdminVouchersData,
+  getActiveBrandPartnersForSelect,
+  getAdminBrandCampaigns,
+} from '@/actions/admin/vouchers';
 import { VouchersControlClient } from '@/components/admin/marketing/VouchersControlClient';
 import type { Metadata } from 'next';
 
@@ -11,12 +15,17 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function AdminVouchersPage() {
-  const [{ vouchers = [], stats, pagination }, brandPartnersRes] = await Promise.all([
+  const [
+    { vouchers = [], stats, pagination },
+    brandPartnersRes,
+    brandCampaignsRes,
+  ] = await Promise.all([
     getAdminVouchersData({
       page: 1,
       pageSize: 10,
     }),
     getActiveBrandPartnersForSelect(),
+    getAdminBrandCampaigns(),
   ]);
 
   return (
@@ -33,6 +42,7 @@ export default async function AdminVouchersPage() {
         }
       }
       brandPartners={brandPartnersRes.data || []}
+      initialBrandCampaigns={brandCampaignsRes.campaigns || []}
     />
   );
 }
