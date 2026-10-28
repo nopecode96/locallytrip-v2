@@ -2286,4 +2286,24 @@ model reward_merchandise {
   updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 }
 
+// 8. Konfigurasi Biaya Transaksi Platform (Append-only Versioned Fee Configurations)
+model platform_fee_configurations {
+  id                  Int       @id @default(autoincrement())
+  name                String    @db.VarChar(100)
+  category            String    @default("EXPERIENCES") @db.VarChar(50)
+  fee_percent         Decimal   @db.Decimal(5, 2)
+  fee_type            String    @default("PERCENTAGE") @db.VarChar(20)
+  fee_bearer          String    @default("HOST") @db.VarChar(20)
+  description         String?   @db.Text
+  effective_from      DateTime  @default(now()) @db.Timestamptz(6)
+  effective_until     DateTime? @db.Timestamptz(6)
+  is_active           Boolean   @default(true)
+  created_by_admin_id Int?
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([category, is_active, effective_from], map: "idx_fee_config_lookup")
+}
+
+
 

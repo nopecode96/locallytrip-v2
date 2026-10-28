@@ -9,6 +9,7 @@ import { revalidatePath } from 'next/cache';
 import { createNotification } from '@/lib/notifications';
 import { getPublicImageUrl } from '@/lib/images';
 import { createAdminNotification } from '@/actions/admin/notifications';
+import { calculateExperienceBookingFee } from '@/lib/fees';
 
 export interface CreateBookingInput {
   experienceId: number;
@@ -193,11 +194,11 @@ export async function createBooking(input: CreateBookingInput): Promise<{
     const currentUser = await getCurrentUserSession();
     const effectiveUserId = currentUser ? currentUser.id : 209; // Default user Joyslana untuk booking
 
-    // 4. Kalkulasi harga dan take-rate komisi platform (10% - 15%)
+    // 4. Kalkulasi harga dan take-rate komisi platform dinamis dari platform_fee_configurations
     const pricePerPerson = Number(exp.package_price ?? 0);
     const grossTotal = pricePerPerson * participantCount;
-    const platformCommissionPercent = 0.12; // 12% take-rate
-    const platformFee = Math.round(grossTotal * platformCommissionPercent * 100) / 100;
+    const feeCalculation = await calculateExperienceBookingFee(grossTotal, targetDate);
+    const platformFee = feeCalculation.platformFee;
 
     // 5. Integrasi Pemotongan Saldo LTP
     let ltpDiscount = 0;
@@ -257,9 +258,11 @@ export async function createBooking(input: CreateBookingInput): Promise<{
         category_specific: {
           gross_amount: grossTotal,
           platform_fee: platformFee,
-          platform_take_rate: '12%',
+          platform_take_rate: `${feeCalculation.feePercent}%`,
+          fee_config_id: feeCalculation.configId,
+          fee_bearer: feeCalculation.feeBearer,
           ltp_discount_applied: ltpDiscount,
-          host_net_earning: grossTotal - platformFee,
+          host_net_earning: feeCalculation.hostNetEarning,
           currency: exp.currency || 'USD',
         },
         created_at: new Date(),

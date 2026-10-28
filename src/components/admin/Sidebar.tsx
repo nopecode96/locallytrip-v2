@@ -31,6 +31,7 @@ import {
   Globe,
   MapPin,
   Gift,
+  Percent,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut } from 'next-auth/react';
@@ -220,6 +221,12 @@ const navItems: NavItem[] = [
         href: '/master/categories',
         icon: Layers,
         description: 'Forums, meetups & story categories',
+      },
+      {
+        name: 'Experience Transaction Fee',
+        href: '/master/fees',
+        icon: Percent,
+        description: 'Take-rate rule 0-12% & audit baseline',
       },
     ],
   },

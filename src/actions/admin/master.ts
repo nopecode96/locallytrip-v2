@@ -848,3 +848,105 @@ export async function deleteStoryCategory(id: number) {
     return { success: false, error: error.message || 'Failed to delete story category' };
   }
 }
+
+// ==========================================
+// 6. PLATFORM FEE CONFIGURATIONS (APPEND-ONLY)
+// ==========================================
+
+export interface AdminFeeConfigItem {
+  id: number;
+  name: string;
+  category: string;
+  feePercent: number;
+  feeType: string;
+  feeBearer: string;
+  description: string | null;
+  effectiveFrom: string;
+  effectiveUntil: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+const FeeConfigSchema = z.object({
+  name: z.string().min(2, 'Nama konfigurasi minimal 2 karakter').max(100),
+  category: z.string().default('EXPERIENCES'),
+  fee_percent: z.number().min(0, 'Fee minimal 0%').max(12, 'Fee maksimal 12%'),
+  fee_type: z.enum(['PERCENTAGE', 'FIXED', 'HYBRID']).default('PERCENTAGE'),
+  fee_bearer: z.enum(['HOST', 'TRAVELER', 'SPLIT']).default('HOST'),
+  description: z.string().nullable().optional(),
+  effective_from: z.string().optional(),
+});
+
+export async function getAdminFeeConfigurations(category: string = 'EXPERIENCES') {
+  try {
+    const rows = await prisma.$queryRaw<any[]>`
+      SELECT 
+        id, name, category, fee_percent, fee_type, fee_bearer, 
+        description, effective_from, effective_until, is_active, created_at
+      FROM public.platform_fee_configurations
+      WHERE category = ${category}
+      ORDER BY effective_from DESC, id DESC;
+    `;
+
+    const formatted: AdminFeeConfigItem[] = rows.map((r) => ({
+      id: Number(r.id),
+      name: String(r.name),
+      category: String(r.category),
+      feePercent: Number(r.fee_percent),
+      feeType: String(r.fee_type),
+      feeBearer: String(r.fee_bearer),
+      description: r.description ? String(r.description) : null,
+      effectiveFrom: new Date(r.effective_from).toISOString(),
+      effectiveUntil: r.effective_until ? new Date(r.effective_until).toISOString() : null,
+      isActive: Boolean(r.is_active),
+      createdAt: new Date(r.created_at).toISOString(),
+    }));
+
+    return { success: true, data: formatted };
+  } catch (error: any) {
+    console.error('getAdminFeeConfigurations error:', error);
+    return { success: false, error: error.message || 'Failed to fetch fee configurations', data: [] };
+  }
+}
+
+/**
+ * Membuat baris baru konfigurasi fee (Append-Only Rule).
+ * Otomatis menutup effective_until baris sebelumnya agar data transaksi lama tetap utuh.
+ */
+export async function createNewFeeConfiguration(input: z.infer<typeof FeeConfigSchema>) {
+  try {
+    const validated = FeeConfigSchema.parse(input);
+    const now = validated.effective_from ? new Date(validated.effective_from) : new Date();
+
+    // 1. Tutup baris aktif sebelumnya pada kategori yang sama
+    await prisma.$executeRaw`
+      UPDATE public.platform_fee_configurations
+      SET effective_until = ${now}, is_active = false, updated_at = CURRENT_TIMESTAMP
+      WHERE category = ${validated.category} AND is_active = true AND effective_from <= ${now};
+    `;
+
+    // 2. Tambah baris baru (append-only)
+    await prisma.$executeRaw`
+      INSERT INTO public.platform_fee_configurations (
+        name, category, fee_percent, fee_type, fee_bearer, description, effective_from, is_active
+      ) VALUES (
+        ${validated.name.trim()},
+        ${validated.category},
+        ${validated.fee_percent},
+        ${validated.fee_type},
+        ${validated.fee_bearer},
+        ${validated.description?.trim() || null},
+        ${now},
+        true
+      );
+    `;
+
+    revalidatePath('/admin/master/fees');
+    revalidatePath('/admin/finances');
+    return { success: true };
+  } catch (error: any) {
+    console.error('createNewFeeConfiguration error:', error);
+    return { success: false, error: error.message || 'Gagal menambahkan konfigurasi fee baru' };
+  }
+}
+

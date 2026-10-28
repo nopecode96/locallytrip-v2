@@ -7,6 +7,7 @@ import { authOptions } from '@/lib/auth';
 import { getCurrentUserSession } from './index';
 import { PAYMENT_METHODS } from '@/config/payment-gateways';
 import { createAdminNotification } from '@/actions/admin/notifications';
+import { calculateExperienceBookingFee } from '@/lib/fees';
 
 export interface CreateBookingOrderInput {
   experience_id?: number;
@@ -255,6 +256,9 @@ export async function createBookingOrder(
         selectedTimeDate.setHours(hours || 9, minutes || 0, 0, 0);
       }
 
+      // Hitung fee platform secara dinamis dari platform_fee_configurations
+      const feeCalculation = await calculateExperienceBookingFee(basePrice, selectedDateObj);
+
       // A. prisma.bookings.create
       const booking = await tx.bookings.create({
         data: {
@@ -276,6 +280,11 @@ export async function createBookingOrder(
           },
           category_specific: {
             gross_amount: basePrice,
+            platform_fee: feeCalculation.platformFee,
+            platform_take_rate: `${feeCalculation.feePercent}%`,
+            fee_config_id: feeCalculation.configId,
+            fee_bearer: feeCalculation.feeBearer,
+            host_net_earning: feeCalculation.hostNetEarning,
             ltp_discount: ltpDiscount,
             promo_discount: promoDiscount,
             currency: experience.currency || 'USD',
@@ -305,7 +314,8 @@ export async function createBookingOrder(
           base_amount: basePrice,
           discount_amount: promoDiscount + ltpDiscount,
           total_with_fee: finalTotal,
-          platform_fee: 0,
+          platform_fee: feeCalculation.platformFee,
+          host_commission: feeCalculation.hostNetEarning,
           promo_code_id: validPromoId,
           created_at: new Date(),
           updated_at: new Date(),
