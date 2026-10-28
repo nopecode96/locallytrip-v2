@@ -473,14 +473,17 @@ export function CitiesControlClient({
                         <div className="flex items-center gap-2">
                           <div
                             onClick={() => setPreviewImage({ name: city.name, url: city.imageUrl! })}
-                            className="w-10 h-10 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 relative cursor-pointer group shadow-sm shrink-0"
+                            className="w-10 h-10 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 relative cursor-pointer group shadow-sm shrink-0 bg-slate-100 dark:bg-slate-800"
                           >
                             <img
-                              src={getPublicImageUrl(city.imageUrl, 'destinations')}
+                              src={getPublicImageUrl(city.imageUrl, 'cities')}
                               alt={city.name}
                               className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
                               onError={(e) => {
-                                (e.target as HTMLElement).style.display = 'none';
+                                const target = e.currentTarget;
+                                if (!target.src.includes('city-default.jpg')) {
+                                  target.src = '/images/placeholders/city-default.jpg';
+                                }
                               }}
                             />
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white">
@@ -492,9 +495,18 @@ export function CitiesControlClient({
                           </span>
                         </div>
                       ) : (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700">
-                          Visual Default
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-10 h-10 rounded-xl overflow-hidden border border-dashed border-slate-300 dark:border-slate-700 relative shadow-sm shrink-0 bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
+                            <img
+                              src="/images/placeholders/city-default.jpg"
+                              alt="Default visual"
+                              className="w-full h-full object-cover opacity-60"
+                            />
+                          </div>
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700">
+                            Visual Default
+                          </span>
+                        </div>
                       )}
                     </td>
 
@@ -678,16 +690,29 @@ export function CitiesControlClient({
 
                 {/* Drag and Drop Image Upload */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Foto Visual Hero Destinasi
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Foto Visual Hero Destinasi
+                    </label>
+                    {formImageUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setFormImageUrl('')}
+                        className="text-[11px] text-rose-500 hover:text-rose-600 font-semibold"
+                      >
+                        Hapus Foto
+                      </button>
+                    )}
+                  </div>
                   <ImageUploadDropzone
-                    value={formImageUrl}
+                    value={formImageUrl ? getPublicImageUrl(formImageUrl, 'cities') : ''}
                     onChange={(url) => setFormImageUrl(url)}
-                    folder="destinations"
+                    folder="cities"
                     label="Unggah Foto Destinasi Kota"
                   />
-                  <p className="text-[11px] text-slate-400 mt-1">Digunakan sebagai gambar banner, kartu destinasi, dan fallback visual meetup.</p>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Tersimpan di direktori <code className="font-mono text-emerald-600 dark:text-emerald-400">/public/images/cities/</code>. Digunakan untuk kartu destinasi, banner jelajah, dan visual meetup.
+                  </p>
                 </div>
 
                 {/* Description */}
@@ -817,7 +842,7 @@ export function CitiesControlClient({
               </div>
               <div className="relative aspect-video w-full bg-black/20">
                 <img
-                  src={getPublicImageUrl(previewImage.url, 'destinations')}
+                  src={getPublicImageUrl(previewImage.url, 'cities')}
                   alt={previewImage.name}
                   className="w-full h-full object-cover"
                 />
