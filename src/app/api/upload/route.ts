@@ -36,6 +36,7 @@ const ALLOWED_FOLDERS = [
   'reviews',
   'rewards',
   'advertisement',
+  'categories',
   'forums',
   'meetups',
   'users',

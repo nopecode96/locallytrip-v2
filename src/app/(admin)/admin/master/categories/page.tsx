@@ -8,7 +8,19 @@ import { CategoriesControlClient } from '@/components/admin/master/CategoriesCon
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminCategoriesPage() {
+interface AdminCategoriesPageProps {
+  searchParams?: Promise<{
+    tab?: string;
+  }>;
+}
+
+export default async function AdminCategoriesPage({ searchParams }: AdminCategoriesPageProps) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const validTabs = ['forums', 'experiences', 'stories'];
+  const initialTab = (resolvedParams?.tab && validTabs.includes(resolvedParams.tab))
+    ? (resolvedParams.tab as 'forums' | 'experiences' | 'stories')
+    : 'forums';
+
   const [forumsRes, experiencesRes, storiesRes] = await Promise.all([
     getAdminForumCategories({ limit: 100 }),
     getAdminExperienceTypes({ limit: 100 }),
@@ -20,6 +32,7 @@ export default async function AdminCategoriesPage() {
       initialForumCategories={forumsRes.data || []}
       initialExperienceTypes={experiencesRes.data || []}
       initialStoryCategories={storiesRes.data || []}
+      initialTab={initialTab}
     />
   );
 }

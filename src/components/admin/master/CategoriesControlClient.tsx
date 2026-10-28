@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useEffect } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Layers,
@@ -39,11 +40,13 @@ import {
   getAdminStoryCategories,
 } from '@/actions/admin/master';
 import { ImageUploadDropzone } from '@/components/shared/ImageUploadDropzone';
+import { getPublicImageUrl } from '@/lib/images';
 
 interface CategoriesControlClientProps {
   initialForumCategories: AdminForumCategoryItem[];
   initialExperienceTypes: AdminExperienceTypeItem[];
   initialStoryCategories: AdminStoryCategoryItem[];
+  initialTab?: TabType;
 }
 
 type TabType = 'forums' | 'experiences' | 'stories';
@@ -52,8 +55,21 @@ export function CategoriesControlClient({
   initialForumCategories,
   initialExperienceTypes,
   initialStoryCategories,
+  initialTab = 'forums',
 }: CategoriesControlClientProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('forums');
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const getEffectiveTab = (): TabType => {
+    const tabParam = searchParams?.get('tab');
+    if (tabParam === 'experiences' || tabParam === 'stories' || tabParam === 'forums') {
+      return tabParam;
+    }
+    return initialTab;
+  };
+
+  const [activeTab, setActiveTab] = useState<TabType>(getEffectiveTab());
   const [forumCategories, setForumCategories] = useState<AdminForumCategoryItem[]>(initialForumCategories);
   const [experienceTypes, setExperienceTypes] = useState<AdminExperienceTypeItem[]>(initialExperienceTypes);
   const [storyCategories, setStoryCategories] = useState<AdminStoryCategoryItem[]>(initialStoryCategories);
@@ -84,6 +100,23 @@ export function CategoriesControlClient({
   const showToast = (type: 'success' | 'error', text: string) => {
     setToastMessage({ type, text });
     setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  // Sync with URL query parameter changes
+  useEffect(() => {
+    const tabParam = searchParams?.get('tab');
+    if (tabParam === 'forums' || tabParam === 'experiences' || tabParam === 'stories') {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (target: TabType) => {
+    setActiveTab(target);
+    setSearch('');
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('tab', target);
+    const qs = params.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
 
   // Auto-generate slug when name changes for create mode
@@ -341,7 +374,7 @@ export function CategoriesControlClient({
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.05 }}
-          onClick={() => setActiveTab('forums')}
+          onClick={() => handleTabChange('forums')}
           className={`cursor-pointer p-5 rounded-2xl border transition-all shadow-sm ${
             activeTab === 'forums'
               ? 'ring-2 ring-violet-500 bg-violet-50/50 dark:bg-violet-950/20 border-violet-300 dark:border-violet-800'
@@ -371,7 +404,7 @@ export function CategoriesControlClient({
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.1 }}
-          onClick={() => setActiveTab('experiences')}
+          onClick={() => handleTabChange('experiences')}
           className={`cursor-pointer p-5 rounded-2xl border transition-all shadow-sm ${
             activeTab === 'experiences'
               ? 'ring-2 ring-amber-500 bg-amber-50/50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800'
@@ -401,7 +434,7 @@ export function CategoriesControlClient({
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.15 }}
-          onClick={() => setActiveTab('stories')}
+          onClick={() => handleTabChange('stories')}
           className={`cursor-pointer p-5 rounded-2xl border transition-all shadow-sm ${
             activeTab === 'stories'
               ? 'ring-2 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800'
@@ -441,10 +474,7 @@ export function CategoriesControlClient({
             return (
               <button
                 key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id as TabType);
-                  setSearch('');
-                }}
+                onClick={() => handleTabChange(tab.id as TabType)}
                 className={`relative px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-2 ${
                   isActive
                     ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
@@ -955,15 +985,29 @@ export function CategoriesControlClient({
 
                 {modalType !== 'forums' && (
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                      Visual Banner Kategori (Opsional)
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Visual Banner Kategori (Opsional)
+                      </label>
+                      {formImageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setFormImageUrl('')}
+                          className="text-[11px] text-rose-500 hover:text-rose-600 font-semibold"
+                        >
+                          Hapus Foto
+                        </button>
+                      )}
+                    </div>
                     <ImageUploadDropzone
-                      value={formImageUrl}
+                      value={formImageUrl ? getPublicImageUrl(formImageUrl, 'categories') : ''}
                       onChange={(url) => setFormImageUrl(url)}
                       folder="categories"
                       label="Unggah Banner Kategori"
                     />
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Tersimpan di direktori <code className="font-mono text-violet-600 dark:text-violet-400">/public/images/categories/</code>.
+                    </p>
                   </div>
                 )}
 

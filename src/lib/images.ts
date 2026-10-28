@@ -24,6 +24,7 @@ export type ImageCategory =
   | 'meetups'
   | 'forums'
   | 'cities'
+  | 'categories'
   | 'rewards'
   | 'banks'
   | 'apps'
@@ -86,6 +87,7 @@ const KNOWN_DIRECTORIES = new Set([
   'banks',
   'banners',
   'become',
+  'categories',
   'cities',
   'communication-apps',
   'destinations',
