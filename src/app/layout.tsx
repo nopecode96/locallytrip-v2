@@ -6,6 +6,7 @@ import { Locale, Currency } from '@/lib/i18n';
 import prisma from '@/lib/prisma';
 import type { Metadata } from 'next';
 import { SessionProvider } from '@/components/common/SessionProvider';
+import GoogleAnalytics from '@/components/common/GoogleAnalytics';
 
 export const metadata: Metadata = {
   title: "Locallytrip — Explore & Experience Like a Local",
@@ -45,6 +46,7 @@ export default async function RootLayout({
   return (
     <html lang={savedLocale} className="max-w-full overflow-x-hidden relative h-full">
       <body className="min-h-screen bg-slate-50/50 text-slate-900 font-sans antialiased max-w-full overflow-x-hidden relative">
+        <GoogleAnalytics />
         <SessionProvider>
           <PreferencesProvider
             initialLocale={savedLocale}
