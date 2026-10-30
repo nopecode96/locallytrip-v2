@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import prisma from '@/lib/prisma';
 import { enum_experiences_status } from '@prisma/client';
 
-export const revalidate = 3600; // Cache sitemap selama 1 jam untuk performa & efisiensi crawler
+export const revalidate = 300; // Cache sitemap selama 5 menit (300s) agar Googlebot selalu mendapatkan update terbaru
 
 const LOCALES = ['id', 'en'] as const;
 

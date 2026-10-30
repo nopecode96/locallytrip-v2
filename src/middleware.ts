@@ -34,8 +34,39 @@ export async function middleware(request: NextRequest) {
 
   const isAdminRoute = isAdminHost || pathname.startsWith('/admin');
 
-  // 3. Jika bukan rute admin atau subdomain admin, lanjutkan request normal
+  // 3. Jika bukan rute admin atau subdomain admin (Rute Publik Marketplace):
   if (!isAdminRoute) {
+    // 3a. Biarkan file static root, auth callback, dan file SEO diteruskan langsung
+    if (
+      pathname === '/robots.txt' ||
+      pathname === '/sitemap.xml' ||
+      pathname === '/favicon.ico' ||
+      pathname === '/favicon-32x32.png' ||
+      pathname === '/apple-touch-icon.png' ||
+      pathname.startsWith('/auth')
+    ) {
+      return NextResponse.next();
+    }
+
+    // 3b. Periksa apakah pathname sudah memiliki prefix bahasa valid (/id atau /en)
+    const hasLocalePrefix = pathname === '/id' || pathname.startsWith('/id/') ||
+                            pathname === '/en' || pathname.startsWith('/en/');
+
+    // 3c. Jika BELUM memiliki prefix bahasa, lakukan 301 Permanent Redirect ke /{targetLocale}{pathname}
+    // Ini mengalihkan seluruh legacy URLs lama yang sudah terindeks di Google Search Console
+    if (!hasLocalePrefix) {
+      // Ambil preferensi bahasa dari cookie browser, default ke 'id'
+      const savedLocale = request.cookies.get('locallytrip_locale')?.value;
+      const targetLocale = savedLocale === 'en' ? 'en' : 'id';
+
+      const targetPath = pathname === '/' ? `/${targetLocale}` : `/${targetLocale}${pathname}`;
+      const redirectUrl = new URL(targetPath, request.url);
+      redirectUrl.search = request.nextUrl.search;
+
+      // 301 Moved Permanently: sinyal standar SEO untuk memindahkan index GSC ke URL baru
+      return NextResponse.redirect(redirectUrl, { status: 301 });
+    }
+
     return NextResponse.next();
   }
 
