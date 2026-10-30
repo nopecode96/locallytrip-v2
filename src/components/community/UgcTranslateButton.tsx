@@ -13,6 +13,7 @@ interface UgcTranslateButtonProps {
 export function UgcTranslateButton({ originalText, className = '' }: UgcTranslateButtonProps) {
   const { locale } = usePreferences();
   const [translated, setTranslated] = useState<string | null>(null);
+  const [resolvedTargetLang, setResolvedTargetLang] = useState<'id' | 'en'>('en');
   const [isLoading, setIsLoading] = useState(false);
   const [isTranslatedView, setIsTranslatedView] = useState(false);
 
@@ -34,11 +35,21 @@ export function UgcTranslateButton({ originalText, className = '' }: UgcTranslat
 
     if (res.success && res.translatedText) {
       setTranslated(res.translatedText);
+      if (res.targetLang) {
+        setResolvedTargetLang(res.targetLang);
+      }
       setIsTranslatedView(true);
     } else {
       alert(res.error || 'Gagal menerjemahkan.');
     }
   };
+
+  const badgeLabel = resolvedTargetLang === 'id' ? 'Terjemahan AI (ID)' : 'AI Translation (EN)';
+  const toggleLabel = isLoading
+    ? (locale === 'en' ? 'Translating...' : 'Menerjemahkan...')
+    : isTranslatedView
+    ? (locale === 'en' ? 'Show Original' : 'Tampilkan Teks Asli')
+    : (locale === 'en' ? '🌐 Translate' : '🌐 Lihat Terjemahan');
 
   return (
     <div className={`space-y-2 ${className}`}>
@@ -46,7 +57,7 @@ export function UgcTranslateButton({ originalText, className = '' }: UgcTranslat
         <div className="p-3 bg-emerald-50/70 border border-emerald-200/60 rounded-xl text-xs text-emerald-950 leading-relaxed animate-in fade-in duration-200">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1">
             <Check className="w-3 h-3" />
-            <span>Terjemahan AI ({locale.toUpperCase()})</span>
+            <span>{badgeLabel}</span>
           </div>
           <p className="whitespace-pre-line">{translated}</p>
         </div>
@@ -63,13 +74,7 @@ export function UgcTranslateButton({ originalText, className = '' }: UgcTranslat
         ) : (
           <Globe className="w-3 h-3 text-emerald-600" />
         )}
-        <span>
-          {isLoading
-            ? 'Menerjemahkan...'
-            : isTranslatedView
-            ? 'Tampilkan Teks Asli'
-            : '🌐 Lihat Terjemahan (Translate)'}
-        </span>
+        <span>{toggleLabel}</span>
       </button>
     </div>
   );

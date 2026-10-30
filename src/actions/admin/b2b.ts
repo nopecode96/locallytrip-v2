@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { getAdminStaffSession } from '@/lib/admin-auth';
+import { getAdminStaffSession, hasRole } from '@/lib/admin-auth';
 import { getPublicImageUrl } from '@/lib/images';
 
 export interface AdminVoucherCodeSummary {
@@ -124,8 +124,8 @@ async function requireAdminOrMarketingSession() {
     throw new Error('Sesi tidak valid. Silakan login terlebih dahulu.');
   }
 
-  if (!session.isStaff) {
-    throw new Error('Akses ditolak. Anda tidak memiliki izin marketing atau administrator.');
+  if (!hasRole(session, ['super admin', 'marketing'])) {
+    throw new Error('Akses ditolak. Fitur B2B hanya dapat diakses oleh Super Admin dan Marketing.');
   }
 
   return session;

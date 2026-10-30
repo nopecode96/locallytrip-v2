@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getPublicImageUrl } from '@/lib/images';
+import { requireRole } from '@/lib/admin-auth';
 
 export interface EconomyLeaderboardUser {
   id: number;
@@ -61,6 +62,8 @@ export async function getAdminEconomyData(params: {
   limit?: number;
 } = {}) {
   try {
+    await requireRole(['super admin', 'admin', 'finances']);
+
     const {
       search = '',
       leaderboardSort = 'ltp',
@@ -286,6 +289,8 @@ export async function updateClaimStatus(
   voucherCode?: string
 ) {
   try {
+    await requireRole(['super admin', 'admin', 'finances']);
+
     const updated = await prisma.user_reward_claims.update({
       where: { id: claimId },
       data: {
@@ -311,6 +316,8 @@ export async function grantManualAirdrop(
   reason: string
 ) {
   try {
+    await requireRole(['super admin', 'admin', 'finances']);
+
     if (!userId || (ltpAmount <= 0 && xpAmount <= 0)) {
       return { success: false, error: 'User ID and positive LTP or XP amount are required.' };
     }

@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getPublicImageUrl } from '@/lib/images';
+import { requireRole } from '@/lib/admin-auth';
 
 export interface AdminForumThreadItem {
   id: number;
@@ -41,6 +42,7 @@ export interface GetAdminForumThreadsParams {
 
 export async function getAdminForumThreads(params: GetAdminForumThreadsParams = {}) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const { search = '', category = 'all', page = 1, limit, pageSize } = params;
     const effectiveLimit = pageSize || limit || 10;
     const skip = (page - 1) * effectiveLimit;
@@ -189,6 +191,7 @@ export async function getAdminForumThreads(params: GetAdminForumThreadsParams = 
 
 export async function toggleThreadPinned(threadId: number, currentPinned: boolean) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const updated = await prisma.vibes_forum_threads.update({
       where: { id: threadId },
       data: {
@@ -207,6 +210,7 @@ export async function toggleThreadPinned(threadId: number, currentPinned: boolea
 
 export async function toggleThreadLocked(threadId: number, currentLocked: boolean) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const updated = await prisma.vibes_forum_threads.update({
       where: { id: threadId },
       data: {
@@ -225,6 +229,7 @@ export async function toggleThreadLocked(threadId: number, currentLocked: boolea
 
 export async function deleteThread(threadId: number) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     await prisma.vibes_forum_threads.update({
       where: { id: threadId },
       data: {

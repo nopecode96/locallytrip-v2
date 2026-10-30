@@ -34,7 +34,7 @@ import {
   Percent,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { logoutAction } from '@/actions/auth/logout';
 
 interface SubNavItem {
@@ -42,6 +42,7 @@ interface SubNavItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   description: string;
+  allowedRoles?: string[];
 }
 
 interface NavItem {
@@ -52,6 +53,7 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   badge?: string | number;
   subItems?: SubNavItem[];
+  allowedRoles?: string[];
 }
 
 const navItems: NavItem[] = [
@@ -60,18 +62,21 @@ const navItems: NavItem[] = [
     name: 'Overview',
     href: '/dashboard',
     icon: LayoutDashboard,
+    allowedRoles: ['super admin', 'admin', 'moderator', 'finances', 'marketing'],
   },
   {
     id: 'users',
     name: 'User Management',
     href: '/users',
     icon: Users,
+    allowedRoles: ['super admin', 'admin'],
   },
   {
     id: 'bookings',
     name: 'Bookings Control',
     href: '/bookings',
     icon: CalendarCheck,
+    allowedRoles: ['super admin', 'admin', 'finances'],
   },
   {
     id: 'community',
@@ -79,30 +84,35 @@ const navItems: NavItem[] = [
     category: 'Platform Content',
     href: '/community/meetups',
     icon: Flame,
+    allowedRoles: ['super admin', 'admin', 'moderator'],
     subItems: [
       {
         name: 'Travel Meetups',
         href: '/community/meetups',
         icon: Calendar,
         description: 'Gatherings, capacity & attendees',
+        allowedRoles: ['super admin', 'admin', 'moderator'],
       },
       {
         name: 'Discussion Forums',
         href: '/community/forums',
         icon: MessageSquare,
         description: 'Threads, pin/locks & spam moderation',
+        allowedRoles: ['super admin', 'admin', 'moderator'],
       },
       {
         name: 'Stories & Journals',
         href: '/community/stories',
         icon: BookOpen,
         description: 'Member narratives & publishing',
+        allowedRoles: ['super admin', 'admin', 'moderator'],
       },
       {
         name: 'Content Reports',
         href: '/community/reports',
         icon: Flag,
         description: 'Moderation queue & user flags',
+        allowedRoles: ['super admin', 'admin', 'moderator'],
       },
     ],
   },
@@ -112,6 +122,7 @@ const navItems: NavItem[] = [
     href: '/kyc',
     icon: ShieldCheck,
     badge: 'KYC',
+    allowedRoles: ['super admin', 'admin', 'moderator'],
   },
   {
     id: 'experiences',
@@ -119,18 +130,21 @@ const navItems: NavItem[] = [
     category: 'Catalog & Inventory',
     href: '/experiences',
     icon: Compass,
+    allowedRoles: ['super admin', 'admin', 'moderator', 'marketing'],
     subItems: [
       {
         name: 'Experiences Catalog',
         href: '/experiences',
         icon: Compass,
         description: 'Listing status, drafts & featured',
+        allowedRoles: ['super admin', 'admin', 'moderator', 'marketing'],
       },
       {
         name: 'Reviews Moderation',
         href: '/experiences/reviews',
         icon: Star,
         description: 'Traveler feedback, ratings & spam purge',
+        allowedRoles: ['super admin', 'admin', 'moderator'],
       },
     ],
   },
@@ -140,18 +154,21 @@ const navItems: NavItem[] = [
     category: 'Treasury & Payments',
     href: '/finances',
     icon: Wallet,
+    allowedRoles: ['super admin', 'finances'],
     subItems: [
       {
         name: 'Financial Ledger & GMV',
         href: '/finances',
         icon: CreditCard,
         description: 'Gross revenue, take-rate & ticket ledger',
+        allowedRoles: ['super admin', 'finances'],
       },
       {
         name: 'Host Withdrawals & Payouts',
         href: '/finances/withdrawals',
         icon: ArrowUpRight,
         description: 'Host payout queues, bank audit & settlement',
+        allowedRoles: ['super admin', 'finances'],
       },
     ],
   },
@@ -161,18 +178,21 @@ const navItems: NavItem[] = [
     category: 'Treasury & Rewards',
     href: '/economy',
     icon: Coins,
+    allowedRoles: ['super admin', 'admin', 'finances'],
     subItems: [
       {
         name: 'LTP & XP Economy',
         href: '/economy',
         icon: Coins,
         description: 'Point balances, XP ranks & redemptions',
+        allowedRoles: ['super admin', 'admin', 'finances'],
       },
       {
         name: 'Rewards & Merch Catalog',
         href: '/rewards',
         icon: Gift,
         description: 'Merchandise inventory & rule settings',
+        allowedRoles: ['super admin', 'admin', 'finances'],
       },
     ],
   },
@@ -182,18 +202,21 @@ const navItems: NavItem[] = [
     category: 'Marketing & Campaigns',
     href: '/marketing/vouchers',
     icon: Megaphone,
+    allowedRoles: ['super admin', 'admin', 'marketing'],
     subItems: [
       {
         name: 'Promo Vouchers',
         href: '/marketing/vouchers',
         icon: Ticket,
         description: 'Coupons, usage limits & discounts',
+        allowedRoles: ['super admin', 'admin', 'marketing'],
       },
       {
         name: 'B2B Partners',
         href: '/b2b',
         icon: Building2,
         description: 'Corporate accounts & agency commissions',
+        allowedRoles: ['super admin', 'marketing'],
       },
     ],
   },
@@ -203,41 +226,79 @@ const navItems: NavItem[] = [
     category: 'Platform Settings',
     href: '/master/countries',
     icon: Layers,
+    allowedRoles: ['super admin', 'admin', 'moderator', 'finances'],
     subItems: [
       {
         name: 'Countries & Regions',
         href: '/master/countries',
         icon: Globe,
         description: 'ISO codes & country definitions',
+        allowedRoles: ['super admin', 'admin', 'moderator'],
       },
       {
         name: 'Cities & Destinations',
         href: '/master/cities',
         icon: MapPin,
         description: 'Destinations & fallback photo visuals',
+        allowedRoles: ['super admin', 'admin', 'moderator'],
       },
       {
         name: 'Taxonomy & Categories',
         href: '/master/categories',
         icon: Layers,
         description: 'Forums, meetups & story categories',
+        allowedRoles: ['super admin', 'admin'],
       },
       {
         name: 'Experience Transaction Fee',
         href: '/master/fees',
         icon: Percent,
         description: 'Take-rate rule 0-12% & audit baseline',
+        allowedRoles: ['super admin', 'admin', 'finances'],
       },
     ],
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ initialRole }: { initialRole?: string | null } = {}) {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [openFlyoutId, setOpenFlyoutId] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const flyoutRef = useRef<HTMLDivElement>(null);
+
+  const rawRole = (session?.user as any)?.role || initialRole || '';
+  const userRole = rawRole.toLowerCase().trim();
+  const isSuperAdmin = userRole === 'super admin' || userRole === 'superadmin';
+
+  const visibleNavItems = React.useMemo(() => {
+    if (!userRole) {
+      return navItems.filter((item) => item.id === 'overview');
+    }
+
+    return navItems
+      .map((item) => {
+        const isAllowed = isSuperAdmin || !item.allowedRoles || item.allowedRoles.includes(userRole);
+        if (!isAllowed) return null;
+
+        if (item.subItems && item.subItems.length > 0) {
+          const visibleSubs = item.subItems.filter(
+            (sub) => isSuperAdmin || !sub.allowedRoles || sub.allowedRoles.includes(userRole)
+          );
+          if (visibleSubs.length === 0) return null;
+
+          return {
+            ...item,
+            href: visibleSubs[0].href,
+            subItems: visibleSubs,
+          };
+        }
+
+        return item;
+      })
+      .filter((item): item is NavItem => item !== null);
+  }, [userRole, isSuperAdmin]);
 
   const isAdminSubdomain = !pathname.startsWith('/admin');
   const resolveHref = (path: string) => (isAdminSubdomain ? path : `/admin${path}`);
@@ -323,7 +384,7 @@ export function Sidebar() {
 
         {/* Navigation Interactive Icon List */}
         <nav className="flex flex-col items-center gap-3">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = isCurrentActive(item);
             const hasSubItems = Boolean(item.subItems && item.subItems.length > 0);

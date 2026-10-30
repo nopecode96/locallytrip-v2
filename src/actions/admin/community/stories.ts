@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import { enum_stories_status } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { getPublicImageUrl } from '@/lib/images';
+import { requireRole } from '@/lib/admin-auth';
 
 export interface AdminStoryItem {
   id: number;
@@ -40,6 +41,7 @@ export interface GetAdminStoriesParams {
 
 export async function getAdminStories(params: GetAdminStoriesParams = {}) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const { search = '', status = 'all', page = 1, limit, pageSize } = params;
     const effectiveLimit = pageSize || limit || 10;
     const skip = (page - 1) * effectiveLimit;
@@ -168,6 +170,7 @@ export async function getAdminStories(params: GetAdminStoriesParams = {}) {
 
 export async function toggleStoryStatus(storyId: number, currentStatus: string) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const nextStatus: enum_stories_status =
       currentStatus === 'published' ? 'draft' : 'published';
 
@@ -190,6 +193,7 @@ export async function toggleStoryStatus(storyId: number, currentStatus: string) 
 
 export async function deleteStory(storyId: number) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     await prisma.stories.delete({
       where: { id: storyId },
     });

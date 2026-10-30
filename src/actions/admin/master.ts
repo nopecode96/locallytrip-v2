@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { PaginationState } from '@/components/admin/ui/AdminPagination';
+import { requireRole } from '@/lib/admin-auth';
 
 // ==========================================
 // 1. COUNTRIES ACTIONS & TYPES
@@ -29,6 +30,8 @@ export async function getAdminCountries(params: {
   limit?: number;
 }) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
+
     const page = Math.max(1, params.page || 1);
     const limit = Math.max(1, Math.min(100, params.limit || 20));
     const skip = (page - 1) * limit;
@@ -89,6 +92,7 @@ export async function getAdminCountries(params: {
 
 export async function createCountry(input: z.infer<typeof CountrySchema>) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const validated = CountrySchema.parse(input);
 
     const existing = await prisma.countries.findFirst({
@@ -121,6 +125,7 @@ export async function createCountry(input: z.infer<typeof CountrySchema>) {
 
 export async function updateCountry(id: number, input: z.infer<typeof CountrySchema>) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const validated = CountrySchema.parse(input);
 
     const existing = await prisma.countries.findFirst({
@@ -155,6 +160,7 @@ export async function updateCountry(id: number, input: z.infer<typeof CountrySch
 
 export async function deleteCountry(id: number) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const cityCount = await prisma.cities.count({ where: { country_id: id } });
     if (cityCount > 0) {
       return {
@@ -212,6 +218,7 @@ export async function getAdminCities(params: {
   limit?: number;
 }) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const page = Math.max(1, params.page || 1);
     const limit = Math.max(1, Math.min(100, params.limit || 20));
     const skip = (page - 1) * limit;
@@ -294,6 +301,7 @@ export async function getAdminCities(params: {
 
 export async function createCity(input: z.infer<typeof CitySchema>) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const validated = CitySchema.parse(input);
 
     const created = await prisma.cities.create({
@@ -317,6 +325,7 @@ export async function createCity(input: z.infer<typeof CitySchema>) {
 
 export async function updateCity(id: number, input: z.infer<typeof CitySchema>) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const validated = CitySchema.parse(input);
 
     const updated = await prisma.cities.update({
@@ -341,6 +350,7 @@ export async function updateCity(id: number, input: z.infer<typeof CitySchema>) 
 
 export async function toggleCityStatus(id: number, is_active: boolean) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const updated = await prisma.cities.update({
       where: { id },
       data: { is_active },
@@ -354,6 +364,7 @@ export async function toggleCityStatus(id: number, is_active: boolean) {
 
 export async function deleteCity(id: number) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const [expCount, meetupCount, storyCount] = await Promise.all([
       prisma.experiences.count({ where: { city_id: id } }),
       prisma.vibes_travel_meetups.count({ where: { city_id: id } }),
@@ -378,6 +389,7 @@ export async function deleteCity(id: number) {
 
 export async function getCountryOptions() {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const countries = await prisma.countries.findMany({
       select: { id: true, name: true, code: true },
       orderBy: { name: 'asc' },
@@ -417,6 +429,7 @@ const ForumCategorySchema = z.object({
 
 export async function getAdminForumCategories(params: { search?: string; page?: number; limit?: number }) {
   try {
+    await requireRole(['super admin', 'admin']);
     const page = Math.max(1, params.page || 1);
     const limit = Math.max(1, Math.min(100, params.limit || 30));
     const skip = (page - 1) * limit;
@@ -476,6 +489,7 @@ export async function getAdminForumCategories(params: { search?: string; page?: 
 
 export async function createForumCategory(input: z.infer<typeof ForumCategorySchema>) {
   try {
+    await requireRole(['super admin', 'admin']);
     const validated = ForumCategorySchema.parse(input);
     const slug = validated.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-');
 
@@ -500,6 +514,7 @@ export async function createForumCategory(input: z.infer<typeof ForumCategorySch
 
 export async function updateForumCategory(id: number, input: z.infer<typeof ForumCategorySchema>) {
   try {
+    await requireRole(['super admin', 'admin']);
     const validated = ForumCategorySchema.parse(input);
     const slug = validated.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-');
 
@@ -525,6 +540,7 @@ export async function updateForumCategory(id: number, input: z.infer<typeof Foru
 
 export async function deleteForumCategory(id: number) {
   try {
+    await requireRole(['super admin', 'admin']);
     const threadCount = await prisma.vibes_forum_threads.count({ where: { category_id: id } });
     if (threadCount > 0) {
       return {
@@ -572,6 +588,7 @@ const ExperienceTypeSchema = z.object({
 
 export async function getAdminExperienceTypes(params: { search?: string; page?: number; limit?: number }) {
   try {
+    await requireRole(['super admin', 'admin']);
     const page = Math.max(1, params.page || 1);
     const limit = Math.max(1, Math.min(100, params.limit || 30));
     const skip = (page - 1) * limit;
@@ -635,6 +652,7 @@ export async function getAdminExperienceTypes(params: { search?: string; page?: 
 
 export async function createExperienceType(input: z.infer<typeof ExperienceTypeSchema>) {
   try {
+    await requireRole(['super admin', 'admin']);
     const validated = ExperienceTypeSchema.parse(input);
 
     const created = await prisma.experience_types.create({
@@ -661,6 +679,7 @@ export async function createExperienceType(input: z.infer<typeof ExperienceTypeS
 
 export async function updateExperienceType(id: number, input: z.infer<typeof ExperienceTypeSchema>) {
   try {
+    await requireRole(['super admin', 'admin']);
     const validated = ExperienceTypeSchema.parse(input);
 
     const updated = await prisma.experience_types.update({
@@ -687,6 +706,7 @@ export async function updateExperienceType(id: number, input: z.infer<typeof Exp
 
 export async function deleteExperienceType(id: number) {
   try {
+    await requireRole(['super admin', 'admin']);
     const [expCount, meetupCount] = await Promise.all([
       prisma.experiences.count({ where: { experience_type_id: id } }),
       prisma.vibes_travel_meetups.count({ where: { experience_type_id: id } }),
@@ -736,6 +756,7 @@ const StoryCategorySchema = z.object({
 
 export async function getAdminStoryCategories(params: { search?: string; page?: number; limit?: number }) {
   try {
+    await requireRole(['super admin', 'admin']);
     const page = Math.max(1, params.page || 1);
     const limit = Math.max(1, Math.min(100, params.limit || 30));
     const skip = (page - 1) * limit;
@@ -790,6 +811,7 @@ export async function getAdminStoryCategories(params: { search?: string; page?: 
 
 export async function createStoryCategory(input: z.infer<typeof StoryCategorySchema>) {
   try {
+    await requireRole(['super admin', 'admin']);
     const validated = StoryCategorySchema.parse(input);
     const slug = validated.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-');
 
@@ -815,6 +837,7 @@ export async function createStoryCategory(input: z.infer<typeof StoryCategorySch
 
 export async function updateStoryCategory(id: number, input: z.infer<typeof StoryCategorySchema>) {
   try {
+    await requireRole(['super admin', 'admin']);
     const validated = StoryCategorySchema.parse(input);
     const slug = validated.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-');
 
@@ -841,6 +864,7 @@ export async function updateStoryCategory(id: number, input: z.infer<typeof Stor
 
 export async function deleteStoryCategory(id: number) {
   try {
+    await requireRole(['super admin', 'admin']);
     await prisma.story_categories.delete({ where: { id } });
     revalidatePath('/admin/master/categories');
     return { success: true };
@@ -879,6 +903,8 @@ const FeeConfigSchema = z.object({
 
 export async function getAdminFeeConfigurations(category: string = 'EXPERIENCES') {
   try {
+    await requireRole(['super admin', 'admin', 'finances']);
+
     const rows = await prisma.$queryRaw<any[]>`
       SELECT 
         id, name, category, fee_percent, fee_type, fee_bearer, 
@@ -915,6 +941,8 @@ export async function getAdminFeeConfigurations(category: string = 'EXPERIENCES'
  */
 export async function createNewFeeConfiguration(input: z.infer<typeof FeeConfigSchema>) {
   try {
+    await requireRole(['super admin', 'admin', 'finances']);
+
     const validated = FeeConfigSchema.parse(input);
     const now = validated.effective_from ? new Date(validated.effective_from) : new Date();
 

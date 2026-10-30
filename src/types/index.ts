@@ -1,4 +1,18 @@
-export type UserRole = 'USER' | 'HOST' | 'ADMIN' | 'SUPERADMIN';
+export type InternalRole =
+  | 'super admin'
+  | 'admin'
+  | 'moderator'
+  | 'finances'
+  | 'marketing'
+  | 'host'
+  | 'traveller';
+
+export type UserRole =
+  | InternalRole
+  | 'USER'
+  | 'HOST'
+  | 'ADMIN'
+  | 'SUPERADMIN';
 
 export type ExperienceStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
 

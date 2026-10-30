@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
-const ADMIN_ROLES = ['admin', 'super admin', 'moderator', 'finances', 'marketing'];
+const ADMIN_ROLES = ['admin', 'super admin', 'superadmin', 'moderator', 'finances', 'marketing'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -114,7 +114,87 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', publicUrl));
   }
 
-  // 9. Akses Diizinkan pada Subdomain Admin: Internal Rewrite ke Next.js app/(admin) routes
+  // 9. Route-level RBAC Guard: Periksa hak akses role terhadap submodule admin yang dituju
+  type RoutePermissionRule = {
+    prefix: string;
+    allowedRoles: string[];
+  };
+
+  const ADMIN_ROUTE_RULES: RoutePermissionRule[] = [
+    // Finances module (Ledger, GMV, host payouts & withdrawals)
+    { prefix: '/finances', allowedRoles: ['super admin', 'finances'] },
+    { prefix: '/withdrawals', allowedRoles: ['super admin', 'finances'] },
+    { prefix: '/payouts', allowedRoles: ['super admin', 'finances'] },
+
+    // User Management
+    { prefix: '/users', allowedRoles: ['super admin', 'admin'] },
+
+    // Marketing: Promo Vouchers
+    { prefix: '/marketing/vouchers', allowedRoles: ['super admin', 'admin', 'marketing'] },
+    { prefix: '/vouchers', allowedRoles: ['super admin', 'admin', 'marketing'] },
+
+    // B2B & Affiliates
+    { prefix: '/marketing/b2b', allowedRoles: ['super admin', 'marketing'] },
+    { prefix: '/b2b', allowedRoles: ['super admin', 'marketing'] },
+
+    // Marketing general
+    { prefix: '/marketing', allowedRoles: ['super admin', 'admin', 'marketing'] },
+
+    // Host KYC Verification
+    { prefix: '/kyc', allowedRoles: ['super admin', 'admin', 'moderator'] },
+
+    // Bookings Control
+    { prefix: '/bookings', allowedRoles: ['super admin', 'admin', 'finances'] },
+
+    // Community Control & Moderation
+    { prefix: '/community', allowedRoles: ['super admin', 'admin', 'moderator'] },
+    { prefix: '/moderation', allowedRoles: ['super admin', 'admin', 'moderator'] },
+
+    // Tour Experiences & Catalog
+    { prefix: '/experiences/reviews', allowedRoles: ['super admin', 'admin', 'moderator'] },
+    { prefix: '/experiences', allowedRoles: ['super admin', 'admin', 'moderator', 'marketing'] },
+
+    // Economy & Rewards
+    { prefix: '/economy', allowedRoles: ['super admin', 'admin', 'finances'] },
+    { prefix: '/rewards', allowedRoles: ['super admin', 'admin', 'finances'] },
+
+    // Master Data
+    { prefix: '/master/countries', allowedRoles: ['super admin', 'admin', 'moderator'] },
+    { prefix: '/master/cities', allowedRoles: ['super admin', 'admin', 'moderator'] },
+    { prefix: '/master/categories', allowedRoles: ['super admin', 'admin'] },
+    { prefix: '/master/fees', allowedRoles: ['super admin', 'admin', 'finances'] },
+    { prefix: '/master', allowedRoles: ['super admin', 'admin', 'moderator', 'finances'] },
+
+    // Overview / Dashboard & Notifications
+    { prefix: '/dashboard', allowedRoles: ['super admin', 'admin', 'moderator', 'finances', 'marketing'] },
+    { prefix: '/notifications', allowedRoles: ['super admin', 'admin', 'moderator', 'finances', 'marketing'] },
+  ];
+
+  // Normalisasi path relatif admin (baik di subdomain maupun path /admin)
+  const relativeAdminPath = isAdminHost
+    ? pathname
+    : (pathname.replace(/^\/admin/, '') || '/dashboard');
+
+  const isSuperAdmin = userRole === 'super admin' || userRole === 'superadmin';
+
+  if (!isSuperAdmin) {
+    // Cari aturan dengan prefix paling spesifik
+    const matchingRule = ADMIN_ROUTE_RULES
+      .slice()
+      .sort((a, b) => b.prefix.length - a.prefix.length)
+      .find((rule) => relativeAdminPath === rule.prefix || relativeAdminPath.startsWith(`${rule.prefix}/`));
+
+    if (matchingRule && !matchingRule.allowedRoles.includes(userRole)) {
+      // Role tidak diizinkan mengakses rute ini, redirect ke dashboard
+      const dashboardUrl = isAdminHost
+        ? new URL('/dashboard', request.url)
+        : new URL('/admin/dashboard', request.url);
+      dashboardUrl.searchParams.set('denied', '1');
+      return NextResponse.redirect(dashboardUrl);
+    }
+  }
+
+  // 10. Akses Diizinkan pada Subdomain Admin: Internal Rewrite ke Next.js app/(admin) routes
   if (isAdminHost) {
     // Root atau /dashboard -> rewrite ke /admin/dashboard
     if (pathname === '/' || pathname === '/dashboard') {
@@ -136,7 +216,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(new URL(`/admin${pathname}`, request.url));
   }
 
-  // 10. Untuk akses via direct path /admin di domain utama
+  // 11. Untuk akses via direct path /admin di domain utama
   if (pathname === '/admin') {
     return NextResponse.redirect(new URL('/admin/dashboard', request.url));
   }

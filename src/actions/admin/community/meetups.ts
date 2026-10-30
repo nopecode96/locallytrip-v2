@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getPublicImageUrl } from '@/lib/images';
+import { requireRole } from '@/lib/admin-auth';
 
 export interface AdminMeetupItem {
   id: number;
@@ -41,6 +42,7 @@ export interface GetAdminMeetupsParams {
 
 export async function getAdminMeetups(params: GetAdminMeetupsParams = {}) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const { search = '', status = 'all', page = 1, limit, pageSize } = params;
     const effectiveLimit = pageSize || limit || 10;
     const skip = (page - 1) * effectiveLimit;
@@ -186,6 +188,7 @@ export async function getAdminMeetups(params: GetAdminMeetupsParams = {}) {
 
 export async function updateMeetupStatus(meetupId: number, newStatus: string) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const statusClean = newStatus.toLowerCase().trim();
     const updated = await prisma.vibes_travel_meetups.update({
       where: { id: meetupId },
@@ -205,6 +208,7 @@ export async function updateMeetupStatus(meetupId: number, newStatus: string) {
 
 export async function deleteMeetup(meetupId: number) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     await prisma.vibes_travel_meetups.update({
       where: { id: meetupId },
       data: {

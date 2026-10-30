@@ -1,3 +1,5 @@
+import { recordAiApiLog } from '@/lib/ai/quotaTracker';
+
 /**
  * Bilateral Auto-Translator (Indonesian <-> English)
  * Mendukung penerjemahan dua arah untuk:
@@ -14,12 +16,9 @@ interface TranslationResult {
 }
 
 const CANDIDATE_GEMINI_MODELS = [
+  'gemini-3.5-flash-lite',
   'gemini-3.8-flash',
   'gemini-flash-latest',
-  'gemini-3.5-flash',
-  'gemini-3.5-flash-lite',
-  'gemini-2.5-flash',
-  'gemini-1.5-flash',
 ];
 
 /**
@@ -64,6 +63,7 @@ Content to translate:
 ${cleanText}`;
 
     for (const model of CANDIDATE_GEMINI_MODELS) {
+      const startTime = Date.now();
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 6000);
@@ -83,21 +83,54 @@ ${cleanText}`;
           }
         );
         clearTimeout(timeoutId);
+        const latencyMs = Date.now() - startTime;
 
         if (response.ok) {
           const json = await response.json();
           const candidate = json.candidates?.[0]?.content?.parts?.[0]?.text;
+          const tokens = json.usageMetadata?.totalTokenCount || Math.ceil((prompt.length + (candidate?.length || 0)) / 4);
+
+          // Log sukses
+          recordAiApiLog({
+            feature: 'BILATERAL_TRANSLATION',
+            model,
+            statusCode: 200,
+            isSuccess: true,
+            tokensUsed: tokens,
+            latencyMs,
+          }).catch(() => {});
+
           if (candidate && candidate.trim()) {
             let result = candidate.trim();
             // Bersihkan jika model membungkusnya dalam code fence
             result = result.replace(/^```(?:markdown|html)?\r?\n/i, '').replace(/\r?\n```$/i, '').trim();
             return result;
           }
-        } else if (response.status === 400) {
-          // Kunci API tidak valid / error format request; langsung beralih ke fallback
-          break;
+        } else {
+          // Log error / rate limit status (misal 429 atau 400)
+          recordAiApiLog({
+            feature: 'BILATERAL_TRANSLATION',
+            model,
+            statusCode: response.status,
+            isSuccess: false,
+            errorMessage: `Gemini API returned status ${response.status}`,
+            latencyMs,
+          }).catch(() => {});
+
+          if (response.status === 400) {
+            // Kunci API tidak valid / error format request; langsung beralih ke fallback
+            break;
+          }
         }
-      } catch (geminiErr) {
+      } catch (geminiErr: any) {
+        recordAiApiLog({
+          feature: 'BILATERAL_TRANSLATION',
+          model,
+          statusCode: 500,
+          isSuccess: false,
+          errorMessage: geminiErr?.message || 'Gemini fetch timeout or connection failed',
+          latencyMs: Date.now() - startTime,
+        }).catch(() => {});
         // Lanjut ke model berikutnya
       }
     }

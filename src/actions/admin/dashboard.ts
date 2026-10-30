@@ -1,7 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { getAdminStaffSession } from '@/lib/admin-auth';
+import { getAdminStaffSession, requireStaffSession } from '@/lib/admin-auth';
 
 export interface AdminDashboardOverviewStats {
   totalUsers: number;
@@ -77,11 +77,8 @@ async function getStaffSession() {
  */
 export async function getAdminDashboardOverview(): Promise<GetAdminDashboardOverviewResponse> {
   try {
-    // 1. Verifikasi Sesi (dengan fallback bersahabat)
-    const session = await getStaffSession();
-    if (!session && process.env.NODE_ENV === 'production') {
-      console.warn('[Admin Dashboard] Warning: Session not found in server action, relying on middleware guard.');
-    }
+    // 1. Verifikasi Sesi Staf Operasional
+    await requireStaffSession();
 
     // 2. Ambil Nilai Kurs FX USD -> IDR terkini dari database
     let usdToIdrRate = 17896.90;

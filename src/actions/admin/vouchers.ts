@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { getAdminStaffSession } from '@/lib/admin-auth';
+import { getAdminStaffSession, hasRole } from '@/lib/admin-auth';
 import { enum_promotion_codes_discount_type, enum_promotion_codes_status, enum_promotion_codes_type } from '@prisma/client';
 
 export interface AdminVoucherItem {
@@ -98,7 +98,7 @@ async function requireAdminOrMarketingSession() {
     throw new Error('Sesi tidak valid. Silakan login terlebih dahulu.');
   }
 
-  if (!session.isStaff) {
+  if (!hasRole(session, ['super admin', 'admin', 'marketing'])) {
     throw new Error('Akses ditolak. Anda tidak memiliki izin marketing atau admin.');
   }
 

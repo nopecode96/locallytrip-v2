@@ -4,30 +4,48 @@ import {
   getAdminRewardRulesAndTiers,
 } from '@/actions/admin/rewards';
 import { RewardsControlClient } from '@/components/admin/rewards/RewardsControlClient';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Rewards, Merchandise & Gamification | Locallytrip Admin',
+  description: 'Kelola level reputation XP, katalog merchandise hadiah, dan aturan perolehan poin LTP.',
+};
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminRewardsPage() {
+interface AdminRewardsPageProps {
+  searchParams?: Promise<{
+    tab?: string;
+  }>;
+}
+
+export default async function AdminRewardsPage({ searchParams }: AdminRewardsPageProps) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const validTabs = ['merchandise', 'tiers', 'rules'];
+  const initialTab = resolvedParams?.tab && validTabs.includes(resolvedParams.tab)
+    ? (resolvedParams.tab as 'merchandise' | 'tiers' | 'rules')
+    : 'merchandise';
+
   const [merchRes, rulesTiersRes] = await Promise.all([
     getAdminMerchandise({ page: 1, limit: 20 }),
     getAdminRewardRulesAndTiers(),
   ]);
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      <RewardsControlClient
-        initialMerchandise={merchRes.data || []}
-        initialPagination={
-          merchRes.pagination || {
-            currentPage: 1,
-            pageSize: 20,
-            totalItems: 0,
-            totalPages: 1,
-          }
+    <RewardsControlClient
+      initialMerchandise={merchRes.data || []}
+      initialPagination={
+        merchRes.pagination || {
+          currentPage: 1,
+          pageSize: 20,
+          totalItems: 0,
+          totalPages: 1,
         }
-        initialTiers={rulesTiersRes.tiers || []}
-        initialRules={rulesTiersRes.rules || []}
-      />
-    </div>
+      }
+      initialTiers={rulesTiersRes.tiers || []}
+      initialRules={rulesTiersRes.rules || []}
+      initialTab={initialTab}
+    />
   );
 }
+

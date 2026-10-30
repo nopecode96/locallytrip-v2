@@ -35,12 +35,14 @@ ${text}`;
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_KEY;
 
-    // 1. Prioritas Utama: Google Gemini AI
+    // 1. Prioritas Utama: Google Gemini AI (Gunakan model ultra-fast gemini-3.5-flash-lite)
     if (apiKey) {
-      // Coba model Gemini Flash kontemporer
-      const candidateModels = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest', 'gemini-2.5-flash'];
+      const candidateModels = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
       for (const model of candidateModels) {
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000);
+
           const aiRes = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
             {
@@ -52,16 +54,20 @@ ${text}`;
                   temperature: 0.2,
                 },
               }),
+              signal: controller.signal,
             }
           );
+          clearTimeout(timeoutId);
 
           if (aiRes.ok) {
             const aiData = await aiRes.json();
             const translatedMarkdown = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
             if (translatedMarkdown && translatedMarkdown.trim()) {
+              let cleanResult = translatedMarkdown.trim();
+              cleanResult = cleanResult.replace(/^```(?:markdown|html)?\r?\n/i, '').replace(/\r?\n```$/i, '').trim();
               return NextResponse.json({
                 success: true,
-                translatedText: translatedMarkdown.trim(),
+                translatedText: cleanResult,
               });
             }
           }

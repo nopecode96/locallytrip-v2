@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { enum_experiences_status } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import { requireRole } from '@/lib/admin-auth';
 
 export interface AdminStats {
   totalUsers: number;
@@ -87,6 +88,8 @@ export async function getAdminExperiencesList(): Promise<{
   error?: string;
 }> {
   try {
+    await requireRole(['super admin', 'admin', 'moderator', 'marketing']);
+
     const list = await prisma.experiences.findMany({
       orderBy: { created_at: 'desc' },
       take: 50,
@@ -125,6 +128,8 @@ export async function toggleExperienceActive(
   currentStatus: boolean
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
+
     await prisma.experiences.update({
       where: { id: experienceId },
       data: {

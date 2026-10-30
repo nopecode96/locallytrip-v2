@@ -1,5 +1,7 @@
 import React from 'react';
 import { getAdminDashboardOverview } from '@/actions/admin/dashboard';
+import { getAiQuotaTelemetry } from '@/lib/ai/quotaTracker';
+import { getAdminStaffSession } from '@/lib/admin-auth';
 import { DashboardClientView } from '@/components/admin/DashboardClientView';
 import type { Metadata } from 'next';
 
@@ -11,12 +13,27 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboardPage() {
-  const { stats, recentBookings, error } = await getAdminDashboardOverview();
+  const [{ stats, recentBookings, error }, aiTelemetry, staffSession] = await Promise.all([
+    getAdminDashboardOverview(),
+    getAiQuotaTelemetry(),
+    getAdminStaffSession(),
+  ]);
 
   // If there was an error, log it and provide graceful fallback stats
   if (error) {
     console.warn('[AdminDashboardPage] Notice from overview server action:', error);
   }
+
+  const userRole = (staffSession?.role || '').toLowerCase().trim();
+  const isSuperAdmin = userRole === 'super admin' || userRole === 'superadmin';
+
+  // Sembunyikan AI Synthetic Personas & Seeding Telemetry jika bukan superadmin
+  const filteredAiTelemetry = aiTelemetry
+    ? {
+        ...aiTelemetry,
+        syntheticSeedStats: isSuperAdmin ? aiTelemetry.syntheticSeedStats : undefined,
+      }
+    : undefined;
 
   const safeStats = stats || {
     totalUsers: 0,
@@ -41,6 +58,9 @@ export default async function AdminDashboardPage() {
     <DashboardClientView
       stats={safeStats}
       recentBookings={recentBookings || []}
+      aiTelemetry={filteredAiTelemetry}
+      isSuperAdmin={isSuperAdmin}
     />
   );
 }
+

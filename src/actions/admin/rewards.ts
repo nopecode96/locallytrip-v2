@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { requireRole } from '@/lib/admin-auth';
 
 // ==========================================
 // 1. REWARD MERCHANDISE TYPES & SCHEMAS
@@ -102,6 +103,8 @@ export async function getAdminMerchandise(params: {
   limit?: number;
 }) {
   try {
+    await requireRole(['super admin', 'admin', 'finances']);
+
     const page = Math.max(1, params.page || 1);
     const limit = Math.max(1, Math.min(100, params.limit || 20));
     const skip = (page - 1) * limit;
@@ -173,6 +176,8 @@ export async function getAdminMerchandise(params: {
 
 export async function createMerchandise(input: z.infer<typeof MerchandiseSchema>) {
   try {
+    await requireRole(['super admin', 'admin', 'finances']);
+
     const validated = MerchandiseSchema.parse(input);
     const slug = validated.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-');
 
@@ -199,6 +204,8 @@ export async function createMerchandise(input: z.infer<typeof MerchandiseSchema>
 
 export async function updateMerchandise(id: number, input: z.infer<typeof MerchandiseSchema>) {
   try {
+    await requireRole(['super admin', 'admin', 'finances']);
+
     const validated = MerchandiseSchema.parse(input);
     const slug = validated.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-');
 
@@ -226,6 +233,8 @@ export async function updateMerchandise(id: number, input: z.infer<typeof Mercha
 
 export async function toggleMerchandiseStatus(id: number, is_active: boolean) {
   try {
+    await requireRole(['super admin', 'admin', 'finances']);
+
     const updated = await prisma.reward_merchandise.update({
       where: { id },
       data: { is_active },
@@ -239,6 +248,8 @@ export async function toggleMerchandiseStatus(id: number, is_active: boolean) {
 
 export async function deleteMerchandise(id: number) {
   try {
+    await requireRole(['super admin', 'admin', 'finances']);
+
     await prisma.reward_merchandise.delete({ where: { id } });
     revalidatePath('/admin/rewards');
     return { success: true };

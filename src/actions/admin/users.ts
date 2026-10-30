@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getPublicImageUrl } from '@/lib/images';
+import { requireRole } from '@/lib/admin-auth';
 
 export interface AdminUserItem {
   id: number;
@@ -37,6 +38,8 @@ export interface GetAdminUsersParams {
 
 export async function getAdminUsers(params: GetAdminUsersParams = {}) {
   try {
+    await requireRole(['super admin', 'admin']);
+
     const { search = '', role = 'all', kycStatus = 'all', page = 1 } = params;
     const pageSize = params.pageSize || params.limit || 10;
     const skip = (page - 1) * pageSize;
@@ -222,6 +225,8 @@ export async function getAdminUsers(params: GetAdminUsersParams = {}) {
 
 export async function toggleUserStatus(userId: number, currentStatus: boolean) {
   try {
+    await requireRole(['super admin', 'admin']);
+
     const updated = await prisma.users.update({
       where: { id: userId },
       data: {
@@ -240,11 +245,19 @@ export async function toggleUserStatus(userId: number, currentStatus: boolean) {
 
 export async function updateUserRole(userId: number, newRole: string) {
   try {
+    await requireRole(['super admin', 'admin']);
+
     const roleClean = newRole.toLowerCase().trim();
+    const matchedRole = await prisma.roles.findFirst({
+      where: { name: roleClean },
+      select: { id: true },
+    });
+
     const updated = await prisma.users.update({
       where: { id: userId },
       data: {
         role: roleClean,
+        role_id: matchedRole ? matchedRole.id : undefined,
         updated_at: new Date(),
       },
     });

@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma';
 import { enum_host_kyc_status, enum_host_kyc_id_type } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { getPublicImageUrl } from '@/lib/images';
-import { getAdminStaffSession } from '@/lib/admin-auth';
+import { getAdminStaffSession, requireRole } from '@/lib/admin-auth';
 
 export interface AdminKycDocumentItem {
   id: number;
@@ -87,6 +87,8 @@ export async function getAdminKycSubmissions(
   params: GetAdminKycParams = {}
 ): Promise<GetAdminKycResponse> {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
+
     const {
       search = '',
       status = 'all',
@@ -281,7 +283,7 @@ export async function approveKyc(
   adminNotes?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const session = await getAdminStaffSession();
+    const session = await requireRole(['super admin', 'admin', 'moderator']);
     const reviewerId = session?.id ? Number(session.id) : 1;
 
     const kyc = await prisma.host_kyc.findUnique({
@@ -312,6 +314,7 @@ export async function approveKyc(
           is_verified: true,
           is_trusted: true,
           role: 'host', // Ensure user is elevated to host
+          role_id: 2,
           updated_at: now,
         },
       }),
@@ -351,7 +354,7 @@ export async function rejectKyc(
   adminNotes?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const session = await getAdminStaffSession();
+    const session = await requireRole(['super admin', 'admin', 'moderator']);
     const reviewerId = session?.id ? Number(session.id) : 1;
 
     const kyc = await prisma.host_kyc.findUnique({

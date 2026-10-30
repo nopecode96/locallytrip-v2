@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getPublicImageUrl } from '@/lib/images';
+import { requireRole } from '@/lib/admin-auth';
 
 export interface AdminReviewItem {
   id: number;
@@ -35,6 +36,7 @@ export interface GetAdminReviewsParams {
 
 export async function getAdminReviews(params: GetAdminReviewsParams = {}) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const { search = '', ratingFilter = 'all', page = 1, limit, pageSize } = params;
     const effectiveLimit = pageSize || limit || 10;
     const skip = (page - 1) * effectiveLimit;
@@ -173,6 +175,7 @@ export async function getAdminReviews(params: GetAdminReviewsParams = {}) {
 
 export async function deleteReview(reviewId: number) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const existing = await prisma.reviews.findUnique({
       where: { id: reviewId },
       select: { experience_id: true },

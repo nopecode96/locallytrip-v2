@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { getAdminStaffSession } from '@/lib/admin-auth';
+import { getAdminStaffSession, hasRole } from '@/lib/admin-auth';
 import { resolveAvatarUrl } from '@/lib/avatar';
 import { getPublicImageUrl } from '@/lib/images';
 
@@ -95,8 +95,8 @@ async function requireAdminSession() {
     throw new Error('Sesi tidak valid. Silakan login terlebih dahulu.');
   }
 
-  if (!session.isStaff) {
-    throw new Error('Akses ditolak. Anda tidak memiliki izin administrator atau finance.');
+  if (!hasRole(session, ['super admin', 'finances'])) {
+    throw new Error('Akses ditolak. Fitur keuangan dan penarikan dana hanya untuk Super Admin dan Finance.');
   }
 
   return session;

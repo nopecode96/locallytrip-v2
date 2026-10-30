@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import { enum_experiences_status } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { getPublicImageUrl } from '@/lib/images';
+import { requireRole } from '@/lib/admin-auth';
 
 export interface AdminExperienceCatalogItem {
   id: number;
@@ -46,6 +47,7 @@ function extractCoverImage(images: any): string | null {
 
 export async function getAdminExperiences(params: GetAdminExperiencesParams = {}) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator', 'marketing']);
     const { search = '', status = 'all', page = 1 } = params;
     const pageSize = params.pageSize || params.limit || 10;
     const skip = (page - 1) * pageSize;
@@ -202,6 +204,7 @@ export async function getAdminExperiences(params: GetAdminExperiencesParams = {}
 
 export async function toggleExperienceStatus(experienceId: number, currentStatus: string) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const nextStatus: enum_experiences_status =
       currentStatus === 'published' ? 'draft' : 'published';
 
@@ -223,6 +226,7 @@ export async function toggleExperienceStatus(experienceId: number, currentStatus
 
 export async function toggleExperienceFeatured(experienceId: number, currentFeatured: boolean) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator', 'marketing']);
     const updated = await prisma.experiences.update({
       where: { id: experienceId },
       data: {
@@ -240,6 +244,7 @@ export async function toggleExperienceFeatured(experienceId: number, currentFeat
 
 export async function archiveExperience(experienceId: number) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const updated = await prisma.experiences.update({
       where: { id: experienceId },
       data: {

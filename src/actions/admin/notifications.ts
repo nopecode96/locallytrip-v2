@@ -1,7 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { getAdminStaffSession } from '@/lib/admin-auth';
+import { getAdminStaffSession, requireStaffSession } from '@/lib/admin-auth';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
 
@@ -55,7 +55,7 @@ export async function getAdminNotifications(params: {
   limit?: number;
 } = {}): Promise<GetAdminNotificationsResult> {
   try {
-    const session = await getAdminStaffSession();
+    const session = await requireStaffSession();
     const currentAdminId = session?.id ? Number(session.id) : null;
     const { page = 1, limit = 15 } = params;
     const skip = (page - 1) * limit;
@@ -122,6 +122,7 @@ export async function getAdminNotifications(params: {
  */
 export async function markNotificationAsRead(notificationId: number) {
   try {
+    await requireStaffSession();
     await prisma.notifications.update({
       where: { id: notificationId },
       data: {
@@ -144,7 +145,7 @@ export async function markNotificationAsRead(notificationId: number) {
  */
 export async function markAllNotificationsAsRead() {
   try {
-    const session = await getAdminStaffSession();
+    const session = await requireStaffSession();
     const currentAdminId = session?.id ? Number(session.id) : null;
 
     const where: any = { read: false };

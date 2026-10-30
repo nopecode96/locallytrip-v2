@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getPublicImageUrl } from '@/lib/images';
+import { requireRole } from '@/lib/admin-auth';
 
 export interface AdminBookingItem {
   id: number;
@@ -48,6 +49,8 @@ export interface GetAdminBookingsParams {
 
 export async function getAdminBookings(params: GetAdminBookingsParams = {}) {
   try {
+    await requireRole(['super admin', 'admin', 'finances']);
+
     const { search = '', status = 'all', page = 1 } = params;
     const pageSize = params.pageSize || params.limit || 10;
     const skip = (page - 1) * pageSize;
@@ -216,6 +219,8 @@ export async function getAdminBookings(params: GetAdminBookingsParams = {}) {
 
 export async function updateBookingStatus(bookingId: number, newStatus: string) {
   try {
+    await requireRole(['super admin', 'admin', 'finances']);
+
     const statusClean = newStatus.toLowerCase().trim();
     const updated = await prisma.bookings.update({
       where: { id: bookingId },

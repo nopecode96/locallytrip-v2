@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getPublicImageUrl } from '@/lib/images';
+import { requireRole } from '@/lib/admin-auth';
 
 export interface AdminReportItem {
   id: number;
@@ -45,6 +46,7 @@ export interface GetAdminReportsParams {
 
 export async function getAdminContentReports(params: GetAdminReportsParams = {}) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const {
       search = '',
       status = 'all',
@@ -294,6 +296,7 @@ export async function getAdminContentReports(params: GetAdminReportsParams = {})
 
 export async function updateReportStatus(reportId: number, newStatus: 'pending' | 'reviewed' | 'resolved' | 'dismissed') {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const updated = await prisma.content_reports.update({
       where: { id: reportId },
       data: {
@@ -312,6 +315,7 @@ export async function updateReportStatus(reportId: number, newStatus: 'pending' 
 
 export async function takedownReportedContent(reportId: number) {
   try {
+    await requireRole(['super admin', 'admin', 'moderator']);
     const report = await prisma.content_reports.findUnique({
       where: { id: reportId },
     });
